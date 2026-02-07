@@ -15,12 +15,13 @@
 // module.exports = router;
 /////
 const express = require('express');
-const { 
-    loginStudent, 
-    registerStudent, 
+const {
+    login,
+    loginStudent,
+    registerStudent,
     loginStudentByRollNo,
     forgotPassword,
-    resetPassword
+    resetPassword,
 } = require('../controllers/auth');
 
 const router = express.Router();
@@ -28,8 +29,8 @@ const router = express.Router();
 // Student registration
 router.post('/register', registerStudent);
 
-// Student login (email & password)
-router.post('/login', loginStudent);
+// Unified login: student or munshi (redirect by role on frontend)
+router.post('/login', login);
 
 // Student login (rollNo-based for backward compatibility)
 router.post('/login-rollno', loginStudentByRollNo);

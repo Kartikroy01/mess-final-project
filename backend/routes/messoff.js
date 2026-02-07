@@ -3,6 +3,84 @@ const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const MessOff = require('../models/MessOff');
 
+// @route   GET /api/mess-off/all
+// @desc    Get all mess-off requests (for munshi dashboard)
+// @access  Public
+router.get('/all', async (req, res) => {
+    try {
+        const requests = await MessOff.find()
+            .populate('studentId', 'name rollNo roomNo')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const data = requests.map((r) => ({
+            id: r._id.toString(),
+            studentId: r.studentId._id ? r.studentId._id.toString() : r.studentId,
+            studentName: r.studentId && r.studentId.name ? r.studentId.name : 'Unknown',
+            from: r.fromDate.toISOString().split('T')[0],
+            to: r.toDate.toISOString().split('T')[0],
+            status: r.status,
+            reason: r.reason || '',
+        }));
+
+        res.json({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        console.error('Get all mess-off error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error fetching mess-off requests',
+        });
+    }
+});
+
+// @route   PATCH /api/mess-off/:id/status
+// @desc    Approve or reject a mess-off request (munshi)
+// @access  Public
+router.patch('/:id/status', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!['Approved', 'Rejected'].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Status must be Approved or Rejected',
+            });
+        }
+
+        const messOff = await MessOff.findByIdAndUpdate(
+            id,
+            { status, approvedAt: new Date() },
+            { new: true }
+        ).lean();
+
+        if (!messOff) {
+            return res.status(404).json({
+                success: false,
+                message: 'Request not found',
+            });
+        }
+
+        res.json({
+            success: true,
+            message: `Request ${status.toLowerCase()} successfully`,
+            data: {
+                id: messOff._id.toString(),
+                status: messOff.status,
+            },
+        });
+    } catch (error) {
+        console.error('Update mess-off status error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error updating request',
+        });
+    }
+});
+
 // @route   POST /api/mess-off/apply
 // @desc    Apply for mess off
 // @access  Private

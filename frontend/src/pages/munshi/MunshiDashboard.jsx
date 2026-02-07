@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, X, CheckCircle, ShoppingBag, LogOut, Menu, Calendar, TrendingUp, Plus } from 'lucide-react';
 import MessOffRequestsPage from './MessOffRequest';
 import ReportsPage from './MunshiReport';
 import AddMealPage from './MunshiAddMeal';
 import { Card, Button, Badge } from './components/UIComponents';
-import { MOCK_STUDENTS, INITIAL_MOCK_MEALS, MOCK_MESS_OFF_REQUESTS, MOCK_ORDERS } from './data/mockData';
+import { munshiApi } from './api';
 
 // ==================== MEAL SELECTION PAGE ====================
 const MealSelectionPage = ({ onSelectMeal }) => {
@@ -51,19 +51,18 @@ const MealSelectionPage = ({ onSelectMeal }) => {
 };
 
 // ==================== DASHBOARD VIEW ====================
-const DashboardView = ({ sessionMeal, onStudentScan, scannedStudent, clearScannedStudent, onAddExtraItems, meals }) => {
+const DashboardView = ({ sessionMeal, onStudentScan, scannedStudent, clearScannedStudent, onAddExtraItems, meals, scanLoading, menuLoading }) => {
   const [studentIdInput, setStudentIdInput] = useState('');
   const [error, setError] = useState('');
   const [extraItems, setExtraItems] = useState([]);
   const [notification, setNotification] = useState(null);
 
-  const handleScan = (e) => {
+  const handleScan = async (e) => {
     e.preventDefault();
-    const student = onStudentScan(studentIdInput);
+    setError('');
+    const student = await onStudentScan(studentIdInput);
     if (!student) {
-      setError('Student ID or Room Number not found. Please try again.');
-    } else {
-      setError('');
+      setError('Student ID, Roll Number or Room Number not found. Please try again.');
     }
   };
 
@@ -82,17 +81,24 @@ const DashboardView = ({ sessionMeal, onStudentScan, scannedStudent, clearScanne
     );
   };
 
-  const handleSubmitExtras = () => {
+  const handleSubmitExtras = async () => {
     if (!scannedStudent || extraItems.length === 0) return;
-    onAddExtraItems(scannedStudent.id, extraItems);
-    setNotification({
-      type: 'success',
-      message: `Successfully added ${extraItems.length} item(s) for ${scannedStudent.name}`
-    });
-    setTimeout(() => {
-      setNotification(null);
-      handleClear();
-    }, 3000);
+    try {
+      await onAddExtraItems(scannedStudent.id, extraItems);
+      setNotification({
+        type: 'success',
+        message: `Successfully added ${extraItems.length} item(s) for ${scannedStudent.name}`
+      });
+      setTimeout(() => {
+        setNotification(null);
+        handleClear();
+      }, 3000);
+    } catch (err) {
+      setNotification({
+        type: 'error',
+        message: err.message || 'Failed to process order. Please try again.'
+      });
+    }
   };
 
   const totalAmount = extraItems.reduce((sum, item) => sum + item.price, 0);
@@ -103,8 +109,12 @@ const DashboardView = ({ sessionMeal, onStudentScan, scannedStudent, clearScanne
         <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
           notification.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
         }`}>
-          <CheckCircle className="w-5 h-5 text-green-600" />
-          <span className="text-green-800">{notification.message}</span>
+          {notification.type === 'success' ? (
+            <CheckCircle className="w-5 h-5 text-green-600" />
+          ) : (
+            <X className="w-5 h-5 text-red-600" />
+          )}
+          <span className={notification.type === 'success' ? 'text-green-800' : 'text-red-800'}>{notification.message}</span>
         </div>
       )}
 
@@ -138,8 +148,8 @@ const DashboardView = ({ sessionMeal, onStudentScan, scannedStudent, clearScanne
                     <span>{error}</span>
                   </div>
                 )}
-                <Button type="submit" className="w-full" icon={Search}>
-                  Find Student
+                <Button type="submit" className="w-full" icon={Search} disabled={scanLoading}>
+                  {scanLoading ? 'Searching...' : 'Find Student'}
                 </Button>
               </form>
             ) : (
@@ -184,6 +194,7 @@ const DashboardView = ({ sessionMeal, onStudentScan, scannedStudent, clearScanne
                 <h2 className="text-xl font-semibold text-gray-900">Available Menu</h2>
                 <p className="text-sm text-gray-500 capitalize mt-1">
                   Current Session: <span className="font-medium text-indigo-600">{sessionMeal}</span>
+                  {menuLoading && <span className="ml-2 text-gray-400">(Loading...)</span>}
                 </p>
               </div>
               {scannedStudent && extraItems.length > 0 && (
@@ -192,7 +203,7 @@ const DashboardView = ({ sessionMeal, onStudentScan, scannedStudent, clearScanne
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {meals[sessionMeal].map(item => {
+              {(meals[sessionMeal] || []).map(item => {
                 const isSelected = extraItems.find(i => i.id === item.id);
                 return (
                   <div
@@ -267,48 +278,137 @@ const DashboardView = ({ sessionMeal, onStudentScan, scannedStudent, clearScanne
   );
 };
 
+// Default empty menu shape
+const EMPTY_MEALS = {
+  breakfast: [],
+  lunch: [],
+  snacks: [],
+  dinner: [],
+};
+
 // ==================== MAIN MUNSHI DASHBOARD COMPONENT ====================
-const MunshiDashboard = ({ onLogout }) => {
+const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   const [sessionMeal, setSessionMeal] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scannedStudent, setScannedStudent] = useState(null);
-  const [messOffRequests, setMessOffRequests] = useState(MOCK_MESS_OFF_REQUESTS);
-  const [orders, setOrders] = useState(MOCK_ORDERS);
-  const [meals, setMeals] = useState(INITIAL_MOCK_MEALS);
+  const [messOffRequests, setMessOffRequests] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [meals, setMeals] = useState(EMPTY_MEALS);
+  const [loading, setLoading] = useState(false);
+  const [menuLoading, setMenuLoading] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
-  const handleStudentScan = (searchInput) => {
-    const student = Object.values(MOCK_STUDENTS).find(
-      s =>
-        s.id.toLowerCase() === searchInput.toLowerCase() ||
-        s.roomNumber.toLowerCase() === searchInput.toLowerCase()
-    );
-    if (student) {
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('authUser');
+    localStorage.removeItem('authRole');
+    sessionStorage.removeItem('authUser');
+    window.location.href = '/login';
+  };
+  const onLogout = onLogoutProp || handleLogout;
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    const role = localStorage.getItem('authRole');
+    if (!token || role !== 'munshi') {
+      window.location.href = '/login';
+      return;
+    }
+    setAuthChecked(true);
+  }, []);
+
+  useEffect(() => {
+    if (!authChecked || !sessionMeal) return;
+    setMenuLoading(true);
+    munshiApi
+      .getMenu()
+      .then((data) => setMeals(data))
+      .catch(() => setMeals(EMPTY_MEALS))
+      .finally(() => setMenuLoading(false));
+  }, [authChecked, sessionMeal]);
+
+  const refreshOrders = () => {
+    munshiApi.getOrders().then(setOrders).catch(() => setOrders([]));
+  };
+
+  const refreshMessOffRequests = () => {
+    munshiApi.getMessOffRequests().then(setMessOffRequests).catch(() => setMessOffRequests([]));
+  };
+
+  useEffect(() => {
+    if (activeTab === 'reports') refreshOrders();
+    if (activeTab === 'messoffrequest') refreshMessOffRequests();
+  }, [activeTab]);
+
+  const handleStudentScan = async (searchInput) => {
+    const q = (searchInput || '').trim();
+    if (!q) {
+      setScannedStudent(null);
+      return null;
+    }
+    setLoading(true);
+    try {
+      const student = await munshiApi.lookupStudent(q);
       setScannedStudent(student);
       return student;
+    } catch {
+      setScannedStudent(null);
+      return null;
+    } finally {
+      setLoading(false);
     }
-    setScannedStudent(null);
-    return null;
   };
 
   const clearScannedStudent = () => setScannedStudent(null);
 
-  const handleRequestAction = (requestId, status) =>
-    setMessOffRequests(prev =>
-      prev.map(req => (req.id === requestId ? { ...req, status } : req))
+  const handleRequestAction = async (requestId, status) => {
+    try {
+      await munshiApi.updateMessOffStatus(requestId, status);
+      setMessOffRequests((prev) =>
+        prev.map((req) => (req.id === requestId ? { ...req, status } : req))
+      );
+    } catch (err) {
+      console.error(err);
+      refreshMessOffRequests();
+    }
+  };
+
+  const handleAddExtraItems = async (studentId, items, mealType) => {
+    try {
+      await munshiApi.createOrder(studentId, items, sessionMeal || 'breakfast');
+      refreshOrders();
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
+
+  const handleAddMeal = async (mealType, newMeal) => {
+    try {
+      const created = await munshiApi.addMealItem({
+        mealType,
+        name: newMeal.name,
+        price: newMeal.price,
+        image: newMeal.image || '',
+      });
+      setMeals((prev) => ({
+        ...prev,
+        [mealType]: [...(prev[mealType] || []), { ...created, id: created.id || created._id }],
+      }));
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="inline-block w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      </div>
     );
-
-  const handleAddExtraItems = (studentId, items) => {
-    const newOrder = { id: Date.now(), studentId, items, date: new Date() };
-    setOrders(prevOrders => [...prevOrders, newOrder]);
-  };
-
-  const handleAddMeal = (mealType, newMeal) => {
-    setMeals(prevMeals => ({
-      ...prevMeals,
-      [mealType]: [...prevMeals[mealType], newMeal],
-    }));
-  };
+  }
 
   if (!sessionMeal) {
     return <MealSelectionPage onSelectMeal={setSessionMeal} />;
@@ -419,6 +519,8 @@ const MunshiDashboard = ({ onLogout }) => {
             clearScannedStudent={clearScannedStudent}
             onAddExtraItems={handleAddExtraItems}
             meals={meals}
+            scanLoading={loading}
+            menuLoading={menuLoading}
           />
         )}
         {activeTab === 'messoffrequest' && (

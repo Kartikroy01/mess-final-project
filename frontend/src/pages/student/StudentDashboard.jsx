@@ -699,10 +699,16 @@ function StudentDashboard() {
     const [activePage, setActivePage] = useState('home');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-    // Check if user is logged in
+    // Check if user is logged in as student (redirect munshi to munshi dashboard)
     useEffect(() => {
         const storedToken = localStorage.getItem('authToken');
         const storedUser = localStorage.getItem('authUser');
+        const storedRole = localStorage.getItem('authRole');
+
+        if (storedRole === 'munshi') {
+            window.location.href = '/munshi/dashboard';
+            return;
+        }
 
         if (storedToken && storedUser) {
             try {
@@ -713,11 +719,11 @@ function StudentDashboard() {
                 console.error('Error parsing stored user data:', e);
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('authUser');
-                window.location.href = '/';
+                localStorage.removeItem('authRole');
+                window.location.href = '/login';
             }
         } else {
-            // No stored session, redirect to login
-            window.location.href = '/';
+            window.location.href = '/login';
         }
 
         setInitialLoading(false);
@@ -726,10 +732,11 @@ function StudentDashboard() {
     const handleLogout = () => {
         localStorage.removeItem('authToken');
         localStorage.removeItem('authUser');
+        localStorage.removeItem('authRole');
         sessionStorage.removeItem('authUser');
         setStudent(null);
         setToken(null);
-        window.location.href = '/';
+        window.location.href = '/login';
     };
 
     if (initialLoading) {

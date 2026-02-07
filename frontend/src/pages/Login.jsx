@@ -807,25 +807,35 @@ export default function Login() {
         return;
       }
 
-      // Store authentication data
+      // Store authentication data (role: student | munshi)
+      const role = data.role || "student";
+      const user = data.student || data.munshi;
       const authData = {
         isAuthenticated: true,
         token: data.token,
-        student: data.student,
+        role,
+        student: data.student || null,
+        munshi: data.munshi || null,
+        user,
         loginTime: new Date().toISOString(),
       };
 
       localStorage.setItem("authToken", data.token);
+      localStorage.setItem("authRole", role);
       localStorage.setItem("authUser", JSON.stringify(authData));
       sessionStorage.setItem("authUser", JSON.stringify(authData));
       window.currentUser = authData;
 
       setLoading(false);
 
-      alert(
-        `Login successful! Welcome ${data.student.name}\n\nRedirecting to dashboard...`,
-      );
-      window.location.href = "/student/dashboard";
+      const name = user?.name || "User";
+      alert(`Login successful! Welcome ${name}\n\nRedirecting to dashboard...`);
+
+      if (role === "munshi") {
+        window.location.href = "/munshi/dashboard";
+      } else {
+        window.location.href = "/student/dashboard";
+      }
     } catch (error) {
       console.error("Login error:", error);
       setError("Server error. Please try again later.");

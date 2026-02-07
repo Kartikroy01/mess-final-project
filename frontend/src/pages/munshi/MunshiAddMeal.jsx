@@ -11,7 +11,7 @@ const AddMealPage = ({ onAddMeal }) => {
   });
   const [notification, setNotification] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.price || !formData.mealType) {
       setNotification({ type: 'error', message: 'Please fill all required fields' });
@@ -21,15 +21,19 @@ const AddMealPage = ({ onAddMeal }) => {
     const newMeal = {
       id: Date.now(),
       name: formData.name,
-      price: parseInt(formData.price),
+      price: parseInt(formData.price, 10),
       image: formData.image || `https://placehold.co/300x200/cccccc/FFF?text=${formData.name.replace(' ', '+')}`,
       category: formData.mealType,
     };
 
-    onAddMeal(formData.mealType, newMeal);
-    setNotification({ type: 'success', message: 'Meal added successfully!' });
-    setFormData({ name: '', price: '', mealType: 'breakfast', image: '' });
-    setTimeout(() => setNotification(null), 3000);
+    try {
+      await onAddMeal(formData.mealType, newMeal);
+      setNotification({ type: 'success', message: 'Meal added successfully!' });
+      setFormData({ name: '', price: '', mealType: 'breakfast', image: '' });
+      setTimeout(() => setNotification(null), 3000);
+    } catch (err) {
+      setNotification({ type: 'error', message: err.message || 'Failed to add meal. Please try again.' });
+    }
   };
 
   return (

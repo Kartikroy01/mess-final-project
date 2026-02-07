@@ -17,6 +17,10 @@ const menuSchema = new mongoose.Schema(
           type: Number,
           default: 0,
         },
+        image: {
+          type: String,
+          default: '',
+        },
         isAvailable: {
           type: Boolean,
           default: true,

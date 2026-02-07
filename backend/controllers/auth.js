@@ -230,15 +230,24 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const Student = require('../models/Student');
+const Munshi = require('../models/Munshi');
 const Bill = require('../models/Bill');
 const MealHistory = require('../models/MealHistory');
 const { sendPasswordResetEmail, sendWelcomeEmail } = require('../utils/emailService');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
+const TOKEN_EXPIRY = '7d';
+
 const createToken = (student) => {
-  const secret = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
-  return jwt.sign({ id: student._id, role: 'student' }, secret, {
-    expiresIn: '7d',
-  });
+  return jwt.sign({ id: student._id, role: 'student' }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+};
+
+const createTokenForMunshi = (munshi) => {
+  return jwt.sign(
+    { id: munshi._id, role: 'munshi', hostel: munshi.hostel },
+    JWT_SECRET,
+    { expiresIn: TOKEN_EXPIRY }
+  );
 };
 
 const buildStudentResponse = async (student) => {
@@ -354,14 +363,11 @@ exports.registerStudent = async (req, res) => {
   }
 };
 
-// POST /api/auth/login (Email & Password)
-exports.loginStudent = async (req, res) => {
+// POST /api/auth/login (Email & Password) – unified: student or munshi
+exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    console.log('Login attempt for:', email);
-
-    // Validation
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -369,38 +375,94 @@ exports.loginStudent = async (req, res) => {
       });
     }
 
-    // Find student by email
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // 1. Try student first
+    const student = await Student.findOne({ email: normalizedEmail });
+    if (student) {
+      const valid = await student.comparePassword(password);
+      if (!valid) {
+        return res.status(401).json({ success: false, message: 'Invalid email or password' });
+      }
+      if (!student.isActive) {
+        return res.status(401).json({ success: false, message: 'Account is inactive' });
+      }
+      const token = createToken(student);
+      const studentPayload = await buildStudentResponse(student);
+      return res.json({
+        success: true,
+        message: 'Login successful',
+        token,
+        role: 'student',
+        student: studentPayload,
+      });
+    }
+
+    // 2. Try munshi
+    const munshi = await Munshi.findOne({ email: normalizedEmail });
+    if (munshi) {
+      const valid = await munshi.comparePassword(password);
+      if (!valid) {
+        return res.status(401).json({ success: false, message: 'Invalid email or password' });
+      }
+      if (!munshi.isActive) {
+        return res.status(401).json({ success: false, message: 'Account is inactive' });
+      }
+      const token = createTokenForMunshi(munshi);
+      const munshiPayload = {
+        id: munshi._id,
+        name: munshi.name,
+        email: munshi.email,
+        hostel: munshi.hostel,
+      };
+      return res.json({
+        success: true,
+        message: 'Login successful',
+        token,
+        role: 'munshi',
+        munshi: munshiPayload,
+      });
+    }
+
+    return res.status(401).json({ success: false, message: 'Invalid email or password' });
+  } catch (error) {
+    console.error('Login error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error during login',
+    });
+  }
+};
+
+// POST /api/auth/login (Email & Password) – student only (backward compatibility)
+exports.loginStudent = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide email and password',
+      });
+    }
+
     const student = await Student.findOne({ email: email.toLowerCase() });
-
-    console.log('Student found:', student ? 'Yes' : 'No');
-
     if (!student) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password',
-      });
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
-    // Check password using the comparePassword method
     const isPasswordValid = await student.comparePassword(password);
-
-    console.log('Password valid:', isPasswordValid);
-
     if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password',
-      });
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
-    // Generate token
     const token = createToken(student);
     const studentPayload = await buildStudentResponse(student);
-
     return res.json({
       success: true,
       message: 'Login successful',
       token,
+      role: 'student',
       student: studentPayload,
     });
   } catch (error) {

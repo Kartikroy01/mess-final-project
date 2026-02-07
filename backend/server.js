@@ -27,6 +27,7 @@ const messOffRoutes = require('./routes/messOff');
 const feedbackRoutes = require('./routes/feedback');
 const menuRoutes = require('./routes/menu');
 const billRoutes = require('./routes/bill');
+const munshiRoutes = require('./routes/munshi');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
@@ -35,6 +36,7 @@ app.use('/api/mess-off', messOffRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/bill', billRoutes);
+app.use('/api/munshi', munshiRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
