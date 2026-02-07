@@ -1,31 +1,12 @@
+
+// --- IMPORTS ---
 import React, { useState, useEffect } from 'react';
 import { Home, BarChart2, CalendarOff, LogOut, Menu, X, QrCode, Download, FileText, ThumbsUp, Meh, ThumbsDown, Angry, MessageSquare, UtensilsCrossed, Bell, User, ChevronRight, Activity, DollarSign, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 // --- API SERVICE LAYER ---
-// Support both CRA (process.env.REACT_APP_*) and Vite (import.meta.env.VITE_*)
-const API_BASE_URL =
-    (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE_URL) ||
-    (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) ||
-    'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 const apiService = {
-  login: async (credentials) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials)
-      });
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.message || 'Login failed');
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
-  },
   fetchStudentData: async (token) => {
     try {
       const response = await fetch(`${API_BASE_URL}/student/profile`, {
@@ -35,7 +16,8 @@ const apiService = {
         }
       });
       if (!response.ok) throw new Error('Failed to fetch student data');
-      return await response.json();
+      const data = await response.json();
+      return data.success ? data.student : data;
     } catch (error) {
       console.error('Error fetching student data:', error);
       throw error;
@@ -116,7 +98,6 @@ const apiService = {
       });
       if (!response.ok) throw new Error('Failed to fetch menu');
       const data = await response.json();
-      // Backend returns either plain object or { success, data }
       if (data && data.data) return data.data;
       return data;
     } catch (error) {
@@ -187,7 +168,7 @@ const StudentHome = ({ student, token }) => {
         const fetchData = async () => {
             try {
                 const meals = await apiService.fetchMealHistory(token);
-                setMealHistory(meals.slice(0, 5));
+                setMealHistory(Array.isArray(meals) ? meals.slice(0, 5) : []);
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
             } finally {
@@ -199,11 +180,10 @@ const StudentHome = ({ student, token }) => {
 
     const avgMealCost = student.mealCount > 0 ? (student.bill / student.mealCount).toFixed(2) : 0;
     
-    // Alert button (Fines & Extras) removed from stats array
     const stats = [
         { 
             label: 'Total Bill', 
-            value: `₹${student.bill}`, 
+            value: `₹${student.bill || 0}`, 
             icon: <DollarSign size={24} />, 
             gradient: 'from-blue-500 to-blue-600',
             bgGradient: 'from-blue-50 to-blue-100',
@@ -212,7 +192,7 @@ const StudentHome = ({ student, token }) => {
         },
         { 
             label: 'Total Meals', 
-            value: student.mealCount, 
+            value: student.mealCount || 0, 
             icon: <UtensilsCrossed size={24} />, 
             gradient: 'from-green-500 to-emerald-600',
             bgGradient: 'from-green-50 to-green-100',
@@ -343,7 +323,7 @@ const StudentFeedback = ({ token }) => {
         }
         setLoading(true);
         try {
-            await apiService.submitFeedback(token, { date: selectedDate, mealType: selectedMealType, mealName: selectedMealName, rating, comment });
+            await apiService.submitFeedback(token, { date: selectedDate, mealType: selectedMealType, mealItem: selectedMealName, rating, comment });
             setSubmitted(true);
             setTimeout(() => {
                 setSubmitted(false);
@@ -360,10 +340,10 @@ const StudentFeedback = ({ token }) => {
     };
 
     const ratingOptions = [
-        { value: 'Excellent', icon: <ThumbsUp size={32}/>, gradient: 'from-green-500 to-emerald-600', bg: 'from-green-50 to-emerald-50' },
-        { value: 'Good', icon: <Meh size={32}/>, gradient: 'from-blue-500 to-blue-600', bg: 'from-blue-50 to-blue-50' },
-        { value: 'Average', icon: <ThumbsDown size={32}/>, gradient: 'from-yellow-500 to-orange-500', bg: 'from-yellow-50 to-orange-50' },
-        { value: 'Poor', icon: <Angry size={32}/>, gradient: 'from-red-500 to-red-600', bg: 'from-red-50 to-red-50' },
+        { value: 'Good', icon: <ThumbsUp size={32}/>, gradient: 'from-green-500 to-emerald-600', bg: 'from-green-50 to-emerald-50' },
+        { value: 'Average', icon: <Meh size={32}/>, gradient: 'from-blue-500 to-blue-600', bg: 'from-blue-50 to-blue-50' },
+        { value: 'Bad', icon: <ThumbsDown size={32}/>, gradient: 'from-yellow-500 to-orange-500', bg: 'from-yellow-50 to-orange-50' },
+        { value: 'Very Bad', icon: <Angry size={32}/>, gradient: 'from-red-500 to-red-600', bg: 'from-red-50 to-red-50' },
     ];
     
     return (
@@ -454,9 +434,10 @@ const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) 
                 setLoading(true);
                 try {
                     const data = await apiService.fetchMealHistory(token, selectedMonth);
-                    setFilteredHistory(data);
+                    setFilteredHistory(Array.isArray(data) ? data : []);
                 } catch (error) {
                     console.error('Error fetching month data:', error);
+                    setFilteredHistory([]);
                 } finally {
                     setLoading(false);
                 }
@@ -499,12 +480,12 @@ const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) 
                             <p className="text-sm text-gray-600">Track your dining activity</p>
                         </div>
                     </div>
-                    {!isSummary && (
+                    {!isSummary && availableMonths.length > 0 && (
                         <div className="flex items-center gap-3">
                             <select value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))} className="px-4 py-2 border-2 border-gray-200 rounded-xl bg-white text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                 {availableMonths.map(month => <option key={month} value={month}>{monthNames[month]}</option>)}
                             </select>
-                            <button onClick={handleDownloadPdf} disabled={downloading || filteredHistory.length === 0} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2 rounded-xl hover:from-blue-700 hover:to-indigo-700 flex items-center gap-2 font-medium transition-all shadow-lg">
+                            <button onClick={handleDownloadPdf} disabled={downloading || filteredHistory.length === 0} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2 rounded-xl hover:from-blue-700 hover:to-indigo-700 flex items-center gap-2 font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
                                 {downloading ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div></> : <><Download size={18}/> Export PDF</>}
                             </button>
                         </div>
@@ -512,30 +493,42 @@ const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) 
                 </div>
             </div>
             <div className="overflow-x-auto">
-                <table className="w-full">
-                    <thead>
-                        <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
-                            <th className="text-left p-4 text-sm font-bold text-gray-700">Date</th>
-                            <th className="text-left p-4 text-sm font-bold text-gray-700">Meal Type</th>
-                            <th className="text-left p-4 text-sm font-bold text-gray-700">Items Ordered</th>
-                            <th className="text-right p-4 text-sm font-bold text-gray-700">Total Cost</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredHistory.length > 0 ? filteredHistory.map((meal, index) => { 
-                            const totalCost = meal.items.reduce((sum, item) => sum + (item.qty * item.price), 0);
-                            const style = getMealTypeStyle(meal.type);
-                            return (
-                                <tr key={index} className="border-b hover:bg-blue-50 transition-colors">
-                                    <td className="p-4 text-sm text-gray-700 font-medium">{meal.date}</td>
-                                    <td className="p-4"><span className={`px-3 py-1.5 text-xs font-bold rounded-full border-2 bg-gradient-to-r ${style.bg} ${style.text} ${style.border}`}>{meal.type}</span></td>
-                                    <td className="p-4 text-sm text-gray-600">{meal.items.map((item, idx) => <span key={idx} className="inline-block mr-2 mb-1">{item.name} <span className="text-gray-400 font-semibold">×{item.qty}</span>{idx < meal.items.length - 1 ? ',' : ''}</span>)}</td>
-                                    <td className="p-4 text-right text-sm font-bold text-gray-900">₹{totalCost}</td>
-                                </tr>
-                            ); 
-                        }) : <tr><td colSpan="4" className="text-center p-12"><FileText size={48} className="mx-auto mb-4 text-gray-300"/><p className="text-gray-500 font-medium">No meal records found</p></td></tr>}
-                    </tbody>
-                </table>
+                {loading ? (
+                    <div className="p-8"><LoadingSpinner message="Loading meals..." /></div>
+                ) : (
+                    <table className="w-full">
+                        <thead>
+                            <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
+                                <th className="text-left p-4 text-sm font-bold text-gray-700">Date</th>
+                                <th className="text-left p-4 text-sm font-bold text-gray-700">Meal Type</th>
+                                <th className="text-left p-4 text-sm font-bold text-gray-700">Items Ordered</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredHistory.length > 0 ? filteredHistory.map((meal, index) => { 
+                                const style = getMealTypeStyle(meal.type);
+                                return (
+                                    <tr key={index} className="border-b hover:bg-blue-50 transition-colors">
+                                        <td className="p-4 text-sm text-gray-700 font-medium">{meal.date}</td>
+                                        <td className="p-4"><span className={`px-3 py-1.5 text-xs font-bold rounded-full border-2 bg-gradient-to-r ${style.bg} ${style.text} ${style.border}`}>{meal.type}</span></td>
+                                        <td className="p-4 text-sm text-gray-600">
+                                            {meal.items && meal.items.length > 0 ? (
+                                                meal.items.map((item, idx) => (
+                                                    <span key={idx} className="inline-block mr-2 mb-1">
+                                                        {item.name} <span className="text-gray-400 font-semibold">×{item.qty}</span>
+                                                        {idx < meal.items.length - 1 ? ',' : ''}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="text-gray-400">No items</span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ); 
+                            }) : <tr><td colSpan="3" className="text-center p-12"><FileText size={48} className="mx-auto mb-4 text-gray-300"/><p className="text-gray-500 font-medium">No meal records found</p></td></tr>}
+                        </tbody>
+                    </table>
+                )}
             </div>
         </div>
     );
@@ -560,6 +553,15 @@ const MessOffPage = ({ studentName, token }) => {
         fetchRequests();
     }, [token]);
 
+    const refreshRequests = async () => {
+        try {
+            const data = await apiService.fetchMessOffRequests(token);
+            setRequests(data);
+        } catch (error) {
+            console.error('Error refreshing requests:', error);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center mb-6">
@@ -567,7 +569,7 @@ const MessOffPage = ({ studentName, token }) => {
                 <div><h1 className="text-3xl font-bold text-gray-800">Mess Off Application</h1><p className="text-gray-600 mt-1">Apply for leave and track your applications</p></div>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"> 
-                <MessOffForm token={token} onSubmitSuccess={() => { apiService.fetchMessOffRequests(token).then(data => setRequests(data)); }} /> 
+                <MessOffForm token={token} onSubmitSuccess={refreshRequests} /> 
                 <MessOffStatus requests={requests} loading={loading} /> 
             </div> 
         </div>
@@ -581,18 +583,26 @@ const MessOffForm = ({ token, onSubmitSuccess }) => {
     const [reason, setReason] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    const handleMealToggle = (meal) => { setMeals(prev => prev.includes(meal) ? prev.filter(m => m !== meal) : [...prev, meal]); };
+    const handleMealToggle = (meal) => { 
+        setMeals(prev => prev.includes(meal) ? prev.filter(m => m !== meal) : [...prev, meal]); 
+    };
 
     const handleSubmit = async () => {
-        if (!fromDate || !toDate || meals.length === 0) { alert('Please fill in all required fields'); return; }
+        if (!fromDate || !toDate || meals.length === 0) { 
+            alert('Please fill in all required fields'); 
+            return; 
+        }
         setSubmitting(true);
         try {
             await apiService.submitMessOff(token, { fromDate, toDate, meals, reason });
             alert('Mess off application submitted successfully!');
-            setFromDate(''); setToDate(''); setMeals([]); setReason('');
-            onSubmitSuccess();
+            setFromDate(''); 
+            setToDate(''); 
+            setMeals([]); 
+            setReason('');
+            if (onSubmitSuccess) onSubmitSuccess();
         } catch (error) {
-            alert('Failed to submit application.');
+            alert('Failed to submit application. Please try again.');
         } finally {
             setSubmitting(false);
         }
@@ -615,8 +625,10 @@ const MessOffForm = ({ token, onSubmitSuccess }) => {
                     ))}
                 </div> 
             </div> 
-            <div className="mb-6"><label className="block text-sm font-bold text-gray-700 mb-2">Reason (Optional)</label><textarea value={reason} onChange={(e) => setReason(e.target.value)} className="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all resize-none" rows="3"></textarea></div> 
-            <button onClick={handleSubmit} disabled={submitting} className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center">{submitting ? "Submitting..." : <>Submit Application<ChevronRight className="ml-2" size={20} /></>}</button>
+            <div className="mb-6"><label className="block text-sm font-bold text-gray-700 mb-2">Reason (Optional)</label><textarea value={reason} onChange={(e) => setReason(e.target.value)} className="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all resize-none" rows="3" placeholder="Enter your reason..."></textarea></div> 
+            <button onClick={handleSubmit} disabled={submitting} className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center transition-all hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                {submitting ? <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>Submitting...</> : <>Submit Application<ChevronRight className="ml-2" size={20} /></>}
+            </button>
         </div>
     );
 };
@@ -630,63 +642,105 @@ const MessOffStatus = ({ requests, loading }) => {
         };
         return styles[status] || { bg: 'from-gray-100 to-gray-200', text: 'text-gray-700', border: 'border-gray-200', icon: null };
     };
+
     return (
         <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100"> 
             <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center"><FileText className="mr-2 text-blue-600" size={22} />Application History</h2>
-            {loading ? <LoadingSpinner message="Loading..." /> : <div className="overflow-x-auto"><table className="w-full"><thead><tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200"><th className="text-left p-3 text-sm font-bold text-gray-700">From</th><th className="text-left p-3 text-sm font-bold text-gray-700">To</th><th className="text-left p-3 text-sm font-bold text-gray-700">Meals</th><th className="text-left p-3 text-sm font-bold text-gray-700">Status</th></tr></thead><tbody>{requests.length > 0 ? requests.map((req, index) => { const style = getStatusStyle(req.status); return (<tr key={index} className="border-b hover:bg-gray-50 transition-colors"><td className="p-3 text-sm text-gray-700">{req.from}</td><td className="p-3 text-sm text-gray-700">{req.to}</td><td className="p-3 text-sm text-gray-600">{req.meals.join(', ')}</td><td className="p-3"><span className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-full border-2 bg-gradient-to-r ${style.bg} ${style.text} ${style.border}`}>{style.icon}{req.status}</span></td></tr>);}) : <tr><td colSpan="4" className="text-center p-8"><FileText size={40} className="mx-auto mb-2 text-gray-300"/><p className="text-gray-500">No applications found</p></td></tr>}</tbody></table></div>}
+            {loading ? (
+                <LoadingSpinner message="Loading applications..." />
+            ) : (
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
+                                <th className="text-left p-3 text-sm font-bold text-gray-700">From</th>
+                                <th className="text-left p-3 text-sm font-bold text-gray-700">To</th>
+                                <th className="text-left p-3 text-sm font-bold text-gray-700">Meals</th>
+                                <th className="text-left p-3 text-sm font-bold text-gray-700">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {requests.length > 0 ? requests.map((req, index) => { 
+                                const style = getStatusStyle(req.status); 
+                                return (
+                                    <tr key={index} className="border-b hover:bg-gray-50 transition-colors">
+                                        <td className="p-3 text-sm text-gray-700">{req.fromDate || req.from}</td>
+                                        <td className="p-3 text-sm text-gray-700">{req.toDate || req.to}</td>
+                                        <td className="p-3 text-sm text-gray-600">{Array.isArray(req.meals) ? req.meals.join(', ') : req.meals}</td>
+                                        <td className="p-3">
+                                            <span className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-full border-2 bg-gradient-to-r ${style.bg} ${style.text} ${style.border}`}>
+                                                {style.icon}{req.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                );
+                            }) : (
+                                <tr>
+                                    <td colSpan="4" className="text-center p-8">
+                                        <FileText size={40} className="mx-auto mb-2 text-gray-300"/>
+                                        <p className="text-gray-500">No applications found</p>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
     );
 };
 
 // --- MAIN DASHBOARD COMPONENT ---
-// This component can work in two ways:
-// 1) If parent passes { student, token, onLogout } props, it will use those.
-// 2) If no props are passed (your current case), it will auto-login a demo rollNo via backend.
-function StudentDashboard({ student: initialStudent, token: initialToken, onLogout: externalLogout }) {
-    const [student, setStudent] = useState(initialStudent || null);
-    const [token, setToken] = useState(initialToken || null);
-    const [initialLoading, setInitialLoading] = useState(!initialStudent);
+function StudentDashboard() {
+    const [student, setStudent] = useState(null);
+    const [token, setToken] = useState(null);
+    const [initialLoading, setInitialLoading] = useState(true);
     const [error, setError] = useState('');
     const [activePage, setActivePage] = useState('home');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-    // Fallback: if no student was provided via props, log in using a roll number
+    // Check if user is logged in
     useEffect(() => {
-        if (initialStudent) return; // parent is controlling state
+        const storedToken = localStorage.getItem('authToken');
+        const storedUser = localStorage.getItem('authUser');
 
-        const doLogin = async () => {
+        if (storedToken && storedUser) {
             try {
-                // TODO: replace hardcoded rollNo with value from your real login flow
-                const res = await apiService.login({ rollNo: '22103084' });
-                setToken(res.token);
-                setStudent(res.student);
+                const userData = JSON.parse(storedUser);
+                setStudent(userData.student);
+                setToken(storedToken);
             } catch (e) {
-                console.error('Auto login failed:', e);
-                setError('Failed to load student data from server.');
-            } finally {
-                setInitialLoading(false);
+                console.error('Error parsing stored user data:', e);
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('authUser');
+                window.location.href = '/';
             }
-        };
+        } else {
+            // No stored session, redirect to login
+            window.location.href = '/';
+        }
 
-        doLogin();
-    }, [initialStudent]);
+        setInitialLoading(false);
+    }, []);
 
     const handleLogout = () => {
-        if (externalLogout) {
-            externalLogout();
-            return;
-        }
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authUser');
+        sessionStorage.removeItem('authUser');
         setStudent(null);
         setToken(null);
-        // simple fallback: reload to clear state
-        window.location.reload();
+        window.location.href = '/';
     };
 
     if (initialLoading) {
-        return <div className="flex items-center justify-center h-screen w-full bg-gray-100"><LoadingSpinner message="Loading..." /></div>;
+        return (
+            <div className="flex items-center justify-center h-screen w-full bg-gray-100">
+                <LoadingSpinner message="Loading dashboard..." />
+            </div>
+        );
     }
 
-    if (!student) {
+    if (!student || !token) {
         return (
             <div className="flex items-center justify-center h-screen w-full bg-gray-100">
                 <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 text-center max-w-md">
@@ -700,11 +754,16 @@ function StudentDashboard({ student: initialStudent, token: initialToken, onLogo
 
     const renderContent = () => {
         switch (activePage) {
-            case 'home': return <StudentHome student={student} token={token} />;
-            case 'reports': return <StudentReports mealHistory={student.mealHistory || []} studentName={student.name} token={token} />;
-            case 'messOff': return <MessOffPage studentName={student.name} token={token} />;
-            case 'feedback': return <StudentFeedback token={token} />;
-            default: return <StudentHome student={student} token={token} />;
+            case 'home': 
+                return <StudentHome student={student} token={token} />;
+            case 'reports': 
+                return <StudentReports mealHistory={student.mealHistory || []} studentName={student.name} token={token} />;
+            case 'messOff': 
+                return <MessOffPage studentName={student.name} token={token} />;
+            case 'feedback': 
+                return <StudentFeedback token={token} />;
+            default: 
+                return <StudentHome student={student} token={token} />;
         }
     };
 
@@ -713,12 +772,28 @@ function StudentDashboard({ student: initialStudent, token: initialToken, onLogo
             <aside className={`bg-white w-72 fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl flex flex-col`}>
                 <div className="p-6 border-b bg-gradient-to-r from-blue-600 to-indigo-700">
                     <div className="flex items-center justify-between text-white">
-                        <div className="flex items-center"><div className="bg-white bg-opacity-20 p-2 rounded-xl mr-3"><UtensilsCrossed size={28} /></div><div><h1 className="text-2xl font-bold">MessHub</h1><p className="text-xs text-blue-100">Student Portal</p></div></div>
-                        <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-2 rounded-lg transition-all"><X size={24} /></button>
+                        <div className="flex items-center">
+                            <div className="bg-white bg-opacity-20 p-2 rounded-xl mr-3">
+                                <UtensilsCrossed size={28} />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold">MessHub</h1>
+                                <p className="text-xs text-blue-100">Student Portal</p>
+                            </div>
+                        </div>
+                        <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-2 rounded-lg transition-all">
+                            <X size={24} />
+                        </button>
                     </div>
                 </div>
                 <div className="p-6 border-b bg-gradient-to-br from-gray-50 to-white">
-                    <div className="flex items-center"><img src={student.photo} alt={student.name} className="w-16 h-16 rounded-full border-4 border-blue-100 shadow-lg"/><div className="ml-4 flex-1"><h2 className="font-bold text-gray-800 text-lg">{student.name}</h2><p className="text-sm text-gray-500">{student.rollNo}</p></div></div>
+                    <div className="flex items-center">
+                        <img src={student.photo} alt={student.name} className="w-16 h-16 rounded-full border-4 border-blue-100 shadow-lg"/>
+                        <div className="ml-4 flex-1">
+                            <h2 className="font-bold text-gray-800 text-lg">{student.name}</h2>
+                            <p className="text-sm text-gray-500">{student.rollNo}</p>
+                        </div>
+                    </div>
                 </div>
                 <nav className="flex-1 p-4 overflow-y-auto">
                     <ul className="space-y-1">
@@ -728,25 +803,40 @@ function StudentDashboard({ student: initialStudent, token: initialToken, onLogo
                         <NavItem icon={<MessageSquare size={20} />} text="Feedback" active={activePage === 'feedback'} onClick={() => { setActivePage('feedback'); setIsSidebarOpen(false); }} />
                     </ul>
                 </nav>
-                <div className="p-4 border-t bg-gray-50"><button onClick={handleLogout} className="w-full flex items-center justify-center px-4 py-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-semibold shadow-sm"><LogOut size={20} className="mr-2" />Logout</button></div>
+                <div className="p-4 border-t bg-gray-50">
+                    <button onClick={handleLogout} className="w-full flex items-center justify-center px-4 py-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-semibold shadow-sm">
+                        <LogOut size={20} className="mr-2" />Logout
+                    </button>
+                </div>
             </aside>
             {isSidebarOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
             <div className="flex-1 flex flex-col overflow-hidden">
                 <header className="bg-white shadow-md border-b z-30">
                     <div className="flex items-center justify-between p-4">
-                        <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 hover:bg-gray-100 rounded-xl"><Menu size={24} className="text-gray-700" /></button>
-                        <div className="hidden md:block"><h1 className="text-xl font-bold text-gray-800 uppercase tracking-wide">{activePage}</h1></div>
+                        <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 hover:bg-gray-100 rounded-xl">
+                            <Menu size={24} className="text-gray-700" />
+                        </button>
+                        <div className="hidden md:block">
+                            <h1 className="text-xl font-bold text-gray-800 uppercase tracking-wide">{activePage}</h1>
+                        </div>
                         <div className="flex items-center gap-3">
-                            <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors relative"><Bell size={22} className="text-gray-600" /><span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span></button>
-                            <div className="hidden sm:flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-xl"><User size={18} className="text-gray-600" /><span className="text-sm font-medium text-gray-700">{student.name.split(' ')[0]}</span></div>
+                            <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors relative">
+                                <Bell size={22} className="text-gray-600" />
+                                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                            </button>
+                            <div className="hidden sm:flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-xl">
+                                <User size={18} className="text-gray-600" />
+                                <span className="text-sm font-medium text-gray-700">{student.name.split(' ')[0]}</span>
+                            </div>
                         </div>
                     </div>
                 </header>
-                <main className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100"><div className="p-4 md:p-8">{renderContent()}</div></main>
+                <main className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100">
+                    <div className="p-4 md:p-8">{renderContent()}</div>
+                </main>
             </div>
         </div>
     );
 }
 
-// --- EXPORT ---
 export default StudentDashboard;
