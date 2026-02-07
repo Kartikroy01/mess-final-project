@@ -1,99 +1,68 @@
-import React, { useState } from "react";
+// import React, { useState, useEffect } from 'react';
+// import { CalendarOff, Clock, CheckCircle, XCircle, ChevronRight } from 'lucide-react';
+// import { apiService } from './mockStudentData';
 
-export default function MessOff() {
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-  const [mealType, setMealType] = useState("Breakfast");
-  const [applications, setApplications] = useState([]);
+// export const MessOff = ({ token }) => {
+//     const [requests, setRequests] = useState([]);
+//     const [loading, setLoading] = useState(true);
+//     const [form, setForm] = useState({ from: '', to: '', meals: [] });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const newApplication = { fromDate, toDate, mealType, status: "Pending" };
-    setApplications([...applications, newApplication]);
-    setFromDate("");
-    setToDate("");
-    setMealType("Breakfast");
-    alert("Mess off request submitted to Munshi!");
-  };
+//     useEffect(() => {
+//         apiService.fetchMessOffRequests(token).then(data => {
+//             setRequests(data);
+//             setLoading(false);
+//         });
+//     }, [token]);
 
-  return (
-    <div>
-      <h1 className="text-2xl font-bold text-sky-700 mb-6">Apply for Mess Off</h1>
+//     const handleToggleMeal = (meal) => {
+//         setForm(prev => ({
+//             ...prev,
+//             meals: prev.meals.includes(meal) ? prev.meals.filter(m => m !== meal) : [...prev.meals, meal]
+//         }));
+//     };
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-md p-6 rounded-2xl space-y-4 max-w-lg"
-      >
-        <div>
-          <label className="block text-gray-700 mb-1">From Date</label>
-          <input
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-lg p-2"
-          />
-        </div>
-        <div>
-          <label className="block text-gray-700 mb-1">To Date</label>
-          <input
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-lg p-2"
-          />
-        </div>
-        <div>
-          <label className="block text-gray-700 mb-1">Meal Type</label>
-          <select
-            value={mealType}
-            onChange={(e) => setMealType(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-2"
-          >
-            <option>Breakfast</option>
-            <option>Lunch</option>
-            <option>Dinner</option>
-          </select>
-        </div>
-        <button
-          type="submit"
-          className="bg-sky-700 text-white px-4 py-2 rounded-lg hover:bg-sky-600"
-        >
-          Submit Request
-        </button>
-      </form>
+//     const handleSubmit = async () => {
+//         if (!form.from || !form.to || form.meals.length === 0) return alert("Fill all fields");
+//         await apiService.submitMessOff(token, form);
+//         alert("Application Submitted!");
+//     };
 
-      {/* View Applications */}
-      <div className="mt-10">
-        <h2 className="text-xl font-semibold text-sky-700 mb-4">
-          Your Past Applications
-        </h2>
-        {applications.length === 0 ? (
-          <p className="text-gray-600">No previous applications found.</p>
-        ) : (
-          <table className="w-full bg-white rounded-lg shadow-md">
-            <thead>
-              <tr className="bg-sky-700 text-white">
-                <th className="p-2">From</th>
-                <th className="p-2">To</th>
-                <th className="p-2">Meal</th>
-                <th className="p-2">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {applications.map((app, i) => (
-                <tr key={i} className="text-center border-b">
-                  <td className="p-2">{app.fromDate}</td>
-                  <td className="p-2">{app.toDate}</td>
-                  <td className="p-2">{app.mealType}</td>
-                  <td className="p-2 text-yellow-600 font-semibold">{app.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
-  );
-}
+//     return (
+//         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+//             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+//                 <h2 className="text-xl font-bold mb-6 flex items-center text-gray-800"><CalendarOff className="mr-2 text-blue-600" /> Apply Leave</h2>
+//                 <div className="space-y-4">
+//                     <div className="grid grid-cols-2 gap-4">
+//                         <input type="date" className="w-full p-3 border rounded-xl" onChange={e => setForm({...form, from: e.target.value})} />
+//                         <input type="date" className="w-full p-3 border rounded-xl" onChange={e => setForm({...form, to: e.target.value})} />
+//                     </div>
+//                     <div className="flex gap-2">
+//                         {['Breakfast', 'Lunch', 'Dinner'].map(m => (
+//                             <button key={m} onClick={() => handleToggleMeal(m)} className={`px-4 py-2 rounded-full border text-sm font-bold ${form.meals.includes(m) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-500 border-gray-200'}`}>{m}</button>
+//                         ))}
+//                     </div>
+//                     <button onClick={handleSubmit} className="w-full bg-blue-600 text-white p-4 rounded-xl font-bold flex items-center justify-center hover:bg-blue-700 transition-colors">Submit Request <ChevronRight size={18} className="ml-2"/></button>
+//                 </div>
+//             </div>
+
+//             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+//                 <h2 className="text-xl font-bold mb-6 text-gray-800">History</h2>
+//                 <div className="space-y-4">
+//                     {requests.map((r, i) => (
+//                         <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+//                             <div>
+//                                 <p className="text-sm font-bold text-gray-700">{r.from} to {r.to}</p>
+//                                 <p className="text-xs text-gray-400">{r.meals.join(', ')}</p>
+//                             </div>
+//                             <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${r.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+//                                 {r.status === 'Approved' ? <CheckCircle size={12}/> : <Clock size={12}/>} {r.status}
+//                             </span>
+//                         </div>
+//                     ))}
+//                 </div>
+//             </div>
+//         </div>
+//     );
+// };
+
+// export default MessOff;

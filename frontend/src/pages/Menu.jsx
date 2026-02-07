@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 // Data from the image for the 7-day menu
 const weeklyMenu = [
@@ -101,12 +101,33 @@ const extraItems = [
   },
   {
     name: "Dinner",
-    items: ["MILK PACKET", "CURD PACKET", "HOT MILK", "OMELETTE", "EG G BHURJI"],
+    items: [
+      "MILK PACKET",
+      "CURD PACKET",
+      "HOT MILK",
+      "OMELETTE",
+      "EG G BHURJI",
+    ],
   },
 ];
 
+// Hostel list organized by type
+const hostelData = {
+  boys: ["MBH", "BH-1", "BH-2", "BH-3", "BH-4", "BH-5", "BH-6", "BH-7"],
+  girls: ["GH-1", "GH-2", "MGH-1", "MGH-2"],
+};
+
 export default function Menu() {
-  // Helper function to render meal lists (e.g., Breakfast, Lunch... inside day cards)
+  const [hostelType, setHostelType] = useState("boys");
+  const [selectedHostel, setSelectedHostel] = useState(hostelData.boys[0]);
+
+  // Handle hostel type change
+  const handleHostelTypeChange = (type) => {
+    setHostelType(type);
+    setSelectedHostel(hostelData[type][0]); // Auto-select first hostel of that type
+  };
+
+  // Helper function to render meal lists
   const renderMealList = (title, items) => (
     <div className="mt-4 first:mt-0">
       <h3 className="text-lg font-semibold text-sky-800 uppercase tracking-wide border-b border-gray-200 pb-1">
@@ -122,7 +143,7 @@ export default function Menu() {
     </div>
   );
 
-  // Helper function to render simple item cards (for Daily and Extra items)
+  // Helper function to render simple item cards
   const renderItemCard = (meal) => (
     <div
       key={meal.name}
@@ -142,10 +163,65 @@ export default function Menu() {
   );
 
   return (
-    <div className="p-8 max-w-7xl mx-auto bg-sky-50">
-      <h1 className="text-4xl font-bold text-center text-sky-800 mb-8">
+    <div className="p-8 max-w-7xl mx-auto bg-sky-50 min-h-screen">
+      <h1 className="text-4xl font-bold text-center text-sky-800 mb-4">
         Weekly Mess Menu
       </h1>
+
+      {/* Hostel Type Selector - Boys/Girls */}
+      <div className="mb-6">
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={() => handleHostelTypeChange("boys")}
+            className={`px-12 py-4 text-xl font-bold rounded-xl transition-all ${
+              hostelType === "boys"
+                ? "bg-blue-600 text-white shadow-xl scale-105"
+                : "bg-white text-blue-600 border-2 border-blue-300 hover:border-blue-600 hover:shadow-lg"
+            }`}
+          >
+            Boys Hostel
+          </button>
+          <button
+            onClick={() => handleHostelTypeChange("girls")}
+            className={`px-12 py-4 text-xl font-bold rounded-xl transition-all ${
+              hostelType === "girls"
+                ? "bg-pink-600 text-white shadow-xl scale-105"
+                : "bg-white text-pink-600 border-2 border-pink-300 hover:border-pink-600 hover:shadow-lg"
+            }`}
+          >
+            Girls Hostel
+          </button>
+        </div>
+      </div>
+
+      {/* Hostel Selector */}
+      <div className="mb-8">
+        <label className="block text-lg font-semibold text-sky-800 mb-4 text-center">
+          Select Your Hostel
+        </label>
+        <div className="flex flex-wrap justify-center gap-4">
+          {hostelData[hostelType].map((hostel) => (
+            <button
+              key={hostel}
+              onClick={() => setSelectedHostel(hostel)}
+              className={`px-8 py-3 text-lg font-semibold rounded-lg transition-all ${
+                selectedHostel === hostel
+                  ? "bg-sky-700 text-white shadow-lg scale-105"
+                  : "bg-white text-sky-700 border-2 border-sky-300 hover:border-sky-600 hover:shadow-md"
+              }`}
+            >
+              {hostel}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Selected Hostel Display */}
+      <div className="text-center mb-8">
+        <span className="inline-block bg-sky-700 text-white px-6 py-2 rounded-full text-xl font-bold">
+          {selectedHostel} Menu
+        </span>
+      </div>
 
       {/* Weekly Menu Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">

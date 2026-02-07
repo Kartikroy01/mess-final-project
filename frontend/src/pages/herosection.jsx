@@ -65,15 +65,13 @@ export default function HeroSection() {
             }`}
           >
             <div className="inline-block">
-              <span className="px-4 py-2 bg-sky-500/20 backdrop-blur-sm border border-sky-400/30 rounded-full text-sky-200 text-sm font-medium">
-                🍽️ Next Generation Mess Management
-              </span>
+              
             </div>
 
             <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white leading-tight">
-              Smart
+              Wellcome to 
               <span className="block bg-gradient-to-r from-sky-300 via-blue-300 to-indigo-300 bg-clip-text text-transparent">
-                Hostel Mess
+                NITJ MESS
               </span>
             </h1>
 
@@ -83,7 +81,7 @@ export default function HeroSection() {
             </p>
 
             <div className="flex flex-wrap gap-4 pt-4">
-              <button className="px-8 py-4 bg-white text-blue-900 rounded-lg font-semibold text-lg hover:bg-sky-50 transform hover:scale-105 transition-all duration-200 shadow-xl hover:shadow-2xl">
+              <button className="px-8 py-4  bg-white text-blue-900 rounded-lg font-semibold text-lg hover:bg-sky-50 transform hover:scale-105 transition-all duration-200 shadow-xl hover:shadow-2xl">
                 Get Started
               </button>
               <button className="px-8 py-4 bg-transparent border-2 border-white/30 text-white rounded-lg font-semibold text-lg hover:bg-white/10 backdrop-blur-sm transform hover:scale-105 transition-all duration-200">
@@ -94,11 +92,11 @@ export default function HeroSection() {
             {/* Stats */}
             <div className="flex gap-8 pt-8">
               <div className="text-center">
-                <div className="text-3xl font-bold text-white">500+</div>
+                <div className="text-3xl font-bold text-white">5000+</div>
                 <div className="text-sm text-sky-200">Students</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-white">50+</div>
+                <div className="text-3xl font-bold text-white">13+</div>
                 <div className="text-sm text-sky-200">Hostels</div>
               </div>
               <div className="text-center">

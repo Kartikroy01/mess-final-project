@@ -1,336 +1,752 @@
-import React, { useState } from 'react';
-import { Home, BarChart, CalendarOff, KeyRound, LogOut, Menu, X, QrCode, Download, FileText, ThumbsUp, Meh, ThumbsDown, Angry, MessageSquare, UtensilsCrossed } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Home, BarChart2, CalendarOff, LogOut, Menu, X, QrCode, Download, FileText, ThumbsUp, Meh, ThumbsDown, Angry, MessageSquare, UtensilsCrossed, Bell, User, ChevronRight, Activity, DollarSign, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
 
-// --- MOCK DATA ---
-// This data is used to simulate a logged-in student.
-// In a real app, you'd fetch this after login.
-const allStudents = [
-  {
-    rollNo: '22103084',
-    hostelNo: 'Hostel A',
-    name: 'Kartik Roy',
-    email: 'kartik.ro@example.com',
-    qrCode: '22103084HostelA',
-    photo: 'https://placehold.co/100x100/3B82F6/FFF?text=KR',
-    roomNo: '428',
-    bill: 2350,
-    fines: 150,
-    mealCount: 35,
-    mealHistory: [
-        { date: '2025-10-13', type: 'Breakfast', items: [{name: 'Paratha', qty: 2, price: 20}, {name: 'Curd', qty: 1, price: 10}] },
-        { date: '2025-10-12', type: 'Dinner', items: [{name: 'Roti', qty: 3, price: 5}, {name: 'Paneer Masala', qty: 1, price: 40}, {name: 'Rice', qty: 1, price: 15}] },
-        { date: '2025-10-12', type: 'Lunch', items: [{name: 'Roti', qty: 4, price: 5}, {name: 'Dal', qty: 1, price: 20}, {name: 'Rice', qty: 1, price: 15}, {name: 'Sabzi', qty: 1, price: 25}] },
-    ],
-  },
-  {
-    rollNo: '67890',
-    hostelNo: 'Hostel B',
-    name: 'Priya Verma',
-    email: 'priya.verma@example.com',
-    qrCode: '67890HostelB',
-    photo: 'https://placehold.co/100x100/EC4899/FFF?text=PV',
-    roomNo: '315',
-    bill: 2100,
-    fines: 0,
-    mealCount: 30,
-    mealHistory: [
-        { date: '2025-10-13', type: 'Breakfast', items: [{name: 'Idli', qty: 4, price: 10}, {name: 'Sambar', qty: 1, price: 20}] },
-        { date: '2025-10-12', type: 'Lunch', items: [{name: 'Roti', qty: 3, price: 5}, {name: 'Dal', qty: 1, price: 20}, {name: 'Rice', qty: 1, price: 15}] },
-    ],
-  }
-];
+// --- API SERVICE LAYER ---
+// Support both CRA (process.env.REACT_APP_*) and Vite (import.meta.env.VITE_*)
+const API_BASE_URL =
+    (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE_URL) ||
+    (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) ||
+    'http://localhost:5000/api';
 
-const mockMessOffRequests = [
-  { studentName: 'Kartik Roy', from: '2025-10-20', to: '2025-10-22', meals: ['Lunch', 'Dinner'], status: 'Approved' },
-  { studentName: 'Kartik Roy', from: '2025-11-01', to: '2025-11-03', meals: ['Breakfast', 'Lunch', 'Dinner'], status: 'Pending' },
-];
-
-const mockMenu = {
-  breakfast: [ { name: 'Poha' }, { name: 'Aloo Paratha' }, { name: 'Masala Dosa' } ],
-  lunch: [ { name: 'Rajma' }, { name: 'Paneer Butter Masala' } ],
-  snacks: [ { name: 'Chana Samosa' }, { name: 'Red Sauce Pasta' }, { name: 'Lassi' } ],
-  dinner: [ { name: 'Veg Biryani' }, { name: 'Gulab Jamun' }, { name: 'Kadhai Chicken' } ],
-};
-
-// --- STUDENT DASHBOARD SUB-COMPONENTS ---
-
-const NavItem = ({ icon, text, active, onClick }) => (
-    <li className="px-4">
-        <a href="#" onClick={(e) => { e.preventDefault(); onClick(); }} className={`flex items-center p-3 my-1 rounded-lg transition-colors ${active ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-blue-100'}`}>
-            {icon}
-            <span className="ml-3">{text}</span>
-        </a>
-    </li>
-);
-
-const StudentHome = ({ student }) => (
-    <>
-        <div className="bg-blue-600 text-white rounded-lg p-6 mb-8 shadow-lg">
-            <h1 className="text-3xl font-bold">Welcome, {student.name}!</h1>
-            <p>Roll No: {student.rollNo} | Hostel: {student.hostelNo} | Room: {student.roomNo}</p>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-                 <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Billing Details</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                        <div className="p-4 bg-blue-100 rounded-lg"><p className="text-sm text-blue-800">Total Bill</p><p className="text-3xl font-bold text-blue-900">₹{student.bill}</p></div>
-                        <div className="p-4 bg-red-100 rounded-lg"><p className="text-sm text-red-800">Fines / Extras</p><p className="text-3xl font-bold text-red-900">₹{student.fines}</p></div>
-                        <div className="p-4 bg-green-100 rounded-lg"><p className="text-sm text-green-800">Total Meals</p><p className="text-3xl font-bold text-green-900">{student.mealCount}</p></div>
-                    </div>
-                </div>
-                <StudentReports mealHistory={student.mealHistory.slice(0, 5)} studentName={student.name} isSummary={true} />
-            </div>
-             <div className="space-y-6">
-                <div className="bg-white p-6 rounded-lg shadow-md text-center">
-                     <h2 className="text-xl font-bold text-gray-800 mb-4">Mess QR Code</h2>
-                     <div className="flex justify-center"><div className="w-48 h-48 bg-gray-200 flex items-center justify-center rounded-lg"><QrCode size={128} className="text-gray-600"/></div></div>
-                     <p className="mt-2 text-sm text-gray-500">{student.qrCode}</p>
-                </div>
-            </div>
-        </div>
-    </>
-);
-
-const StudentFeedback = () => { 
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
-    const [selectedMealType, setSelectedMealType] = useState('');
-    const [selectedMealName, setSelectedMealName] = useState('');
-    const [rating, setRating] = useState('');
-    const [comment, setComment] = useState('');
-    const mealItems = selectedMealType ? mockMenu[selectedMealType] || [] : [];
-    // Replaced alert with a simple console log
-    const handleSubmit = () => { if (!selectedDate || !selectedMealType || !rating) { console.error("Please select date, meal type, and provide a rating."); return; } console.log("Feedback submitted successfully!"); };
-    return (
-        <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">Submit Feedback</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div><label className="block text-sm font-medium text-gray-700 mb-1">Date</label><input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-full p-2 border rounded-md"/></div>
-                <div><label className="block text-sm font-medium text-gray-700 mb-1">Meal Type</label><select value={selectedMealType} onChange={(e) => { setSelectedMealType(e.target.value); setSelectedMealName(''); }} className="w-full p-2 border rounded-md"><option value="">Select Type</option><option value="breakfast">Breakfast</option><option value="lunch">Lunch</option><option value="snacks">Snacks</option><option value="dinner">Dinner</option></select></div>
-            </div>
-            {selectedMealType && (<div className="mb-4"><label className="block text-sm font-medium text-gray-700 mb-1">Meal Item (Optional)</label><select value={selectedMealName} onChange={(e) => setSelectedMealName(e.target.value)} className="w-full p-2 border rounded-md"><option value="">Select an item...</option>{mealItems.map(item => (<option key={item.name} value={item.name}>{item.name}</option>))}</select></div>)}
-            <div className="mb-4"><label className="block text-sm font-medium text-gray-700 mb-2">Your Rating</label><div className="flex justify-around"><button onClick={() => setRating('Good')} className={`flex flex-col items-center transition ${rating === 'Good' ? 'text-green-500 scale-110' : 'text-gray-600 hover:text-green-500'}`}><ThumbsUp size={32}/><span className="text-xs mt-1">Good</span></button><button onClick={() => setRating('Average')} className={`flex flex-col items-center transition ${rating === 'Average' ? 'text-yellow-500 scale-110' : 'text-gray-600 hover:text-yellow-500'}`}><Meh size={32}/><span className="text-xs mt-1">Average</span></button><button onClick={() => setRating('Bad')} className={`flex flex-col items-center transition ${rating === 'Bad' ? 'text-orange-500 scale-110' : 'text-gray-600 hover:text-orange-500'}`}><ThumbsDown size={32}/><span className="text-xs mt-1">Bad</span></button><button onClick={() => setRating('Very Bad')} className={`flex flex-col items-center transition ${rating === 'Very Bad' ? 'text-red-500 scale-110' : 'text-gray-600 hover:text-red-500'}`}><Angry size={32}/><span className="text-xs mt-1">Very Bad</span></button></div></div>
-            <textarea value={comment} onChange={(e) => setComment(e.target.value)} className="w-full p-2 border rounded-md" rows="3" placeholder="Write a detailed review..."></textarea>
-            <button onClick={handleSubmit} className="w-full mt-4 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors">Submit Feedback</button>
-        </div>
-    );
-};
-
-const StudentReports = ({ mealHistory, studentName, isSummary = false }) => {
-    const latestMonth = mealHistory.length > 0 ? new Date(mealHistory[0].date).getMonth() : new Date().getMonth();
-    const [selectedMonth, setSelectedMonth] = useState(latestMonth);
-    const availableMonths = [...new Set(mealHistory.map(meal => new Date(meal.date).getMonth()))];
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    const filteredHistory = isSummary ? mealHistory : mealHistory.filter(meal => new Date(meal.date).getMonth() === selectedMonth);
-    const handleDownloadPdf = () => { /* PDF generation logic here */ console.log("Downloading PDF..."); };
-
-    return (
-        <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="flex flex-wrap justify-between items-center mb-4 border-b pb-2">
-                 <h2 className="text-xl font-bold text-gray-800 mb-2 md:mb-0">{isSummary ? "Recent Meal History" : "Full Meal History"}</h2>
-                 {!isSummary && (
-                 <div className="flex items-center gap-2">
-                     <select value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))} className="p-2 border rounded-md bg-gray-50 text-sm">
-                         {availableMonths.map(month => (<option key={month} value={month}>{monthNames[month]}</option>))}
-                     </select>
-                     <button onClick={handleDownloadPdf} className="bg-blue-600 text-white px-3 py-2 text-sm rounded-md hover:bg-blue-700 flex items-center gap-1" disabled={filteredHistory.length === 0}>
-                         <Download size={16}/> Download
-                     </button>
-                 </div>
-                 )}
-            </div>
-            <div className="overflow-x-auto">
-               <table className="w-full text-left">
-                    <thead><tr className="bg-gray-100"><th className="p-3">Date</th><th className="p-3">Meal Type</th><th className="p-3">Items (Qty & Price)</th><th className="p-3">Total Cost</th></tr></thead>
-                    <tbody>{filteredHistory.length > 0 ? filteredHistory.map((meal, index) => { const totalCost = meal.items.reduce((sum, item) => sum + (item.qty * item.price), 0); return (<tr key={index} className="border-b hover:bg-blue-50"><td className="p-3">{meal.date}</td><td className="p-3"><span className="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-200 rounded-full">{meal.type}</span></td><td className="p-3 text-sm">{meal.items.map(item => `${item.name} (x${item.qty} @ ₹${item.price})`).join(', ')}</td><td className="p-3 font-semibold">₹{totalCost}</td></tr>); }) : (<tr><td colSpan="4" className="text-center p-8 text-gray-500"><FileText size={40} className="mx-auto mb-2"/>No meal history found.</td></tr>)}</tbody>
-                </table>
-            </div>
-        </div>
-    );
-};
-
-const ChangePassword = () => ( 
-    <div className="max-w-md mx-auto bg-white rounded-xl shadow-md p-8"> 
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Change Your Password</h2> 
-        <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="currentPassword">Current Password</label>
-            <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="currentPassword" type="password" placeholder="********"/>
-        </div> 
-        <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newPassword">New Password</label>
-            <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="newPassword" type="password" placeholder="********"/>
-        </div> 
-        <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="confirmPassword">Confirm New Password</label>
-            <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="confirmPassword" type="password" placeholder="********"/>
-        </div> 
-        <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Update Password</button> 
-    </div> 
-);
-
-const MessOffPage = ({ studentName }) => ( 
-    <div> 
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Mess Off Application</h1> 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8"> 
-            <MessOffForm /> 
-            <MessOffStatus requests={mockMessOffRequests.filter(req => req.studentName === studentName)} /> 
-        </div> 
-    </div> 
-);
-
-const MessOffForm = () => ( 
-    <div className="bg-white p-6 rounded-lg shadow-md"> 
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Apply for Leave</h2> 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"> 
-            <div><label className="block text-sm font-medium text-gray-700 mb-1">From Date</label><input type="date" className="w-full p-2 border rounded-md"/></div> 
-            <div><label className="block text-sm font-medium text-gray-700 mb-1">To Date</label><input type="date" className="w-full p-2 border rounded-md"/></div> 
-        </div> 
-        <div className="mb-4"> 
-            <label className="block text-sm font-medium text-gray-700 mb-2">Meals to Skip:</label> 
-            <div className="flex flex-wrap gap-4"> 
-                <label className="flex items-center"><input type="checkbox" className="h-4 w-4 text-blue-600 border-gray-300 rounded mr-2"/>Breakfast</label> 
-                <label className="flex items-center"><input type="checkbox" className="h-4 w-4 text-blue-600 border-gray-300 rounded mr-2"/>Lunch</label> 
-                <label className="flex items-center"><input type="checkbox" className="h-4 w-4 text-blue-600 border-gray-300 rounded mr-2"/>Dinner</label> 
-            </div> 
-        </div> 
-        <div className="mb-4"><label className="block text-sm font-medium text-gray-700 mb-1">Reason (Optional)</label><textarea className="w-full p-2 border rounded-md" rows="3" placeholder="e.g., Going home for vacation"></textarea></div> 
-        <button className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">Submit Application</button> 
-    </div> 
-);
-
-const MessOffStatus = ({ requests }) => ( 
-    <div className="bg-white p-6 rounded-lg shadow-md"> 
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Your Past Applications</h2> 
-        <div className="overflow-x-auto"> 
-            <table className="w-full text-left"> 
-                <thead><tr className="bg-gray-100"><th className="p-3">From</th><th className="p-3">To</th><th className="p-3">Meals</th><th className="p-3">Status</th></tr></thead> 
-                <tbody>
-                    {requests.length > 0 ? requests.map((req, index) => (
-                        <tr key={index} className="border-b">
-                            <td className="p-3">{req.from}</td>
-                            <td className="p-3">{req.to}</td>
-                            <td className="p-3">{req.meals.join(', ')}</td>
-                            <td className="p-3"><span className={`px-2 py-1 text-xs font-semibold rounded-full ${req.status === 'Approved' ? 'bg-green-200 text-green-800' : req.status === 'Pending' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800'}`}>{req.status}</span></td>
-                        </tr>
-                    )) : (
-                        <tr><td colSpan="4" className="text-center p-8 text-gray-500">No applications found.</td></tr>
-                    )}
-                </tbody> 
-            </table> 
-        </div> 
-    </div> 
-);
-
-
-// --- MAIN STUDENT DASHBOARD COMPONENT ---
-// This is now the main export.
-// It expects a 'student' object and an 'onLogout' function as props.
-function StudentDashboard({ student, onLogout }) {
-    const [activePage, setActivePage] = useState('home');
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-    if (!student) { 
-        return (
-            <div className="flex items-center justify-center h-screen w-full">
-                <p className="text-xl text-gray-500">Loading student data...</p>
-            </div>
-        ); 
+const apiService = {
+  login: async (credentials) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials)
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || 'Login failed');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
-
-    const renderContent = () => {
-        switch (activePage) {
-            case 'home': return <StudentHome student={student} />;
-            case 'reports': return <StudentReports mealHistory={student.mealHistory || []} studentName={student.name} />;
-            case 'messOff': return <MessOffPage studentName={student.name} />;
-            case 'changePassword': return <ChangePassword />;
-            case 'feedback': return <StudentFeedback />;
-            default: return <StudentHome student={student} />;
-        }
-    };
-
-    return (
-        <div className="flex h-full min-h-screen bg-gray-100 font-sans">
-            {/* Sidebar */}
-            <aside className={`bg-white text-gray-800 w-64 fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-lg md:shadow-none`}>
-                <div className="p-4 border-b flex items-center justify-between">
-                    <div className="text-2xl font-bold text-gray-800 flex items-center"><UtensilsCrossed className="inline-block mr-2 text-blue-600" /><span>Mess</span></div>
-                     <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-gray-600 hover:text-gray-900"><X size={24} /></button>
-                </div>
-                <div className="p-4 border-b">
-                    <img src={student.photo} alt={student.name} className="w-20 h-20 rounded-full mx-auto mb-2 border-4 border-blue-200"/>
-                    <h2 className="font-bold text-center">{student.name}</h2>
-                    <p className="text-sm text-gray-500 text-center">{student.email}</p>
-                </div>
-                <nav className="mt-4">
-                    <ul>
-                        <NavItem icon={<Home />} text="Dashboard" active={activePage === 'home'} onClick={() => { setActivePage('home'); setIsSidebarOpen(false); }} />
-                        <NavItem icon={<BarChart />} text="Reports" active={activePage === 'reports'} onClick={() => { setActivePage('reports'); setIsSidebarOpen(false); }} />
-                        <NavItem icon={<CalendarOff />} text="Mess Off" active={activePage === 'messOff'} onClick={() => { setActivePage('messOff'); setIsSidebarOpen(false); }} />
-                        <NavItem icon={<MessageSquare />} text="Feedback" active={activePage === 'feedback'} onClick={() => { setActivePage('feedback'); setIsSidebarOpen(false); }} />
-                        <NavItem icon={<KeyRound />} text="Change Password" active={activePage === 'changePassword'} onClick={() => { setActivePage('changePassword'); setIsSidebarOpen(false); }} />
-                        {/* Logout button is now always visible */}
-                        <NavItem icon={<LogOut />} text="Logout" onClick={onLogout} />
-                    </ul>
-                </nav>
-            </aside>
-
-            {/* Main Content */}
-            <div className="flex-1">
-                {/* Mobile Menu Button */}
-                 <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden p-2 m-2 bg-white rounded-md shadow-md fixed top-4 left-4 z-40"><Menu /></button>
-                
-                {/* Page Content */}
-                <div className="p-4 md:p-8 bg-blue-50/50 min-h-full pt-20 md:pt-8">
-                    {renderContent()}
-                </div>
-            </div>
-        </div>
-    );
+  },
+  fetchStudentData: async (token) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/student/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch student data');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching student data:', error);
+      throw error;
+    }
+  },
+  fetchMealHistory: async (token, month = null) => {
+    try {
+      const url = month !== null ? `${API_BASE_URL}/student/meals?month=${month}` : `${API_BASE_URL}/student/meals`;
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch meal history');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching meal history:', error);
+      throw error;
+    }
+  },
+  fetchMessOffRequests: async (token) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/mess-off/my-applications`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch mess off requests');
+      const data = await response.json();
+      return Array.isArray(data) ? data : data.data || [];
+    } catch (error) {
+      console.error('Error fetching mess off requests:', error);
+      throw error;
+    }
+  },
+  submitMessOff: async (token, data) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/mess-off/apply`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Failed to submit mess off application');
+      return await response.json();
+    } catch (error) {
+      console.error('Error submitting mess off:', error);
+      throw error;
+    }
+  },
+  submitFeedback: async (token, data) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/feedback/submit`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Failed to submit feedback');
+      return await response.json();
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      throw error;
+    }
+  },
+  fetchMenu: async (token) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/menu/current`, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch menu');
+      const data = await response.json();
+      // Backend returns either plain object or { success, data }
+      if (data && data.data) return data.data;
+      return data;
+    } catch (error) {
+      console.error('Error fetching menu:', error);
+      throw error;
+    }
+  },
+  downloadReport: async (token, month) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/student/report/download?month=${month}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to download report');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `meal-report-${month}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      throw error;
+    }
+  }
 };
 
-// To simulate how this component would be used, you could have a parent 'App' component
-// that handles login and then renders this dashboard.
+// --- NAVIGATION COMPONENT ---
+const NavItem = ({ icon, text, active, onClick, badge }) => (
+    <li>
+        <button 
+            onClick={onClick} 
+            className={`w-full flex items-center px-4 py-3.5 my-1 rounded-xl transition-all duration-300 group ${
+                active 
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/50 scale-105' 
+                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100'
+            }`}
+        >
+            <span className={`${active ? 'text-white' : 'text-gray-400 group-hover:text-blue-600'} transition-colors`}>
+                {icon}
+            </span>
+            <span className="ml-3 font-semibold text-sm">{text}</span>
+            {badge && <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">{badge}</span>}
+            {active && <ChevronRight className="ml-auto" size={18} />}
+        </button>
+    </li>
+);
 
-// We will make this the main App component and set a default student.
-export default function App() {
-    // In a real app, this would be null until login
-    // We set a default student ('Kartik Roy') to show the dashboard immediately.
-    const [loggedInStudent, setLoggedInStudent] = useState(allStudents[0]); // Default to Kartik Roy
+// --- LOADING COMPONENT ---
+const LoadingSpinner = ({ message = "Loading..." }) => (
+    <div className="flex flex-col items-center justify-center h-full py-12">
+        <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-indigo-600 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }}></div>
+        </div>
+        <p className="mt-4 text-gray-600 font-medium">{message}</p>
+    </div>
+);
 
-    // Simple login simulation (can still be used if user logs out)
-    const handleLogin = (rollNo) => {
-        const student = allStudents.find(s => s.rollNo === rollNo);
-        if (student) {
-            setLoggedInStudent(student);
-        } else {
-            console.error("Student not found");
+// --- DASHBOARD HOME ---
+const StudentHome = ({ student, token }) => {
+    const [mealHistory, setMealHistory] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const meals = await apiService.fetchMealHistory(token);
+                setMealHistory(meals.slice(0, 5));
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [token]);
+
+    const avgMealCost = student.mealCount > 0 ? (student.bill / student.mealCount).toFixed(2) : 0;
+    
+    // Alert button (Fines & Extras) removed from stats array
+    const stats = [
+        { 
+            label: 'Total Bill', 
+            value: `₹${student.bill}`, 
+            icon: <DollarSign size={24} />, 
+            gradient: 'from-blue-500 to-blue-600',
+            bgGradient: 'from-blue-50 to-blue-100',
+            change: '+12%',
+            changePositive: false
+        },
+        { 
+            label: 'Total Meals', 
+            value: student.mealCount, 
+            icon: <UtensilsCrossed size={24} />, 
+            gradient: 'from-green-500 to-emerald-600',
+            bgGradient: 'from-green-50 to-green-100',
+            change: '+5',
+            changePositive: true
+        },
+        { 
+            label: 'Avg per Meal', 
+            value: `₹${avgMealCost}`, 
+            icon: <Activity size={24} />, 
+            gradient: 'from-purple-500 to-purple-600',
+            bgGradient: 'from-purple-50 to-purple-100',
+            change: '-3%',
+            changePositive: true
+        }
+    ];
+
+    return (
+        <div className="space-y-8">
+            <div className="relative bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white rounded-3xl p-8 shadow-2xl overflow-hidden">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full -mr-48 -mt-48"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-white opacity-5 rounded-full -ml-32 -mb-32"></div>
+                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <div>
+                        <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight">
+                            Welcome back, {student.name.split(' ')[0]}! 👋
+                        </h1>
+                        <p className="text-blue-100 text-lg font-medium">
+                            Your mess management dashboard is ready
+                        </p>
+                    </div>
+                    <div className="mt-6 md:mt-0 bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 border border-white border-opacity-20">
+                        <div className="text-sm text-blue-100 mb-1">Student ID</div>
+                        <div className="text-3xl font-bold mb-2">{student.rollNo}</div>
+                        <div className="flex items-center text-sm text-blue-100">
+                            <Calendar size={14} className="mr-2" />
+                            {student.hostelNo} • Room {student.roomNo}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                {stats.map((stat, index) => (
+                    <div key={index} className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:-translate-y-1">
+                        <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgGradient} opacity-50`}></div>
+                        <div className="relative p-6">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
+                                    <div className="text-white">{stat.icon}</div>
+                                </div>
+                                <div className={`px-2 py-1 rounded-full text-xs font-bold ${stat.changePositive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                    {stat.change}
+                                </div>
+                            </div>
+                            <p className="text-sm font-semibold text-gray-600 mb-1">{stat.label}</p>
+                            <p className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</p>
+                            <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
+                                <div className={`h-full bg-gradient-to-r ${stat.gradient} rounded-full transition-all duration-500 group-hover:w-full`} style={{ width: '60%' }}></div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2">
+                    {loading ? (
+                        <div className="bg-white rounded-2xl shadow-lg p-6"><LoadingSpinner message="Loading meal history..." /></div>
+                    ) : (
+                        <StudentReports mealHistory={mealHistory} studentName={student.name} isSummary={true} token={token} />
+                    )}
+                </div>
+                <div className="space-y-6">
+                    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-6 border border-gray-200">
+                        <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                            <div className="p-2 bg-blue-100 rounded-lg mr-3"><QrCode className="text-blue-600" size={20} /></div>
+                            Your Mess QR Code
+                        </h3>
+                        <div className="flex justify-center mb-6">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-2xl blur-xl opacity-30"></div>
+                                <div className="relative w-52 h-52 bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center rounded-2xl border-4 border-white shadow-2xl">
+                                    <QrCode size={160} className="text-blue-600"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="text-center bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                            <p className="text-xs text-gray-500 mb-1 font-semibold">QR Code ID</p>
+                            <p className="text-sm font-mono font-bold text-gray-800 tracking-wider">{student.qrCode}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- FEEDBACK COMPONENT ---
+const StudentFeedback = ({ token }) => { 
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
+    const [selectedMealType, setSelectedMealType] = useState('');
+    const [selectedMealName, setSelectedMealName] = useState('');
+    const [rating, setRating] = useState('');
+    const [comment, setComment] = useState('');
+    const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [menu, setMenu] = useState({});
+    
+    useEffect(() => {
+        const fetchMenu = async () => {
+            try {
+                const menuData = await apiService.fetchMenu(token);
+                setMenu(menuData);
+            } catch (error) {
+                console.error('Error loading menu:', error);
+            }
+        };
+        fetchMenu();
+    }, [token]);
+
+    const mealItems = selectedMealType ? menu[selectedMealType] || [] : [];
+    
+    const handleSubmit = async () => { 
+        if (!selectedDate || !selectedMealType || !rating) { 
+            alert("Please select date, meal type, and provide a rating."); 
+            return; 
+        }
+        setLoading(true);
+        try {
+            await apiService.submitFeedback(token, { date: selectedDate, mealType: selectedMealType, mealName: selectedMealName, rating, comment });
+            setSubmitted(true);
+            setTimeout(() => {
+                setSubmitted(false);
+                setSelectedMealType('');
+                setSelectedMealName('');
+                setRating('');
+                setComment('');
+            }, 3000);
+        } catch (error) {
+            alert('Failed to submit feedback. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleLogout = () => {
-        setLoggedInStudent(null);
-        console.log("Logged out");
+    const ratingOptions = [
+        { value: 'Excellent', icon: <ThumbsUp size={32}/>, gradient: 'from-green-500 to-emerald-600', bg: 'from-green-50 to-emerald-50' },
+        { value: 'Good', icon: <Meh size={32}/>, gradient: 'from-blue-500 to-blue-600', bg: 'from-blue-50 to-blue-50' },
+        { value: 'Average', icon: <ThumbsDown size={32}/>, gradient: 'from-yellow-500 to-orange-500', bg: 'from-yellow-50 to-orange-50' },
+        { value: 'Poor', icon: <Angry size={32}/>, gradient: 'from-red-500 to-red-600', bg: 'from-red-50 to-red-50' },
+    ];
+    
+    return (
+        <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-10 border border-gray-100">
+                <div className="flex items-center mb-8">
+                    <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mr-4 shadow-lg"><MessageSquare className="text-white" size={28} /></div>
+                    <div>
+                        <h2 className="text-3xl font-bold text-gray-800">Submit Meal Feedback</h2>
+                        <p className="text-gray-600 mt-1">Help us improve your dining experience</p>
+                    </div>
+                </div>
+                {submitted ? (
+                    <div className="text-center py-16">
+                        <div className="relative inline-block mb-6">
+                            <div className="absolute inset-0 bg-green-400 rounded-full blur-2xl opacity-30 animate-pulse"></div>
+                            <div className="relative bg-gradient-to-br from-green-400 to-emerald-500 w-24 h-24 rounded-full flex items-center justify-center shadow-2xl"><CheckCircle className="text-white" size={48} /></div>
+                        </div>
+                        <h3 className="text-3xl font-bold text-gray-800 mb-3">Thank You!</h3>
+                        <p className="text-gray-600 text-lg">Your valuable feedback has been submitted successfully.</p>
+                    </div>
+                ) : (
+                    <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-3">Select Date</label>
+                                <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all"/>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-3">Meal Type</label>
+                                <select value={selectedMealType} onChange={(e) => { setSelectedMealType(e.target.value); setSelectedMealName(''); }} className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all">
+                                    <option value="">Select meal type</option>
+                                    <option value="breakfast">Breakfast</option>
+                                    <option value="lunch">Lunch</option>
+                                    <option value="snacks">Snacks</option>
+                                    <option value="dinner">Dinner</option>
+                                </select>
+                            </div>
+                        </div>
+                        {selectedMealType && mealItems.length > 0 && (
+                            <div className="mb-6">
+                                <label className="block text-sm font-bold text-gray-700 mb-3">Specific Item (Optional)</label>
+                                <select value={selectedMealName} onChange={(e) => setSelectedMealName(e.target.value)} className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all">
+                                    <option value="">Select an item...</option>
+                                    {mealItems.map(item => <option key={item.name} value={item.name}>{item.name}</option>)}
+                                </select>
+                            </div>
+                        )}
+                        <div className="mb-8">
+                            <label className="block text-sm font-bold text-gray-700 mb-4">Rate Your Experience</label>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {ratingOptions.map((option) => (
+                                    <button key={option.value} onClick={() => setRating(option.value)} className={`relative flex flex-col items-center p-6 rounded-2xl border-2 transition-all duration-300 ${rating === option.value ? `bg-gradient-to-br ${option.bg} border-transparent shadow-2xl scale-110 -translate-y-2` : `border-gray-200 hover:border-gray-300 hover:shadow-xl hover:scale-105 bg-white`}`}>
+                                        {rating === option.value && <div className={`absolute -top-2 -right-2 bg-gradient-to-br ${option.gradient} w-8 h-8 rounded-full flex items-center justify-center shadow-lg`}><CheckCircle className="text-white" size={18} /></div>}
+                                        <div className={`${rating === option.value ? `bg-gradient-to-br ${option.gradient}` : 'bg-gray-100'} p-4 rounded-xl mb-3 transition-all`}><div className={rating === option.value ? 'text-white' : 'text-gray-400'}>{option.icon}</div></div>
+                                        <span className={`text-sm font-bold ${rating === option.value ? 'text-gray-800' : 'text-gray-600'}`}>{option.value}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="mb-8">
+                            <label className="block text-sm font-bold text-gray-700 mb-3">Additional Comments</label>
+                            <textarea value={comment} onChange={(e) => setComment(e.target.value)} className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all resize-none" rows="5" placeholder="Share your experience..."></textarea>
+                        </div>
+                        <button onClick={handleSubmit} disabled={loading} className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold py-5 rounded-xl hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transition-all shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg">
+                            {loading ? <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>Submitting...</> : <>Submit Feedback<ChevronRight className="ml-2" size={20} /></>}
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// --- REPORTS COMPONENT ---
+const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) => {
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+    const [filteredHistory, setFilteredHistory] = useState(mealHistory);
+    const [loading, setLoading] = useState(false);
+    const [downloading, setDownloading] = useState(false);
+
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const availableMonths = [...new Set(mealHistory.map(meal => new Date(meal.date).getMonth()))];
+
+    useEffect(() => {
+        if (!isSummary) {
+            const fetchMonthData = async () => {
+                setLoading(true);
+                try {
+                    const data = await apiService.fetchMealHistory(token, selectedMonth);
+                    setFilteredHistory(data);
+                } catch (error) {
+                    console.error('Error fetching month data:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchMonthData();
+        } else {
+            setFilteredHistory(mealHistory);
+        }
+    }, [selectedMonth, isSummary, token, mealHistory]);
+    
+    const handleDownloadPdf = async () => { 
+        setDownloading(true);
+        try {
+            await apiService.downloadReport(token, selectedMonth);
+        } catch (error) {
+            alert('Failed to download report.');
+        } finally {
+            setDownloading(false);
+        }
     };
 
-    if (!loggedInStudent) {
-        // This is the login screen, shown after logout
+    const getMealTypeStyle = (type) => {
+        const styles = {
+            'Breakfast': { bg: 'from-yellow-100 to-orange-100', text: 'text-orange-700', border: 'border-orange-200' },
+            'Lunch': { bg: 'from-green-100 to-emerald-100', text: 'text-emerald-700', border: 'border-emerald-200' },
+            'Snacks': { bg: 'from-purple-100 to-pink-100', text: 'text-purple-700', border: 'border-purple-200' },
+            'Dinner': { bg: 'from-blue-100 to-indigo-100', text: 'text-blue-700', border: 'border-blue-200' },
+        };
+        return styles[type] || { bg: 'from-gray-100 to-gray-200', text: 'text-gray-700', border: 'border-gray-200' };
+    };
+
+    return (
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 border-b">
+                <div className="flex flex-wrap justify-between items-center">
+                    <div className="flex items-center mb-4 md:mb-0">
+                        <div className="p-2 bg-blue-600 rounded-xl mr-3"><BarChart2 className="text-white" size={24} /></div>
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-800">{isSummary ? "Recent Meal History" : "Detailed Meal Reports"}</h2>
+                            <p className="text-sm text-gray-600">Track your dining activity</p>
+                        </div>
+                    </div>
+                    {!isSummary && (
+                        <div className="flex items-center gap-3">
+                            <select value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))} className="px-4 py-2 border-2 border-gray-200 rounded-xl bg-white text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                {availableMonths.map(month => <option key={month} value={month}>{monthNames[month]}</option>)}
+                            </select>
+                            <button onClick={handleDownloadPdf} disabled={downloading || filteredHistory.length === 0} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2 rounded-xl hover:from-blue-700 hover:to-indigo-700 flex items-center gap-2 font-medium transition-all shadow-lg">
+                                {downloading ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div></> : <><Download size={18}/> Export PDF</>}
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+            <div className="overflow-x-auto">
+                <table className="w-full">
+                    <thead>
+                        <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
+                            <th className="text-left p-4 text-sm font-bold text-gray-700">Date</th>
+                            <th className="text-left p-4 text-sm font-bold text-gray-700">Meal Type</th>
+                            <th className="text-left p-4 text-sm font-bold text-gray-700">Items Ordered</th>
+                            <th className="text-right p-4 text-sm font-bold text-gray-700">Total Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredHistory.length > 0 ? filteredHistory.map((meal, index) => { 
+                            const totalCost = meal.items.reduce((sum, item) => sum + (item.qty * item.price), 0);
+                            const style = getMealTypeStyle(meal.type);
+                            return (
+                                <tr key={index} className="border-b hover:bg-blue-50 transition-colors">
+                                    <td className="p-4 text-sm text-gray-700 font-medium">{meal.date}</td>
+                                    <td className="p-4"><span className={`px-3 py-1.5 text-xs font-bold rounded-full border-2 bg-gradient-to-r ${style.bg} ${style.text} ${style.border}`}>{meal.type}</span></td>
+                                    <td className="p-4 text-sm text-gray-600">{meal.items.map((item, idx) => <span key={idx} className="inline-block mr-2 mb-1">{item.name} <span className="text-gray-400 font-semibold">×{item.qty}</span>{idx < meal.items.length - 1 ? ',' : ''}</span>)}</td>
+                                    <td className="p-4 text-right text-sm font-bold text-gray-900">₹{totalCost}</td>
+                                </tr>
+                            ); 
+                        }) : <tr><td colSpan="4" className="text-center p-12"><FileText size={48} className="mx-auto mb-4 text-gray-300"/><p className="text-gray-500 font-medium">No meal records found</p></td></tr>}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+// --- MESS OFF COMPONENTS ---
+const MessOffPage = ({ studentName, token }) => {
+    const [requests, setRequests] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchRequests = async () => {
+            try {
+                const data = await apiService.fetchMessOffRequests(token);
+                setRequests(data);
+            } catch (error) {
+                console.error('Error loading mess off requests:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchRequests();
+    }, [token]);
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center mb-6">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mr-4 shadow-lg"><CalendarOff className="text-white" size={28} /></div>
+                <div><h1 className="text-3xl font-bold text-gray-800">Mess Off Application</h1><p className="text-gray-600 mt-1">Apply for leave and track your applications</p></div>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"> 
+                <MessOffForm token={token} onSubmitSuccess={() => { apiService.fetchMessOffRequests(token).then(data => setRequests(data)); }} /> 
+                <MessOffStatus requests={requests} loading={loading} /> 
+            </div> 
+        </div>
+    );
+};
+
+const MessOffForm = ({ token, onSubmitSuccess }) => {
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
+    const [meals, setMeals] = useState([]);
+    const [reason, setReason] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+
+    const handleMealToggle = (meal) => { setMeals(prev => prev.includes(meal) ? prev.filter(m => m !== meal) : [...prev, meal]); };
+
+    const handleSubmit = async () => {
+        if (!fromDate || !toDate || meals.length === 0) { alert('Please fill in all required fields'); return; }
+        setSubmitting(true);
+        try {
+            await apiService.submitMessOff(token, { fromDate, toDate, meals, reason });
+            alert('Mess off application submitted successfully!');
+            setFromDate(''); setToDate(''); setMeals([]); setReason('');
+            onSubmitSuccess();
+        } catch (error) {
+            alert('Failed to submit application.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100"> 
+            <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center"><CalendarOff className="mr-2 text-blue-600" size={22} />Apply for Mess Leave</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"> 
+                <div><label className="block text-sm font-bold text-gray-700 mb-2">From Date</label><input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all"/></div> 
+                <div><label className="block text-sm font-bold text-gray-700 mb-2">To Date</label><input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all"/></div> 
+            </div> 
+            <div className="mb-6"> 
+                <label className="block text-sm font-bold text-gray-700 mb-3">Select Meals to Skip</label> 
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3"> 
+                    {['Breakfast', 'Lunch', 'Dinner'].map(meal => (
+                        <label key={meal} className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${meals.includes(meal) ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}>
+                            <input type="checkbox" checked={meals.includes(meal)} onChange={() => handleMealToggle(meal)} className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 mr-3"/><span className="font-semibold text-gray-700">{meal}</span>
+                        </label>
+                    ))}
+                </div> 
+            </div> 
+            <div className="mb-6"><label className="block text-sm font-bold text-gray-700 mb-2">Reason (Optional)</label><textarea value={reason} onChange={(e) => setReason(e.target.value)} className="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all resize-none" rows="3"></textarea></div> 
+            <button onClick={handleSubmit} disabled={submitting} className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center">{submitting ? "Submitting..." : <>Submit Application<ChevronRight className="ml-2" size={20} /></>}</button>
+        </div>
+    );
+};
+
+const MessOffStatus = ({ requests, loading }) => {
+    const getStatusStyle = (status) => {
+        const styles = {
+            'Approved': { bg: 'from-green-100 to-emerald-100', text: 'text-green-700', border: 'border-green-200', icon: <CheckCircle size={16} /> },
+            'Pending': { bg: 'from-yellow-100 to-orange-100', text: 'text-yellow-700', border: 'border-yellow-200', icon: <Clock size={16} /> },
+            'Rejected': { bg: 'from-red-100 to-red-100', text: 'text-red-700', border: 'border-red-200', icon: <XCircle size={16} /> },
+        };
+        return styles[status] || { bg: 'from-gray-100 to-gray-200', text: 'text-gray-700', border: 'border-gray-200', icon: null };
+    };
+    return (
+        <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100"> 
+            <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center"><FileText className="mr-2 text-blue-600" size={22} />Application History</h2>
+            {loading ? <LoadingSpinner message="Loading..." /> : <div className="overflow-x-auto"><table className="w-full"><thead><tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200"><th className="text-left p-3 text-sm font-bold text-gray-700">From</th><th className="text-left p-3 text-sm font-bold text-gray-700">To</th><th className="text-left p-3 text-sm font-bold text-gray-700">Meals</th><th className="text-left p-3 text-sm font-bold text-gray-700">Status</th></tr></thead><tbody>{requests.length > 0 ? requests.map((req, index) => { const style = getStatusStyle(req.status); return (<tr key={index} className="border-b hover:bg-gray-50 transition-colors"><td className="p-3 text-sm text-gray-700">{req.from}</td><td className="p-3 text-sm text-gray-700">{req.to}</td><td className="p-3 text-sm text-gray-600">{req.meals.join(', ')}</td><td className="p-3"><span className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-full border-2 bg-gradient-to-r ${style.bg} ${style.text} ${style.border}`}>{style.icon}{req.status}</span></td></tr>);}) : <tr><td colSpan="4" className="text-center p-8"><FileText size={40} className="mx-auto mb-2 text-gray-300"/><p className="text-gray-500">No applications found</p></td></tr>}</tbody></table></div>}
+        </div>
+    );
+};
+
+// --- MAIN DASHBOARD COMPONENT ---
+// This component can work in two ways:
+// 1) If parent passes { student, token, onLogout } props, it will use those.
+// 2) If no props are passed (your current case), it will auto-login a demo rollNo via backend.
+function StudentDashboard({ student: initialStudent, token: initialToken, onLogout: externalLogout }) {
+    const [student, setStudent] = useState(initialStudent || null);
+    const [token, setToken] = useState(initialToken || null);
+    const [initialLoading, setInitialLoading] = useState(!initialStudent);
+    const [error, setError] = useState('');
+    const [activePage, setActivePage] = useState('home');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    // Fallback: if no student was provided via props, log in using a roll number
+    useEffect(() => {
+        if (initialStudent) return; // parent is controlling state
+
+        const doLogin = async () => {
+            try {
+                // TODO: replace hardcoded rollNo with value from your real login flow
+                const res = await apiService.login({ rollNo: '22103084' });
+                setToken(res.token);
+                setStudent(res.student);
+            } catch (e) {
+                console.error('Auto login failed:', e);
+                setError('Failed to load student data from server.');
+            } finally {
+                setInitialLoading(false);
+            }
+        };
+
+        doLogin();
+    }, [initialStudent]);
+
+    const handleLogout = () => {
+        if (externalLogout) {
+            externalLogout();
+            return;
+        }
+        setStudent(null);
+        setToken(null);
+        // simple fallback: reload to clear state
+        window.location.reload();
+    };
+
+    if (initialLoading) {
+        return <div className="flex items-center justify-center h-screen w-full bg-gray-100"><LoadingSpinner message="Loading..." /></div>;
+    }
+
+    if (!student) {
         return (
-            <div className="flex items-center justify-center h-screen bg-gray-200">
-                <div className="bg-white p-8 rounded-lg shadow-lg">
-                    <h1 className="text-2xl font-bold mb-4">Student Login</h1>
-                    <button onClick={() => handleLogin('22103084')} className="w-full bg-blue-600 text-white p-2 rounded mb-2">Login as Kartik Roy</button>
-                    <button onClick={() => handleLogin('67890')} className="w-full bg-pink-600 text-white p-2 rounded">Login as Priya Verma</button>
+            <div className="flex items-center justify-center h-screen w-full bg-gray-100">
+                <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 text-center max-w-md">
+                    <p className="text-red-600 font-semibold mb-2">Unable to load student data.</p>
+                    <p className="text-gray-600 text-sm mb-4">Please check that the backend is running and try refreshing the page.</p>
+                    <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold">Reload</button>
                 </div>
             </div>
         );
     }
 
-    // If logged in, show the dashboard
-    // Since loggedInStudent is set by default, this will show immediately
-    // and the "Loading..." message inside StudentDashboard will not appear.
+    const renderContent = () => {
+        switch (activePage) {
+            case 'home': return <StudentHome student={student} token={token} />;
+            case 'reports': return <StudentReports mealHistory={student.mealHistory || []} studentName={student.name} token={token} />;
+            case 'messOff': return <MessOffPage studentName={student.name} token={token} />;
+            case 'feedback': return <StudentFeedback token={token} />;
+            default: return <StudentHome student={student} token={token} />;
+        }
+    };
+
     return (
-        <StudentDashboard student={loggedInStudent} onLogout={handleLogout} />
+        <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 font-sans overflow-hidden">
+            <aside className={`bg-white w-72 fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl flex flex-col`}>
+                <div className="p-6 border-b bg-gradient-to-r from-blue-600 to-indigo-700">
+                    <div className="flex items-center justify-between text-white">
+                        <div className="flex items-center"><div className="bg-white bg-opacity-20 p-2 rounded-xl mr-3"><UtensilsCrossed size={28} /></div><div><h1 className="text-2xl font-bold">MessHub</h1><p className="text-xs text-blue-100">Student Portal</p></div></div>
+                        <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-2 rounded-lg transition-all"><X size={24} /></button>
+                    </div>
+                </div>
+                <div className="p-6 border-b bg-gradient-to-br from-gray-50 to-white">
+                    <div className="flex items-center"><img src={student.photo} alt={student.name} className="w-16 h-16 rounded-full border-4 border-blue-100 shadow-lg"/><div className="ml-4 flex-1"><h2 className="font-bold text-gray-800 text-lg">{student.name}</h2><p className="text-sm text-gray-500">{student.rollNo}</p></div></div>
+                </div>
+                <nav className="flex-1 p-4 overflow-y-auto">
+                    <ul className="space-y-1">
+                        <NavItem icon={<Home size={20} />} text="Dashboard" active={activePage === 'home'} onClick={() => { setActivePage('home'); setIsSidebarOpen(false); }} />
+                        <NavItem icon={<BarChart2 size={20} />} text="Reports" active={activePage === 'reports'} onClick={() => { setActivePage('reports'); setIsSidebarOpen(false); }} />
+                        <NavItem icon={<CalendarOff size={20} />} text="Mess Off" active={activePage === 'messOff'} onClick={() => { setActivePage('messOff'); setIsSidebarOpen(false); }} />
+                        <NavItem icon={<MessageSquare size={20} />} text="Feedback" active={activePage === 'feedback'} onClick={() => { setActivePage('feedback'); setIsSidebarOpen(false); }} />
+                    </ul>
+                </nav>
+                <div className="p-4 border-t bg-gray-50"><button onClick={handleLogout} className="w-full flex items-center justify-center px-4 py-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all font-semibold shadow-sm"><LogOut size={20} className="mr-2" />Logout</button></div>
+            </aside>
+            {isSidebarOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
+            <div className="flex-1 flex flex-col overflow-hidden">
+                <header className="bg-white shadow-md border-b z-30">
+                    <div className="flex items-center justify-between p-4">
+                        <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 hover:bg-gray-100 rounded-xl"><Menu size={24} className="text-gray-700" /></button>
+                        <div className="hidden md:block"><h1 className="text-xl font-bold text-gray-800 uppercase tracking-wide">{activePage}</h1></div>
+                        <div className="flex items-center gap-3">
+                            <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors relative"><Bell size={22} className="text-gray-600" /><span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span></button>
+                            <div className="hidden sm:flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-xl"><User size={18} className="text-gray-600" /><span className="text-sm font-medium text-gray-700">{student.name.split(' ')[0]}</span></div>
+                        </div>
+                    </div>
+                </header>
+                <main className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100"><div className="p-4 md:p-8">{renderContent()}</div></main>
+            </div>
+        </div>
     );
 }
 
-
+// --- EXPORT ---
+export default StudentDashboard;

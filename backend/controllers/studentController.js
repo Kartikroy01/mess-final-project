@@ -1,0 +1,207 @@
+const PDFDocument = require('pdfkit');
+const Student = require('../models/Student');
+const MealHistory = require('../models/MealHistory');
+const Bill = require('../models/Bill');
+
+const buildStudentResponse = async (student) => {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+
+  let bill = await Bill.findOne({ studentId: student._id, month, year });
+
+  if (!bill) {
+    bill = await Bill.create({
+      studentId: student._id,
+      month,
+      year,
+      mealCharges: 0,
+      fines: 0,
+      extras: 0,
+      totalBill: 0,
+      mealCount: 0,
+    });
+  }
+
+  const meals = await MealHistory.find({ studentId: student._id })
+    .sort({ date: -1 })
+    .limit(10)
+    .lean();
+
+  const mealHistory = meals.map((meal) => ({
+    date: meal.date.toISOString().split('T')[0],
+    type: meal.type,
+    items: meal.items || [],
+  }));
+
+  return {
+    id: student._id,
+    name: student.name,
+    rollNo: student.rollNo,
+    hostelNo: student.hostelNo,
+    roomNo: student.roomNo,
+    email: student.email,
+    photo: student.photo,
+    qrCode: student.qrCode,
+    bill: bill.totalBill,
+    mealCount: bill.mealCount,
+    mealHistory,
+  };
+};
+
+// GET /api/student/profile
+exports.getProfile = async (req, res) => {
+  try {
+    const student = await Student.findById(req.student._id);
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    const payload = await buildStudentResponse(student);
+    return res.json(payload);
+  } catch (error) {
+    console.error('Get profile error:', error);
+    return res
+      .status(500)
+      .json({ message: 'Server error fetching student profile' });
+  }
+};
+
+// GET /api/student/meals?month=0-11
+exports.getMealHistory = async (req, res) => {
+  try {
+    const studentId = req.student._id;
+    const { month } = req.query;
+
+    const query = { studentId };
+
+    if (month !== undefined) {
+      const m = parseInt(month, 10);
+
+      if (!Number.isNaN(m)) {
+        const year = new Date().getFullYear();
+        const start = new Date(year, m, 1);
+        const end = new Date(year, m + 1, 0, 23, 59, 59, 999);
+        query.date = { $gte: start, $lte: end };
+      }
+    }
+
+    const meals = await MealHistory.find(query).sort({ date: -1 }).lean();
+
+    const response = meals.map((meal) => ({
+      date: meal.date.toISOString().split('T')[0],
+      type: meal.type,
+      items: meal.items || [],
+    }));
+
+    return res.json(response);
+  } catch (error) {
+    console.error('Get meal history error:', error);
+    return res
+      .status(500)
+      .json({ message: 'Server error fetching meal history' });
+  }
+};
+
+// GET /api/student/report/download?month=0-11
+exports.downloadMealReport = async (req, res) => {
+  try {
+    const student = req.student;
+    const { month } = req.query;
+
+    const now = new Date();
+    const m =
+      month !== undefined && month !== null
+        ? parseInt(month, 10)
+        : now.getMonth();
+    const year = now.getFullYear();
+
+    const start = new Date(year, m, 1);
+    const end = new Date(year, m + 1, 0, 23, 59, 59, 999);
+
+    const meals = await MealHistory.find({
+      studentId: student._id,
+      date: { $gte: start, $lte: end },
+    })
+      .sort({ date: 1 })
+      .lean();
+
+    const bill = await Bill.findOne({
+      studentId: student._id,
+      month: m + 1,
+      year,
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="meal-report-${m + 1}-${year}.pdf"`
+    );
+
+    const doc = new PDFDocument();
+    doc.pipe(res);
+
+    doc.fontSize(20).text('Meal Report', { align: 'center' });
+    doc.moveDown();
+
+    doc.fontSize(12).text(`Student: ${student.name} (${student.rollNo})`);
+    doc.text(`Hostel: ${student.hostelNo}, Room: ${student.roomNo}`);
+    doc.text(`Month: ${m + 1}/${year}`);
+    doc.moveDown();
+
+    if (!meals.length) {
+      doc.text('No meal records found for this month.');
+    } else {
+      meals.forEach((meal) => {
+        const dateStr = meal.date.toISOString().split('T')[0];
+        doc.fontSize(12).text(`${dateStr} - ${meal.type}`);
+
+        (meal.items || []).forEach((item) => {
+          doc
+            .fontSize(10)
+            .text(
+              `  - ${item.name} x${item.qty} @ ₹${item.price} = ₹${
+                (item.qty || 0) * (item.price || 0)
+              }`
+            );
+        });
+
+        const total = (meal.items || []).reduce(
+          (sum, item) => sum + (item.qty || 0) * (item.price || 0),
+          0
+        );
+        doc.fontSize(10).text(`  Total: ₹${total}`);
+        doc.moveDown(0.5);
+      });
+    }
+
+    if (bill) {
+      doc.addPage();
+      doc.fontSize(18).text('Bill Summary', { align: 'center' });
+      doc.moveDown();
+
+      doc.fontSize(12).text(`Meal charges: ₹${bill.mealCharges}`);
+      doc.text(`Fines: ₹${bill.fines}`);
+      doc.text(`Extras: ₹${bill.extras}`);
+      doc.text(`Total bill: ₹${bill.totalBill}`);
+      doc.text(`Meal count: ${bill.mealCount}`);
+      doc.text(`Paid: ${bill.isPaid ? 'Yes' : 'No'}`);
+      if (bill.isPaid && bill.paidAt) {
+        doc.text(`Paid at: ${bill.paidAt.toISOString()}`);
+      }
+    }
+
+    doc.end();
+  } catch (error) {
+    console.error('Download meal report error:', error);
+    // If headers already sent while streaming PDF, just end the response
+    if (!res.headersSent) {
+      return res
+        .status(500)
+        .json({ message: 'Server error generating meal report' });
+    }
+    res.end();
+  }
+};
+
