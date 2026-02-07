@@ -1,19 +1,3 @@
-// const express = require('express');
-// const { loginStudent, registerStudent, loginStudentByRollNo } = require('../controllers/auth');
-
-// const router = express.Router();
-
-// // Student registration
-// router.post('/register', registerStudent);
-
-// // Student login (email & password)
-// router.post('/login', loginStudent);
-
-// // Student login (rollNo-based for backward compatibility)
-// router.post('/login-rollno', loginStudentByRollNo);
-
-// module.exports = router;
-/////
 const express = require('express');
 const {
     login,
@@ -29,16 +13,19 @@ const router = express.Router();
 // Student registration
 router.post('/register', registerStudent);
 
-// Unified login: student or munshi (redirect by role on frontend)
+// Unified login: handles both student and munshi login automatically
 router.post('/login', login);
 
-// Student login (rollNo-based for backward compatibility)
+// Student login (email/password - backward compatibility)
+router.post('/student/login', loginStudent);
+
+// Student login (rollNo-based - backward compatibility)
 router.post('/login-rollno', loginStudentByRollNo);
 
-// Forgot password - sends reset token
+// Forgot password - sends reset token (works for both students and munshis)
 router.post('/forgot-password', forgotPassword);
 
-// Reset password - uses token to set new password
+// Reset password - uses token to set new password (works for both students and munshis)
 router.post('/reset-password', resetPassword);
 
 module.exports = router;

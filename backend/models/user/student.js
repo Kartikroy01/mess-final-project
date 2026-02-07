@@ -34,6 +34,10 @@ const studentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    phoneNo: {
+        type: String,
+        default: '0000000000'
+    },
     photo: {
         type: String,
         default: 'https://placehold.co/100x100/3B82F6/FFF?text=ST'
@@ -46,6 +50,13 @@ const studentSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    // Password reset fields (NEW)
+    resetPasswordToken: {
+        type: String
+    },
+    resetPasswordExpiry: {
+        type: Date
+    },
     createdAt: {
         type: Date,
         default: Date.now
@@ -55,13 +66,18 @@ const studentSchema = new mongoose.Schema({
 // Hash password before saving
 studentSchema.pre('save', async function(next) {
     if (!this.isModified('password')) return next();
-    this.password = await bcrypt.hash(this.password, 12);
     
-    // Generate QR code if not exists
-    if (!this.qrCode) {
-        this.qrCode = `${this.rollNo}${this.hostelNo}`;
+    try {
+        this.password = await bcrypt.hash(this.password, 12);
+        
+        // Generate QR code if not exists
+        if (!this.qrCode) {
+            this.qrCode = `${this.rollNo}${this.hostelNo}`;
+        }
+        next();
+    } catch (error) {
+        next(error);
     }
-    next();
 });
 
 // Compare password method

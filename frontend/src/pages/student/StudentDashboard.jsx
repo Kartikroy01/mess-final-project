@@ -502,6 +502,7 @@ const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) 
                                 <th className="text-left p-4 text-sm font-bold text-gray-700">Date</th>
                                 <th className="text-left p-4 text-sm font-bold text-gray-700">Meal Type</th>
                                 <th className="text-left p-4 text-sm font-bold text-gray-700">Items Ordered</th>
+                                <th className="text-left p-4 text-sm font-bold text-gray-700">Price</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -523,9 +524,10 @@ const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) 
                                                 <span className="text-gray-400">No items</span>
                                             )}
                                         </td>
+                                        <td className="p-4 text-sm font-bold text-gray-800">₹{meal.totalCost || 0}</td>
                                     </tr>
                                 ); 
-                            }) : <tr><td colSpan="3" className="text-center p-12"><FileText size={48} className="mx-auto mb-4 text-gray-300"/><p className="text-gray-500 font-medium">No meal records found</p></td></tr>}
+                            }) : <tr><td colSpan="4" className="text-center p-12"><FileText size={48} className="mx-auto mb-4 text-gray-300"/><p className="text-gray-500 font-medium">No meal records found</p></td></tr>}
                         </tbody>
                     </table>
                 )}

@@ -32,6 +32,7 @@ const buildStudentResponse = async (student) => {
     date: meal.date.toISOString().split('T')[0],
     type: meal.type,
     items: meal.items || [],
+    totalCost: meal.totalCost || 0,
   }));
 
   return {
@@ -93,6 +94,7 @@ exports.getMealHistory = async (req, res) => {
       date: meal.date.toISOString().split('T')[0],
       type: meal.type,
       items: meal.items || [],
+      totalCost: meal.totalCost || 0,
     }));
 
     return res.json(response);
