@@ -1,205 +1,323 @@
 import React, { useState } from 'react';
-import { Download, DollarSign, ShoppingBag, TrendingUp } from 'lucide-react';
-import { Card, Button } from './components/UIComponents';
+import { Download, DollarSign, ShoppingBag, TrendingUp, Search, Calendar, Filter } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
+// Reusing UI Components locally to avoid import issues if they aren't exported
+const Card = ({ children, className = '' }) => (
+  <div className={`bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-indigo-100/50 border border-white/50 ${className}`}>
+    {children}
+  </div>
+);
+
+const Button = ({ children, onClick, variant = 'primary', className = '', icon: Icon }) => {
+  const variants = {
+    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/30',
+    secondary: 'bg-white text-slate-700 border-2 border-slate-100 hover:border-indigo-100 hover:bg-indigo-50',
+    success: 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30',
+  };
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 ${variants[variant]} ${className}`}
+    >
+      {Icon && <Icon size={18} strokeWidth={2.5} />}
+      {children}
+    </button>
+  );
+};
 
 const ReportsPage = ({ orders }) => {
   const [filter, setFilter] = useState('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
-
-  const handleDownloadPdf = () => {
-    alert("PDF download functionality would be implemented here using a library like jsPDF");
-  };
+  const [searchQuery, setSearchQuery] = useState('');
 
   const getFilteredOrders = () => {
+    let filtered = orders;
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
+    // Date Filters
     switch (filter) {
       case 'today':
-        return orders.filter(order => new Date(order.date) >= todayStart);
+        filtered = filtered.filter(order => new Date(order.date) >= todayStart);
+        break;
       case 'week':
         const weekStart = new Date(todayStart);
         weekStart.setDate(todayStart.getDate() - todayStart.getDay());
-        return orders.filter(order => new Date(order.date) >= weekStart);
+        filtered = filtered.filter(order => new Date(order.date) >= weekStart);
+        break;
       case 'month':
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        return orders.filter(order => new Date(order.date) >= monthStart);
+        filtered = filtered.filter(order => new Date(order.date) >= monthStart);
+        break;
       case 'custom':
         if (customStartDate && customEndDate) {
           const start = new Date(customStartDate);
           start.setHours(0, 0, 0, 0);
           const end = new Date(customEndDate);
           end.setHours(23, 59, 59, 999);
-          return orders.filter(order => {
+          filtered = filtered.filter(order => {
             const orderDate = new Date(order.date);
             return orderDate >= start && orderDate <= end;
           });
         }
-        return [];
-      case 'all':
+        break;
       default:
-        return orders;
+        break;
     }
+
+    // Search Filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(order => 
+        order.studentName?.toLowerCase().includes(q) ||
+        order.studentRoomNo?.toLowerCase().includes(q) ||
+        order.studentRollNo?.toLowerCase().includes(q) ||
+        order.id.toLowerCase().includes(q)
+      );
+    }
+
+    return filtered;
   };
 
   const filteredOrders = getFilteredOrders();
-  const totalSales = filteredOrders.reduce((total, order) => 
-    total + order.items.reduce((sum, item) => sum + item.price, 0), 0
-  );
+  
+  const totalSales = filteredOrders.reduce((total, order) => total + order.totalAmount, 0);
   const totalOrders = filteredOrders.length;
   const avgOrderValue = totalOrders > 0 ? Math.round(totalSales / totalOrders) : 0;
 
+  const handleDownloadPdf = () => {
+    const doc = new jsPDF();
+
+    // Header
+    doc.setFillColor(79, 70, 229); // Indigo 600
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Mess Sales Report', 14, 25);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 35);
+
+    // Summary Section
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    doc.text(`Total Sales: Rs ${totalSales}`, 14, 50);
+    doc.text(`Total Orders: ${totalOrders}`, 80, 50);
+    doc.text(`Avg Value: Rs ${avgOrderValue}`, 150, 50);
+
+    // Table
+    const tableColumn = ["Date", "Student Name", "Room", "Meal", "Items", "Total"];
+    const tableRows = [];
+
+    filteredOrders.forEach(order => {
+      const orderData = [
+        new Date(order.date).toLocaleDateString('en-IN'),
+        order.studentName || 'Unknown',
+        order.studentRoomNo || '-',
+        order.mealType ? order.mealType.charAt(0).toUpperCase() + order.mealType.slice(1) : '-',
+        order.items.map(i => `${i.name} (x1)`).join(', '),
+        `Rs ${order.totalAmount}`
+      ];
+      tableRows.push(orderData);
+    });
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 60,
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' },
+      styles: { fontSize: 9, cellPadding: 3 },
+      alternateRowStyles: { fillColor: [249, 250, 251] },
+    });
+
+    doc.save(`mess_report_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total Sales</p>
-              <p className="text-3xl font-bold text-gray-900">₹{totalSales}</p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <DollarSign className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total Orders</p>
-              <p className="text-3xl font-bold text-gray-900">{totalOrders}</p>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <ShoppingBag className="w-6 h-6 text-blue-600" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="p-6 relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-indigo-500/10 rounded-bl-[4rem] transition-transform group-hover:scale-110"></div>
+          <div className="relative z-10">
+            <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Total Sales</p>
+            <div className="flex items-center gap-3">
+               <span className="text-4xl font-bold text-slate-800">₹{totalSales}</span>
+               <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
+                  <DollarSign size={24} />
+               </div>
             </div>
           </div>
         </Card>
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Avg Order Value</p>
-              <p className="text-3xl font-bold text-gray-900">₹{avgOrderValue}</p>
+        <Card className="p-6 relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 rounded-bl-[4rem] transition-transform group-hover:scale-110"></div>
+          <div className="relative z-10">
+            <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Total Orders</p>
+             <div className="flex items-center gap-3">
+               <span className="text-4xl font-bold text-slate-800">{totalOrders}</span>
+               <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+                  <ShoppingBag size={24} />
+               </div>
             </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-purple-600" />
+          </div>
+        </Card>
+
+        <Card className="p-6 relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-emerald-500/10 rounded-bl-[4rem] transition-transform group-hover:scale-110"></div>
+           <div className="relative z-10">
+            <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Avg Order Value</p>
+             <div className="flex items-center gap-3">
+               <span className="text-4xl font-bold text-slate-800">₹{avgOrderValue}</span>
+               <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
+                  <TrendingUp size={24} />
+               </div>
             </div>
           </div>
         </Card>
       </div>
 
       {/* Reports Table */}
-      <Card className="p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-100 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-indigo-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Sales Report</h2>
-              <p className="text-sm text-gray-500">View and analyze transaction history</p>
-            </div>
+      <Card className="p-6 md:p-8">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8">
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">Sales Report</h2>
+            <p className="text-slate-500 text-sm">View and analyze transaction history</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium text-gray-600">Filter:</span>
-            {['all', 'today', 'week', 'month', 'custom'].map(f => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-lg capitalize transition-colors ${
-                  filter === f
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-            <Button onClick={handleDownloadPdf} variant="success" icon={Download} className="ml-2">
+          <div className="flex flex-col md:flex-row gap-4">
+             {/* Search */}
+             <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input 
+                  type="text" 
+                  placeholder="Search student, room..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 outline-none transition-all w-full md:w-64"
+                />
+             </div>
+
+             {/* Filters */}
+             <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200">
+                {['all', 'today', 'week', 'month', 'custom'].map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`px-3 py-1.5 text-sm font-bold rounded-lg capitalize transition-all ${
+                      filter === f
+                        ? 'bg-white text-indigo-600 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    {f}
+                  </button>
+                ))}
+            </div>
+
+            <Button onClick={handleDownloadPdf} variant="success" icon={Download}>
               Export PDF
             </Button>
           </div>
         </div>
 
         {filter === 'custom' && (
-          <div className="bg-gray-50 p-4 rounded-lg mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-slate-50 p-4 rounded-2xl mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 border border-slate-100 animate-in fade-in slide-in-from-top-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Start Date</label>
               <input
                 type="date"
                 value={customStartDate}
                 onChange={e => setCustomStartDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">End Date</label>
               <input
                 type="date"
                 value={customEndDate}
                 onChange={e => setCustomEndDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
               />
             </div>
           </div>
         )}
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl border border-slate-100">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-4 px-4 font-semibold text-gray-900">Order ID</th>
-                <th className="text-left py-4 px-4 font-semibold text-gray-900">Date</th>
-                <th className="text-left py-4 px-4 font-semibold text-gray-900">Student ID</th>
-                <th className="text-left py-4 px-4 font-semibold text-gray-900">Items</th>
-                <th className="text-right py-4 px-4 font-semibold text-gray-900">Total</th>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Date</th>
+                <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Student</th>
+                <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Room</th>
+                <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Meal</th>
+                <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider w-1/3">Items</th>
+                <th className="text-right py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Total</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100">
               {filteredOrders.length > 0 ? (
                 filteredOrders.map(order => (
-                  <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td className="py-4 px-4">
-                      <span className="font-medium text-gray-900">#{order.id}</span>
-                    </td>
-                    <td className="py-4 px-4 text-gray-600">
+                  <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 px-6 text-sm font-medium text-slate-600">
                       {new Date(order.date).toLocaleDateString('en-IN', {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric'
                       })}
+                      <div className="text-xs text-slate-400 font-normal">
+                         {new Date(order.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
                     </td>
-                    <td className="py-4 px-4 text-gray-900">{order.studentId}</td>
-                    <td className="py-4 px-4">
-                      <div className="text-sm text-gray-600">
+                    <td className="py-4 px-6">
+                        <div className="font-bold text-slate-800">{order.studentName}</div>
+                        <div className="text-xs text-slate-400 font-medium">#{order.studentRollNo || 'N/A'}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                        <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded-lg text-xs font-bold">
+                            {order.studentRoomNo || '-'}
+                        </span>
+                    </td>
+                    <td className="py-4 px-6">
+                        <span className={`px-2 py-1 rounded-lg text-xs font-bold capitalize ${
+                            order.mealType === 'breakfast' ? 'bg-orange-50 text-orange-600' :
+                            order.mealType === 'lunch' ? 'bg-yellow-50 text-yellow-600' :
+                            order.mealType === 'snacks' ? 'bg-emerald-50 text-emerald-600' :
+                            'bg-indigo-50 text-indigo-600'
+                        }`}>
+                            {order.mealType}
+                        </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="text-sm text-slate-600 font-medium">
                         {order.items.map(i => i.name).join(', ')}
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-right font-semibold text-gray-900">
-                      ₹{order.items.reduce((s, i) => s + i.price, 0)}
+                    <td className="py-4 px-6 text-right">
+                        <span className="font-bold text-slate-800">₹{order.totalAmount}</span>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="py-12 text-center text-gray-500">
-                    No orders found for the selected period
+                  <td colSpan="6" className="py-12 text-center text-slate-400">
+                     <div className="flex flex-col items-center justify-center">
+                        <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                            <Filter size={20} />
+                        </div>
+                        <p>No orders found matching your criteria</p>
+                     </div>
                   </td>
                 </tr>
               )}
             </tbody>
-            {filteredOrders.length > 0 && (
-              <tfoot>
-                <tr className="bg-gray-50 font-semibold text-gray-900">
-                  <td colSpan="4" className="py-4 px-4 text-right">Total Sales</td>
-                  <td className="py-4 px-4 text-right text-lg">₹{totalSales}</td>
-                </tr>
-              </tfoot>
-            )}
           </table>
         </div>
       </Card>

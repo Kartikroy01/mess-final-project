@@ -270,6 +270,7 @@ exports.getOrders = async (req, res) => {
       studentId: o.studentId._id ? o.studentId._id.toString() : o.studentId,
       studentName: o.studentId && o.studentId.name ? o.studentId.name : 'Unknown',
       studentRollNo: o.studentId && o.studentId.rollNo ? o.studentId.rollNo : '',
+      studentRoomNo: o.studentId?.roomNo || 'N/A',
       items: o.items,
       totalAmount: o.totalAmount,
       mealType: o.mealType,

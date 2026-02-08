@@ -1,51 +1,101 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X, CheckCircle, ShoppingBag, LogOut, Menu, Calendar, TrendingUp, Plus } from 'lucide-react';
+import { Search, X, CheckCircle, ShoppingBag, LogOut, Menu, Calendar, TrendingUp, Plus, User, FileText, ChevronRight, Bell, UtensilsCrossed } from 'lucide-react';
 import MessOffRequestsPage from './MessOffRequest';
 import ReportsPage from './MunshiReport';
 import AddMealPage from './MunshiAddMeal';
-import { Card, Button, Badge } from './components/UIComponents';
 import { munshiApi } from './api';
+
+// ==================== UI COMPONENTS ====================
+const Card = ({ children, className = '' }) => (
+  <div className={`bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-indigo-100/50 border border-white/50 ${className}`}>
+    {children}
+  </div>
+);
+
+const Button = ({ children, onClick, variant = 'primary', className = '', icon: Icon, disabled }) => {
+  const variants = {
+    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/30',
+    secondary: 'bg-white text-slate-700 border-2 border-slate-100 hover:border-indigo-100 hover:bg-indigo-50',
+    danger: 'bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-100',
+    success: 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30',
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`px-6 py-3 rounded-2xl font-bold transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${className}`}
+    >
+      {Icon && <Icon size={20} className={variant === 'primary' || variant === 'success' ? 'stroke-[2.5]' : ''} />}
+      {children}
+    </button>
+  );
+};
+
+const Badge = ({ children, variant = 'info' }) => {
+  const variants = {
+    info: 'bg-blue-50 text-blue-700 border-blue-100',
+    success: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    warning: 'bg-orange-50 text-orange-700 border-orange-100',
+  };
+
+  return (
+    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${variants[variant]}`}>
+      {children}
+    </span>
+  );
+};
 
 // ==================== MEAL SELECTION PAGE ====================
 const MealSelectionPage = ({ onSelectMeal }) => {
   const mealTypes = [
-    { id: 'breakfast', label: 'Breakfast', icon: '🌅', color: 'from-orange-400 to-pink-500' },
-    { id: 'lunch', label: 'Lunch', icon: '☀️', color: 'from-yellow-400 to-orange-500' },
-    { id: 'snacks', label: 'Snacks', icon: '🍵', color: 'from-green-400 to-teal-500' },
-    { id: 'dinner', label: 'Dinner', icon: '🌙', color: 'from-indigo-400 to-purple-500' },
+    { id: 'breakfast', label: 'Breakfast', icon: '🌅', color: 'from-orange-400 to-pink-500', time: '7:30 AM - 9:30 AM' },
+    { id: 'lunch', label: 'Lunch', icon: '☀️', color: 'from-yellow-400 to-orange-500', time: '12:30 PM - 2:30 PM' },
+    { id: 'snacks', label: 'Snacks', icon: '🍵', color: 'from-green-400 to-teal-500', time: '4:30 PM - 6:00 PM' },
+    { id: 'dinner', label: 'Dinner', icon: '🌙', color: 'from-indigo-400 to-purple-500', time: '7:30 PM - 9:30 PM' },
   ];
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <Card className="w-full max-w-2xl p-8 m-4">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
-            <ShoppingBag className="w-8 h-8 text-indigo-600" />
+    <div className="flex items-center justify-center min-h-screen bg-[#F8FAFC]">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+      </div>
+      
+      <div className="w-full max-w-5xl p-6 relative z-10">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-3xl mb-6 shadow-xl shadow-indigo-100">
+            <UtensilsCrossed className="w-10 h-10 text-indigo-600" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Select Meal Session</h2>
-          <p className="text-gray-600">Choose the current meal type to begin processing orders</p>
+          <h2 className="text-4xl font-bold text-slate-800 mb-3 tracking-tight">Select Meal Session</h2>
+          <p className="text-slate-500 text-lg">Choose the current meal type to begin processing orders</p>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {mealTypes.map(meal => (
             <button
               key={meal.id}
               onClick={() => onSelectMeal(meal.id)}
-              className={`group relative overflow-hidden p-6 rounded-xl bg-gradient-to-br ${meal.color} hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl`}
+              className="group relative overflow-hidden bg-white hover:bg-slate-50 border border-slate-100 rounded-[2rem] p-6 text-left transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1"
             >
-              <div className="text-center text-white">
-                <div className="text-4xl mb-2">{meal.icon}</div>
-                <div className="text-xl font-bold">{meal.label}</div>
+              <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${meal.color} opacity-10 rounded-bl-[4rem] transition-opacity group-hover:opacity-20`}></div>
+              
+              <div className="relative z-10">
+                <div className="text-4xl mb-4 bg-slate-50 w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm">
+                  {meal.icon}
+                </div>
+                <h3 className="text-xl font-bold text-slate-800 mb-1">{meal.label}</h3>
+                <p className="text-sm text-slate-400 font-medium">{meal.time}</p>
+                
+                <div className="mt-6 flex items-center gap-2 text-indigo-600 font-bold text-sm opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                  <span>Start Session</span>
+                  <ChevronRight size={16} />
+                </div>
               </div>
-              <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity" />
             </button>
           ))}
         </div>
-        
-        <p className="text-xs text-gray-500 text-center mt-6">
-          This selection applies to all transactions until you log out
-        </p>
-      </Card>
+      </div>
     </div>
   );
 };
@@ -62,7 +112,7 @@ const DashboardView = ({ sessionMeal, onStudentScan, scannedStudent, clearScanne
     setError('');
     const student = await onStudentScan(studentIdInput);
     if (!student) {
-      setError('Student ID, Roll Number or Room Number not found. Please try again.');
+      setError('Student ID, Roll Number or Room Number not found.');
     }
   };
 
@@ -87,7 +137,7 @@ const DashboardView = ({ sessionMeal, onStudentScan, scannedStudent, clearScanne
       await onAddExtraItems(scannedStudent.id, extraItems);
       setNotification({
         type: 'success',
-        message: `Successfully added ${extraItems.length} item(s) for ${scannedStudent.name}`
+        message: `Marked ${extraItems.length} item(s) for ${scannedStudent.name}`
       });
       setTimeout(() => {
         setNotification(null);
@@ -96,7 +146,7 @@ const DashboardView = ({ sessionMeal, onStudentScan, scannedStudent, clearScanne
     } catch (err) {
       setNotification({
         type: 'error',
-        message: err.message || 'Failed to process order. Please try again.'
+        message: err.message || 'Failed to process order.'
       });
     }
   };
@@ -104,189 +154,222 @@ const DashboardView = ({ sessionMeal, onStudentScan, scannedStudent, clearScanne
   const totalAmount = extraItems.reduce((sum, item) => sum + item.price, 0);
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {notification && (
-        <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
-          notification.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+        <div className={`fixed bottom-6 right-6 p-4 rounded-2xl shadow-2xl flex items-center gap-3 z-50 animate-in slide-in-from-right duration-300 ${
+          notification.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
         }`}>
-          {notification.type === 'success' ? (
-            <CheckCircle className="w-5 h-5 text-green-600" />
-          ) : (
-            <X className="w-5 h-5 text-red-600" />
-          )}
-          <span className={notification.type === 'success' ? 'text-green-800' : 'text-red-800'}>{notification.message}</span>
+          {notification.type === 'success' ? <CheckCircle size={24} /> : <X size={24} />}
+          <span className="font-bold">{notification.message}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
           {/* Student Lookup */}
-          <Card className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <Search className="w-5 h-5 text-indigo-600" />
+          <Card className="p-8">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="p-3 bg-indigo-50 rounded-2xl">
+                <Search className="w-6 h-6 text-indigo-600" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-900">Student Lookup</h2>
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">Student Lookup</h2>
+                <p className="text-slate-500 text-sm">Scan QR or enter details to find student</p>
+              </div>
             </div>
 
             {!scannedStudent ? (
-              <form onSubmit={handleScan} className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <form onSubmit={handleScan} className="max-w-xl">
+                <div className="relative group">
+                  <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                   <input
                     type="text"
-                    placeholder="Scan QR or Enter Student ID / Room Number"
+                    placeholder="Enter Roll No, Room No, or Scan QR..."
                     value={studentIdInput}
                     onChange={(e) => setStudentIdInput(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full pl-14 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium text-slate-800 outline-none text-lg"
                     autoFocus
                   />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                     <Button type="submit" disabled={scanLoading} className="py-2 px-4 text-sm rounded-xl">
+                       {scanLoading ? 'Wait...' : 'Find'}
+                     </Button>
+                  </div>
                 </div>
                 {error && (
-                  <div className="flex items-center gap-2 text-red-600 text-sm">
-                    <X className="w-4 h-4" />
+                  <div className="mt-3 flex items-center gap-2 text-rose-600 bg-rose-50 px-4 py-2 rounded-xl text-sm font-medium inline-flex">
+                    <X size={16} />
                     <span>{error}</span>
                   </div>
                 )}
-                <Button type="submit" className="w-full" icon={Search} disabled={scanLoading}>
-                  {scanLoading ? 'Searching...' : 'Find Student'}
-                </Button>
               </form>
             ) : (
-              <div className="space-y-4">
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-5">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{scannedStudent.name}</h3>
-                      <Badge variant="success">Verified</Badge>
-                    </div>
+              <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-3xl p-6 border border-indigo-100 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                  <div className="flex items-center gap-4">
+                     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm text-indigo-600 text-xl font-bold">
+                        {scannedStudent.name.charAt(0)}
+                     </div>
+                     <div>
+                       <h3 className="text-2xl font-bold text-slate-800">{scannedStudent.name}</h3>
+                       <div className="flex gap-2 mt-1">
+                          <Badge variant="info">{scannedStudent.rollNumber}</Badge>
+                          <Badge variant="warning">Room {scannedStudent.roomNumber}</Badge>
+                       </div>
+                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">Roll Number</span>
-                      <p className="font-semibold text-gray-900">{scannedStudent.rollNumber}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Room Number</span>
-                      <p className="font-semibold text-gray-900">{scannedStudent.roomNumber}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Hostel</span>
-                      <p className="font-semibold text-gray-900">{scannedStudent.hostelName}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Balance</span>
-                      <p className="font-semibold text-green-600">₹{scannedStudent.balance}</p>
-                    </div>
+                  
+                  <div className="flex items-center gap-4 bg-white/60 p-4 rounded-2xl backdrop-blur-sm">
+                     <div className="text-right">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Balance</p>
+                        <p className={`text-xl font-bold ${scannedStudent.balance > 0 ? 'text-emerald-600' : 'text-slate-800'}`}>
+                           ₹{scannedStudent.balance}
+                        </p>
+                     </div>
+                     <div className="h-8 w-px bg-slate-200"></div>
+                     <button onClick={handleClear} className="p-2 hover:bg-white rounded-xl transition-colors text-slate-400 hover:text-rose-500">
+                        <X size={20} />
+                     </button>
                   </div>
                 </div>
-                <Button onClick={handleClear} variant="secondary" className="w-full" icon={X}>
-                  Clear Student
-                </Button>
               </div>
             )}
           </Card>
 
           {/* Menu Items */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">Available Menu</h2>
-                <p className="text-sm text-gray-500 capitalize mt-1">
-                  Current Session: <span className="font-medium text-indigo-600">{sessionMeal}</span>
-                  {menuLoading && <span className="ml-2 text-gray-400">(Loading...)</span>}
-                </p>
+          <Card className="p-8">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                 <div className="p-3 bg-orange-50 rounded-2xl">
+                   <UtensilsCrossed className="w-6 h-6 text-orange-600" />
+                 </div>
+                 <div>
+                   <h2 className="text-xl font-bold text-slate-800">Available Menu</h2>
+                   <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mt-1">Session: <span className="text-indigo-600">{sessionMeal}</span></p>
+                 </div>
               </div>
               {scannedStudent && extraItems.length > 0 && (
-                <Badge variant="info">{extraItems.length} selected</Badge>
+                <Badge variant="success">{extraItems.length} selected</Badge>
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(meals[sessionMeal] || []).map(item => {
-                const isSelected = extraItems.find(i => i.id === item.id);
-                return (
-                  <div
-                    key={item.id}
-                    className={`group relative overflow-hidden rounded-lg border-2 transition-all duration-200 ${
-                      isSelected
-                        ? 'border-green-500 shadow-lg scale-105'
-                        : 'border-gray-200 hover:border-indigo-300 hover:shadow-md'
-                    } ${scannedStudent ? 'cursor-pointer' : 'opacity-75'}`}
-                    onClick={() => scannedStudent && toggleExtraItem(item)}
-                  >
-                    <div className="aspect-video overflow-hidden">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
-                      <p className="text-lg font-bold text-indigo-600">₹{item.price}</p>
-                    </div>
-                    {scannedStudent && (
-                      <div className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                        isSelected ? 'bg-green-500' : 'bg-gray-300 opacity-0 group-hover:opacity-100'
-                      }`}>
-                        {isSelected && <CheckCircle className="w-5 h-5 text-white" />}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            {menuLoading ? (
+               <div className="text-center py-12 text-slate-400">Loading menu...</div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {(meals[sessionMeal] || []).map(item => {
+                    const isSelected = extraItems.find(i => i.id === item.id);
+                    return (
+                    <button
+                        key={item.id}
+                        disabled={!scannedStudent}
+                        onClick={() => scannedStudent && toggleExtraItem(item)}
+                        className={`group relative overflow-hidden rounded-2xl border-2 text-left transition-all duration-300 ${
+                        isSelected
+                            ? 'border-indigo-500 bg-indigo-50/50'
+                            : 'border-slate-100 bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-500/5'
+                        } ${!scannedStudent && 'opacity-60 grayscale cursor-not-allowed'}`}
+                    >
+                        <div className="aspect-[4/3] overflow-hidden relative">
+                           <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                           />
+                           {isSelected && (
+                               <div className="absolute inset-0 bg-indigo-900/20 flex items-center justify-center backdrop-blur-[2px]">
+                                   <div className="bg-white rounded-full p-2 text-indigo-600 shadow-xl scale-100 animate-in zoom-in duration-200">
+                                       <CheckCircle size={24} fill="currentColor" className="text-white" />
+                                   </div>
+                               </div>
+                           )}
+                        </div>
+                        <div className="p-5">
+                            <div className="flex justify-between items-start mb-2">
+                                <h3 className="font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">{item.name}</h3>
+                                <div className="bg-slate-100 px-2 py-1 rounded-lg text-xs font-bold text-slate-600">
+                                   ₹{item.price}
+                                </div>
+                            </div>
+                        </div>
+                    </button>
+                    );
+                })}
+                {(meals[sessionMeal] || []).length === 0 && (
+                     <div className="col-span-full py-12 text-center text-slate-400 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                        No items available for this session.
+                     </div>
+                )}
+                </div>
+            )}
           </Card>
         </div>
 
-        {/* Sidebar */}
+        {/* Sidebar Order Summary */}
         <div className="space-y-6">
-          {scannedStudent && extraItems.length > 0 && (
-            <Card className="p-6 sticky top-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
-              <div className="space-y-3 mb-4">
-                {extraItems.map(item => (
-                  <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-gray-900 font-medium">{item.name}</span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-gray-900 font-semibold">₹{item.price}</span>
-                      <button
-                        onClick={() => toggleExtraItem(item)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+          <Card className="p-6 sticky top-8 border-indigo-100 shadow-indigo-100/50">
+            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <ShoppingBag className="text-indigo-600" size={20} />
+                Current Order
+            </h3>
+            
+            {scannedStudent && extraItems.length > 0 ? (
+                <>
+                <div className="space-y-3 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                    {extraItems.map(item => (
+                    <div key={item.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl group hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-100 transition-all">
+                        <span className="text-slate-700 font-medium text-sm">{item.name}</span>
+                        <div className="flex items-center gap-3">
+                        <span className="text-slate-900 font-bold text-sm">₹{item.price}</span>
+                        <button
+                            onClick={() => toggleExtraItem(item)}
+                            className="text-slate-400 hover:text-rose-500 transition-colors p-1 rounded-lg hover:bg-rose-50"
+                        >
+                            <X size={16} />
+                        </button>
+                        </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-              <div className="border-t pt-4 mb-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold text-gray-900">Total</span>
-                  <span className="text-2xl font-bold text-indigo-600">₹{totalAmount}</span>
+                    ))}
                 </div>
-              </div>
-              <Button onClick={handleSubmitExtras} variant="success" className="w-full" icon={CheckCircle}>
-                Process Order
-              </Button>
-            </Card>
-          )}
+                
+                <div className="bg-slate-900 rounded-2xl p-5 text-white mb-4 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="flex justify-between items-end relative z-10">
+                        <div>
+                           <p className="text-indigo-200 text-xs font-bold uppercase tracking-wider mb-1">Total Amount</p>
+                           <p className="text-3xl font-bold">₹{totalAmount}</p>
+                        </div>
+                        <div className="bg-white/10 p-2 rounded-lg">
+                           <DollarSign size={20} />
+                        </div>
+                    </div>
+                </div>
+
+                <Button onClick={handleSubmitExtras} variant="success" className="w-full py-4 text-lg shadow-emerald-200">
+                    Process Order
+                </Button>
+                </>
+            ) : (
+                <div className="text-center py-12 px-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200">
+                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                        <ShoppingBag size={24} />
+                    </div>
+                    <p className="text-slate-400 font-medium text-sm">Select a student and add items to create an order.</p>
+                </div>
+            )}
+          </Card>
         </div>
       </div>
     </div>
   );
 };
+import { DollarSign } from 'lucide-react';
 
-// Default empty menu shape
-const EMPTY_MEALS = {
-  breakfast: [],
-  lunch: [],
-  snacks: [],
-  dinner: [],
-};
+const EMPTY_MEALS = { breakfast: [], lunch: [], snacks: [], dinner: [] };
 
-// ==================== MAIN MUNSHI DASHBOARD COMPONENT ====================
+// ==================== MAIN COMPONENT ====================
 const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   const [sessionMeal, setSessionMeal] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -301,9 +384,8 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
-    localStorage.removeItem('authUser');
-    localStorage.removeItem('authRole');
-    sessionStorage.removeItem('authUser');
+    localStorage.clear();
+    sessionStorage.clear();
     window.location.href = '/login';
   };
   const onLogout = onLogoutProp || handleLogout;
@@ -321,32 +403,22 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   useEffect(() => {
     if (!authChecked || !sessionMeal) return;
     setMenuLoading(true);
-    munshiApi
-      .getMenu()
-      .then((data) => setMeals(data))
+    munshiApi.getMenu()
+      .then(setMeals)
       .catch(() => setMeals(EMPTY_MEALS))
       .finally(() => setMenuLoading(false));
   }, [authChecked, sessionMeal]);
 
-  const refreshOrders = () => {
-    munshiApi.getOrders().then(setOrders).catch(() => setOrders([]));
-  };
-
-  const refreshMessOffRequests = () => {
-    munshiApi.getMessOffRequests().then(setMessOffRequests).catch(() => setMessOffRequests([]));
-  };
+  const refreshOrders = () => munshiApi.getOrders().then(setOrders).catch(() => setOrders([]));
+  const refreshMessOffRequests = () => munshiApi.getMessOffRequests().then(setMessOffRequests).catch(() => setMessOffRequests([]));
 
   useEffect(() => {
     if (activeTab === 'reports') refreshOrders();
     if (activeTab === 'messoffrequest') refreshMessOffRequests();
   }, [activeTab]);
 
-  const handleStudentScan = async (searchInput) => {
-    const q = (searchInput || '').trim();
-    if (!q) {
-      setScannedStudent(null);
-      return null;
-    }
+  const handleStudentScan = async (q) => {
+    if (!q?.trim()) return null;
     setLoading(true);
     try {
       const student = await munshiApi.lookupStudent(q);
@@ -360,59 +432,26 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
     }
   };
 
-  const clearScannedStudent = () => setScannedStudent(null);
-
-  const handleRequestAction = async (requestId, status) => {
-    try {
-      await munshiApi.updateMessOffStatus(requestId, status);
-      setMessOffRequests((prev) =>
-        prev.map((req) => (req.id === requestId ? { ...req, status } : req))
-      );
-    } catch (err) {
-      console.error(err);
-      refreshMessOffRequests();
-    }
+  const handleRequestAction = async (id, status, reason) => {
+    await munshiApi.updateMessOffStatus(id, status, reason);
+    setMessOffRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r));
   };
 
-  const handleAddExtraItems = async (studentId, items, mealType) => {
-    try {
-      await munshiApi.createOrder(studentId, items, sessionMeal || 'breakfast');
-      refreshOrders();
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
+  const handleAddExtraItems = async (studentId, items) => {
+    await munshiApi.createOrder(studentId, items, sessionMeal);
+    refreshOrders();
   };
 
-  const handleAddMeal = async (mealType, newMeal) => {
-    try {
-      const created = await munshiApi.addMealItem({
-        mealType,
-        name: newMeal.name,
-        price: newMeal.price,
-        image: newMeal.image || '',
-      });
-      setMeals((prev) => ({
-        ...prev,
-        [mealType]: [...(prev[mealType] || []), { ...created, id: created.id || created._id }],
-      }));
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
+  const handleAddMeal = async (type, meal) => {
+    const created = await munshiApi.addMealItem({ ...meal, mealType: type });
+    setMeals(prev => ({
+      ...prev,
+      [type]: [...(prev[type] || []), { ...created, id: created.id || created._id }]
+    }));
   };
 
-  if (!authChecked) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="inline-block w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!sessionMeal) {
-    return <MealSelectionPage onSelectMeal={setSessionMeal} />;
-  }
+  if (!authChecked) return <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]"><div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>;
+  if (!sessionMeal) return <MealSelectionPage onSelectMeal={setSessionMeal} />;
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: ShoppingBag },
@@ -422,116 +461,98 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/10 rounded-lg">
-                <ShoppingBag className="w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold">Munshi Dashboard</h1>
-                <p className="text-xs text-indigo-100 capitalize">Session: {sessionMeal}</p>
-              </div>
-            </div>
+    <div className="flex min-h-screen bg-[#F8FAFC]">
+       {/* Sidebar Navigation */}
+       <aside className={`fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-slate-100 transform transition-transform duration-300 ease-in-out md:translate-x-0 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="p-8 h-full flex flex-col">
+             <div className="flex items-center gap-3 mb-10 px-2">
+                 <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                     <UtensilsCrossed size={20} />
+                 </div>
+                 <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Munshi<span className="text-indigo-600">Dash</span></h1>
+             </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-2">
-              {tabs.map(tab => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                      activeTab === tab.id
-                        ? 'bg-white text-indigo-600 shadow-lg'
-                        : 'text-white hover:bg-white/10'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </nav>
+             <nav className="space-y-2 flex-1">
+                 {tabs.map(tab => {
+                     const Icon = tab.icon;
+                     const isActive = activeTab === tab.id;
+                     return (
+                         <button
+                             key={tab.id}
+                             onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false); }}
+                             className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 font-bold text-sm relative overflow-hidden group ${isActive ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-200' : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'}`}
+                         >
+                             <Icon size={20} className={`relative z-10 transition-transform group-hover:scale-110 ${isActive ? 'stroke-[2.5]' : ''}`} />
+                             <span className="relative z-10">{tab.label}</span>
+                             {isActive && <div className="absolute inset-0 bg-white/20 blur-xl"></div>}
+                         </button>
+                     );
+                 })}
+             </nav>
 
-            {/* Logout Button */}
-            <div className="hidden md:block">
-              <Button onClick={onLogout} variant="danger" icon={LogOut}>
-                Logout
-              </Button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 hover:bg-white/10 rounded-lg"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
+             <div className="mt-auto pt-8 border-t border-slate-100">
+                 <div className="bg-slate-50 p-4 rounded-2xl mb-4 flex items-center gap-3">
+                     <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-400 font-bold shadow-sm">M</div>
+                     <div className="overflow-hidden">
+                         <p className="text-sm font-bold text-slate-800 truncate">Current Session</p>
+                         <p className="text-xs text-indigo-600 font-bold capitalize truncate">{sessionMeal}</p>
+                     </div>
+                 </div>
+                 <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-2xl text-slate-500 font-bold hover:bg-rose-50 hover:text-rose-600 transition-colors">
+                     <LogOut size={20} />
+                     <span>Sign Out</span>
+                 </button>
+             </div>
           </div>
+       </aside>
 
-          {/* Mobile Navigation */}
-          {mobileMenuOpen && (
-            <div className="md:hidden mt-4 space-y-2">
-              {tabs.map(tab => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => {
-                      setActiveTab(tab.id);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${
-                      activeTab === tab.id
-                        ? 'bg-white text-indigo-600'
-                        : 'text-white hover:bg-white/10'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {tab.label}
+       {/* Mobile Overlay */}
+       {mobileMenuOpen && <div onClick={() => setMobileMenuOpen(false)} className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-30 md:hidden"></div>}
+
+       {/* Main Content */}
+       <main className="flex-1 md:ml-72 min-h-screen relative">
+          {/* Header */}
+          <header className="sticky top-0 z-20 bg-[#F8FAFC]/80 backdrop-blur-md px-8 py-5 flex items-center justify-between">
+              <div className="md:hidden">
+                  <button onClick={() => setMobileMenuOpen(true)} className="p-2 text-slate-600 hover:bg-white rounded-xl transition-colors">
+                      <Menu size={24} />
                   </button>
-                );
-              })}
-              <button
-                onClick={onLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-white hover:bg-white/10"
-              >
-                <LogOut className="w-4 h-4" />
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
-      </header>
+              </div>
+              
+              <div className="hidden md:block">
+                  <h2 className="text-2xl font-bold text-slate-800 tracking-tight">{tabs.find(t => t.id === activeTab)?.label}</h2>
+                  <p className="text-slate-400 text-sm font-medium">Manage your mess operations efficiently</p>
+              </div>
 
-      {/* Main Content */}
-      <main className="min-h-[calc(100vh-80px)]">
-        {activeTab === 'dashboard' && (
-          <DashboardView
-            sessionMeal={sessionMeal}
-            onStudentScan={handleStudentScan}
-            scannedStudent={scannedStudent}
-            clearScannedStudent={clearScannedStudent}
-            onAddExtraItems={handleAddExtraItems}
-            meals={meals}
-            scanLoading={loading}
-            menuLoading={menuLoading}
-          />
-        )}
-        {activeTab === 'messoffrequest' && (
-          <MessOffRequestsPage
-            requests={messOffRequests}
-            handleAction={handleRequestAction}
-          />
-        )}
-        {activeTab === 'reports' && <ReportsPage orders={orders} />}
-        {activeTab === 'addmeal' && <AddMealPage onAddMeal={handleAddMeal} />}
-      </main>
+              <div className="flex items-center gap-4">
+                  <button onClick={() => setSessionMeal(null)} className="hidden md:flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:border-indigo-200 hover:text-indigo-600 transition-all shadow-sm">
+                      <Calendar size={16} />
+                      <span>Change Session</span>
+                  </button>
+                  <div className="w-10 h-10 bg-white rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 shadow-sm">
+                      <Bell size={20} />
+                  </div>
+              </div>
+          </header>
+
+          <div className="p-6 md:p-8 md:pt-4 pb-24 max-w-7xl mx-auto">
+             {activeTab === 'dashboard' && (
+               <DashboardView
+                 sessionMeal={sessionMeal}
+                 onStudentScan={handleStudentScan}
+                 scannedStudent={scannedStudent}
+                 clearScannedStudent={() => setScannedStudent(null)}
+                 onAddExtraItems={handleAddExtraItems}
+                 meals={meals}
+                 scanLoading={loading}
+                 menuLoading={menuLoading}
+               />
+             )}
+             {activeTab === 'messoffrequest' && <MessOffRequestsPage requests={messOffRequests} handleAction={handleRequestAction} />}
+             {activeTab === 'reports' && <ReportsPage orders={orders} />}
+             {activeTab === 'addmeal' && <AddMealPage onAddMeal={handleAddMeal} />}
+          </div>
+       </main>
     </div>
   );
 };
