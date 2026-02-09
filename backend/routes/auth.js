@@ -3,6 +3,7 @@ const {
     login,
     loginStudent,
     registerStudent,
+    verifyRegistrationOTP,
     loginStudentByRollNo,
     forgotPassword,
     resetPassword,

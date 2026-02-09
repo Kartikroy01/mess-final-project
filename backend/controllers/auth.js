@@ -6,7 +6,6 @@ const Bill = require("../models/Bill");
 const MealHistory = require("../models/MealHistory");
 const {
   sendPasswordResetEmail,
-  sendPasswordResetEmail,
   sendWelcomeEmail,
   sendRegistrationOTP
 } = require("../utils/emailService");

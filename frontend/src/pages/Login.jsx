@@ -65,9 +65,9 @@ export default function Login() {
   // Hostel options
   const hostelOptions = [
     { value: "", label: "Select Hostel", disabled: true },
-    { value: "MBH-A", label: "MBH-A - Main Boys Hostel" },
-    { value: "MBH-B", label: "MBH-B - Main Boys Hostel" },
-    { value: "MBH-F", label: "MBH-F - Main Boys Hostel" },
+    { value: "MBH-A", label: "MBH-A - Mega Boys Hostel" },
+    { value: "MBH-B", label: "MBH-B - Mega Boys Hostel" },
+    { value: "MBH-F", label: "MBH-F - Mega Boys Hostel" },
     { value: "BH-1", label: "BH-1 - Boys Hostel 1" },
     { value: "BH-2", label: "BH-2 - Boys Hostel 2" },
     { value: "BH-3", label: "BH-3 - Boys Hostel 3" },
@@ -237,14 +237,16 @@ export default function Login() {
 
       setLoading(false);
       
-      // Switch to login view and show success
-      setShowRegister(false);
-      setEmail(registerData.email);
-      setLoading(false);
+      // Debug: Log the response
+      console.log("Registration response:", data);
+      console.log("Message:", data.message);
+      console.log("Success:", data.success);
       
       // Check if OTP was sent
       if (data.message && data.message.includes("Verification code sent")) {
+        console.log("OTP flow detected - showing OTP form");
         setShowOTP(true);
+        setShowRegister(true); // Keep registration view open to show OTP form
         setSuccessMessage(`Verification code sent to ${data.email}`);
         return;
       }
@@ -442,25 +444,28 @@ export default function Login() {
   // Reset Password View
   if (showResetPassword) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 px-4">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-
-        <div className="bg-white shadow-2xl rounded-3xl w-full max-w-md p-8 relative z-10 border border-gray-100">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-              <KeyRound className="w-8 h-8 text-green-600" />
+      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 relative overflow-hidden">
+        {/* Animated background blobs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        
+        <div className="bg-slate-900/50 backdrop-blur-2xl rounded-3xl w-full max-w-md p-10 relative z-10 border border-white/10 shadow-2xl">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-3xl mb-6 shadow-2xl shadow-green-500/30">
+              <KeyRound className="w-10 h-10 text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            <h2 className="text-4xl font-bold text-white mb-3 tracking-tight">
               Reset Password
             </h2>
-            <p className="text-gray-500">
+            <p className="text-slate-300 text-base">
               Enter the token from your email and set a new password
             </p>
           </div>
 
           <form onSubmit={handleResetPassword}>
             <div className="mb-5">
-              <label className="block mb-2 text-sm font-semibold text-gray-700">
+              <label className="block mb-2 text-sm font-semibold text-white">
                 Reset Token <span className="text-red-500">*</span>
               </label>
               <div className="relative">
@@ -469,7 +474,7 @@ export default function Login() {
                   type="text"
                   value={resetToken}
                   onChange={(e) => setResetToken(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:bg-white/15 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
                   placeholder="Enter token from email"
                   required
                 />
@@ -477,7 +482,7 @@ export default function Login() {
             </div>
 
             <div className="mb-5">
-              <label className="block mb-2 text-sm font-semibold text-gray-700">
+              <label className="block mb-2 text-sm font-semibold text-white">
                 New Password <span className="text-red-500">*</span>
               </label>
               <div className="relative">
@@ -486,7 +491,7 @@ export default function Login() {
                   type={showPassword ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  className="w-full pl-12 pr-12 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:bg-white/15 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
                   placeholder="••••••••"
                   minLength="6"
                   required
@@ -503,13 +508,13 @@ export default function Login() {
                   )}
                 </button>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-slate-400">
                 Minimum 6 characters
               </p>
             </div>
 
             <div className="mb-6">
-              <label className="block mb-2 text-sm font-semibold text-gray-700">
+              <label className="block mb-2 text-sm font-semibold text-white">
                 Confirm New Password <span className="text-red-500">*</span>
               </label>
               <div className="relative">
@@ -518,7 +523,7 @@ export default function Login() {
                   type={showPassword ? "text" : "password"}
                   value={confirmNewPassword}
                   onChange={(e) => setConfirmNewPassword(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:bg-white/15 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
                   placeholder="••••••••"
                   required
                 />
@@ -566,25 +571,28 @@ export default function Login() {
   // Forgot Password View
   if (showForgotPassword) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 px-4">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-
-        <div className="bg-white shadow-2xl rounded-3xl w-full max-w-md p-8 relative z-10 border border-gray-100">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-              <Lock className="w-8 h-8 text-blue-600" />
+      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 relative overflow-hidden">
+        {/* Animated background blobs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        
+        <div className="bg-slate-900/50 backdrop-blur-2xl rounded-3xl w-full max-w-md p-10 relative z-10 border border-white/10 shadow-2xl">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-3xl mb-6 shadow-2xl shadow-blue-500/30">
+              <Lock className="w-10 h-10 text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            <h2 className="text-4xl font-bold text-white mb-3 tracking-tight">
               Forgot Password?
             </h2>
-            <p className="text-gray-500">
+            <p className="text-slate-300 text-base">
               Enter your email to receive a reset token
             </p>
           </div>
 
           <form onSubmit={handleForgotPassword}>
             <div className="mb-6">
-              <label className="block mb-2 text-sm font-semibold text-gray-700">
+              <label className="block mb-2 text-sm font-semibold text-white">
                 College Email Address <span className="text-red-500">*</span>
               </label>
               <div className="relative">
@@ -593,11 +601,8 @@ export default function Login() {
                   type="email"
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && handleForgotPassword(e)
-                  }
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="you@nitj.ac.in"
+                  className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:bg-white/15 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
+                  placeholder="yourname@nitj.ac.in"
                   required
                 />
               </div>
@@ -652,21 +657,21 @@ export default function Login() {
   // Register View
   if (showRegister) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 px-4 py-8">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-
-        <div className="absolute top-20 left-10 w-72 h-72 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-        <div className="absolute bottom-20 right-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-
-        <div className="bg-white shadow-2xl rounded-3xl w-full max-w-2xl p-8 relative z-10 border border-gray-100">
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-blue-500 rounded-2xl mb-4 shadow-lg">
-              <UserPlus className="w-8 h-8 text-white" />
+      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 relative overflow-hidden">
+        {/* Animated background blobs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        
+        <div className="bg-slate-900/50 backdrop-blur-2xl rounded-3xl w-full max-w-2xl p-10 relative z-10 border border-white/10 shadow-2xl">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 rounded-3xl mb-6 shadow-2xl shadow-blue-500/30">
+              <UserPlus className="w-10 h-10 text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            <h2 className="text-4xl font-bold text-white mb-3 tracking-tight">
               {showOTP ? "Verify Email" : "Create Account"}
             </h2>
-            <p className="text-gray-500">
+            <p className="text-slate-300 text-base">
               {showOTP 
                 ? "Enter the 6-digit code sent to your email" 
                 : "Register as a new student at NITJ"}
@@ -676,7 +681,7 @@ export default function Login() {
           {showOTP ? (
             <form onSubmit={handleVerifyOTP}>
               <div className="mb-6">
-                <label className="block mb-2 text-sm font-semibold text-gray-700">
+                <label className="block mb-2 text-sm font-semibold text-white">
                   Verification Code <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -685,15 +690,15 @@ export default function Login() {
                     type="text"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all tracking-widest text-lg"
+                    className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:bg-white/15 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all tracking-widest text-lg outline-none"
                     placeholder="123456"
                     maxLength="6"
                     required
                     autoFocus
                   />
                 </div>
-                <p className="mt-2 text-xs text-gray-500">
-                  Code sent to <span className="font-semibold">{registerData.email}</span>
+                <p className="mt-2 text-xs text-slate-400">
+                  Code sent to <span className="font-semibold text-white">{registerData.email}</span>
                 </p>
               </div>
 
@@ -732,7 +737,7 @@ export default function Login() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Full Name */}
               <div className="md:col-span-2">
-                <label className="block mb-2 text-sm font-semibold text-gray-700">
+                <label className="block mb-2 text-sm font-semibold text-white">
                   Full Name <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -743,7 +748,7 @@ export default function Login() {
                     onChange={(e) =>
                       setRegisterData({ ...registerData, name: e.target.value })
                     }
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:bg-white/15 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
                     placeholder="Your Name"
                     required
                   />
@@ -752,7 +757,7 @@ export default function Login() {
 
               {/* College Email */}
               <div className="md:col-span-2">
-                <label className="block mb-2 text-sm font-semibold text-gray-700">
+                <label className="block mb-2 text-sm font-semibold text-white">
                   College Email Address <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -766,7 +771,7 @@ export default function Login() {
                         email: e.target.value,
                       })
                     }
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:bg-white/15 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
                     placeholder="yourname@nitj.ac.in"
                     required
                   />
@@ -778,7 +783,7 @@ export default function Login() {
 
               {/* Roll Number */}
               <div>
-                <label className="block mb-2 text-sm font-semibold text-gray-700">
+                <label className="block mb-2 text-sm font-semibold text-white">
                   Roll Number <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -792,7 +797,7 @@ export default function Login() {
                         rollNo: e.target.value,
                       })
                     }
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:bg-white/15 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
                     placeholder="22103084"
                     required
                   />
@@ -801,7 +806,7 @@ export default function Login() {
 
               {/* Phone Number */}
               <div>
-                <label className="block mb-2 text-sm font-semibold text-gray-700">
+                <label className="block mb-2 text-sm font-semibold text-white">
                   Phone Number <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -815,7 +820,7 @@ export default function Login() {
                         phoneNo: e.target.value,
                       })
                     }
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:bg-white/15 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
                     placeholder="9876543210"
                     maxLength="10"
                     required
@@ -825,7 +830,7 @@ export default function Login() {
 
               {/* Hostel Dropdown */}
               <div>
-                <label className="block mb-2 text-sm font-semibold text-gray-700">
+                <label className="block mb-2 text-sm font-semibold text-white">
                   Hostel <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -838,7 +843,7 @@ export default function Login() {
                         hostelNo: e.target.value,
                       })
                     }
-                    className="w-full pl-12 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white cursor-pointer"
+                    className="w-full pl-12 pr-10 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:bg-white/15 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all appearance-none cursor-pointer outline-none"
                     required
                   >
                     {hostelOptions.map((option) => (
@@ -846,7 +851,7 @@ export default function Login() {
                         key={option.value}
                         value={option.value}
                         disabled={option.disabled}
-                        className="py-2"
+                        className="py-2 bg-slate-800 text-white"
                       >
                         {option.label}
                       </option>
@@ -858,7 +863,7 @@ export default function Login() {
 
               {/* Room Number */}
               <div>
-                <label className="block mb-2 text-sm font-semibold text-gray-700">
+                <label className="block mb-2 text-sm font-semibold text-white">
                   Room Number <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -872,7 +877,7 @@ export default function Login() {
                         roomNo: e.target.value,
                       })
                     }
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:bg-white/15 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
                     placeholder="428"
                     required
                   />
@@ -881,7 +886,7 @@ export default function Login() {
 
               {/* Password */}
               <div>
-                <label className="block mb-2 text-sm font-semibold text-gray-700">
+                <label className="block mb-2 text-sm font-semibold text-white">
                   Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -895,7 +900,7 @@ export default function Login() {
                         password: e.target.value,
                       })
                     }
-                    className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full pl-12 pr-12 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:bg-white/15 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
                     placeholder="••••••••"
                     minLength="6"
                     required
@@ -919,7 +924,7 @@ export default function Login() {
 
               {/* Confirm Password */}
               <div>
-                <label className="block mb-2 text-sm font-semibold text-gray-700">
+                <label className="block mb-2 text-sm font-semibold text-white">
                   Confirm Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -933,7 +938,7 @@ export default function Login() {
                         confirmPassword: e.target.value,
                       })
                     }
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:bg-white/15 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
                     placeholder="••••••••"
                     required
                   />
@@ -984,59 +989,59 @@ export default function Login() {
 
   // Login View
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 px-4">
-      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-
-      <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-      <div className="absolute bottom-20 right-10 w-72 h-72 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-
-      <div className="bg-white shadow-2xl rounded-3xl w-full max-w-md p-8 relative z-10 border border-gray-100">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-green-500 rounded-2xl mb-4 shadow-lg">
-            <Lock className="w-8 h-8 text-white" />
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 relative overflow-hidden">
+      {/* Animated background blobs */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+      <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+      
+      <div className="bg-slate-900/50 backdrop-blur-2xl rounded-3xl w-full max-w-md p-10 relative z-10 border border-white/10 shadow-2xl">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 rounded-3xl mb-6 shadow-2xl shadow-blue-500/30">
+            <Lock className="w-10 h-10 text-white" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+          <h2 className="text-4xl font-bold text-white mb-3 tracking-tight">
             Welcome Back
           </h2>
-          <p className="text-gray-500">Sign in to access your dashboard</p>
+          <p className="text-slate-300 text-base">Sign in to access your dashboard</p>
         </div>
 
         <form onSubmit={handleLogin}>
-          <div className="mb-5">
-            <label className="block mb-2 text-sm font-semibold text-gray-700">
+          <div className="mb-6">
+            <label className="block mb-3 text-sm font-semibold text-white">
               College Email Address
             </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <div className="relative group">
+              <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-cyan-400 transition-colors" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:bg-white/10 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
                 placeholder="you@nitj.ac.in"
                 required
               />
             </div>
           </div>
 
-          <div className="mb-2">
-            <label className="block mb-2 text-sm font-semibold text-gray-700">
+          <div className="mb-4">
+            <label className="block mb-3 text-sm font-semibold text-white">
               Password
             </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <div className="relative group">
+              <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-cyan-400 transition-colors" />
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:bg-white/10 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
                 placeholder="••••••••"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-cyan-400 transition-colors"
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -1047,11 +1052,11 @@ export default function Login() {
             </div>
           </div>
 
-          <div className="flex justify-end mb-6">
+          <div className="flex justify-end mb-8">
             <button
               type="button"
               onClick={() => setShowForgotPassword(true)}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
+              className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
             >
               Forgot Password?
             </button>
@@ -1059,15 +1064,15 @@ export default function Login() {
 
           {/* Success Message Display */}
           {successMessage && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700 text-sm animate-in fade-in slide-in-from-top-2">
-              <CheckCircle className="w-4 h-4 flex-shrink-0" />
+            <div className="mb-5 p-4 bg-emerald-500/10 border border-emerald-400/30 rounded-2xl flex items-center gap-3 text-emerald-300 text-sm backdrop-blur-sm">
+              <CheckCircle className="w-5 h-5 flex-shrink-0" />
               <span>{successMessage}</span>
             </div>
           )}
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <div className="mb-5 p-4 bg-red-500/10 border border-red-400/30 rounded-2xl flex items-center gap-3 text-red-300 text-sm backdrop-blur-sm">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span>{error}</span>
             </div>
           )}
@@ -1075,7 +1080,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white rounded-xl font-semibold transition-all transform hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="w-full py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 hover:from-cyan-400 hover:via-blue-400 hover:to-purple-500 text-white rounded-2xl font-bold text-lg transition-all transform hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -1087,12 +1092,12 @@ export default function Login() {
             )}
           </button>
 
-          <div className="relative my-6">
+          <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t border-white/10"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">
+              <span className="px-4 bg-slate-900/50 text-slate-400">
                 New to NITJ Mess?
               </span>
             </div>
@@ -1104,7 +1109,7 @@ export default function Login() {
               setShowRegister(true);
               setError("");
             }}
-            className="w-full py-3 bg-white border-2 border-green-600 text-green-600 hover:bg-green-50 rounded-xl font-semibold transition-all transform hover:scale-[1.02] shadow-md hover:shadow-lg"
+            className="w-full py-4 bg-white/5 border-2 border-white/20 text-white hover:bg-white/10 hover:border-cyan-400/50 rounded-2xl font-semibold transition-all transform hover:scale-[1.02] hover:shadow-lg"
           >
             Create New Account
           </button>
