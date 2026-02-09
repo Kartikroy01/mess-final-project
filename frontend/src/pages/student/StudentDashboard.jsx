@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Home, BarChart2, CalendarOff, LogOut, Menu, X, QrCode, Download, FileText, ThumbsUp, Meh, ThumbsDown, Angry, MessageSquare, UtensilsCrossed, Bell, User, ChevronRight, Activity, DollarSign, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { QRCodeCanvas } from 'qrcode.react';
 
 // --- API SERVICE LAYER ---
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -17,7 +18,10 @@ const apiService = {
           'Content-Type': 'application/json'
         }
       });
-      if (!response.ok) throw new Error('Failed to fetch student data');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch student data');
+      }
       const data = await response.json();
       return data.success ? data.student : data;
     } catch (error) {
@@ -34,7 +38,10 @@ const apiService = {
           'Content-Type': 'application/json'
         }
       });
-      if (!response.ok) throw new Error('Failed to fetch meal history');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch meal history');
+      }
       return await response.json();
     } catch (error) {
       console.error('Error fetching meal history:', error);
@@ -49,7 +56,10 @@ const apiService = {
           'Content-Type': 'application/json'
         }
       });
-      if (!response.ok) throw new Error('Failed to fetch mess off requests');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch mess off requests');
+      }
       const data = await response.json();
       return Array.isArray(data) ? data : data.data || [];
     } catch (error) {
@@ -67,7 +77,10 @@ const apiService = {
         },
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error('Failed to submit mess off application');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to submit mess off application');
+      }
       return await response.json();
     } catch (error) {
       console.error('Error submitting mess off:', error);
@@ -84,7 +97,10 @@ const apiService = {
         },
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error('Failed to submit feedback');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to submit feedback');
+      }
       return await response.json();
     } catch (error) {
       console.error('Error submitting feedback:', error);
@@ -98,7 +114,10 @@ const apiService = {
           'Content-Type': 'application/json'
         }
       });
-      if (!response.ok) throw new Error('Failed to fetch menu');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch menu');
+      }
       const data = await response.json();
       if (data && data.data) return data.data;
       return data;
@@ -112,7 +131,10 @@ const apiService = {
       const response = await fetch(`${API_BASE_URL}/student/report/download?month=${month}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!response.ok) throw new Error('Failed to download report');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to download report');
+      }
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -269,9 +291,18 @@ const StudentHome = ({ student, token }) => {
                             Here's what's happening with your mess account today.
                         </p>
                     </div>
-                    <div className="hidden md:block">
-                         <div className="w-24 h-24 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shadow-xl">
-                            <QrCode className="text-white" size={48} strokeWidth={1.5} />
+                    <div className="flex flex-col items-center gap-2 group/qr">
+                         <div className="bg-white p-2.5 rounded-2xl shadow-2xl transition-transform duration-500 group-hover/qr:scale-110 group-hover/qr:rotate-2">
+                            <QRCodeCanvas 
+                                value={student.qrCode || `${student.rollNo}-${student.hostelNo}-${student.roomNo}`} 
+                                size={90}
+                                level={"H"}
+                                includeMargin={false}
+                            />
+                         </div>
+                         <div className="text-center md:text-right px-2">
+                             <p className="text-white text-[10px] font-bold uppercase tracking-widest opacity-80">Identification</p>
+                             <p className="text-blue-200 text-[9px] font-mono leading-none mt-0.5">{student.rollNo}</p>
                          </div>
                     </div>
                 </div>
@@ -364,7 +395,7 @@ const StudentFeedback = ({ token }) => {
                 setComment('');
             }, 3000);
         } catch (error) {
-            alert('Failed to submit feedback. Please try again.');
+            alert(error.message || 'Failed to submit feedback. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -794,7 +825,7 @@ const MessOffForm = ({ token, onSubmitSuccess }) => {
             setReason('');
             if (onSubmitSuccess) onSubmitSuccess();
         } catch (error) {
-            alert('Failed to submit application. Please try again.');
+            alert(error.message || 'Failed to submit application. Please try again.');
         } finally {
             setSubmitting(false);
         }

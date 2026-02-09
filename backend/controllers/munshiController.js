@@ -60,6 +60,9 @@ exports.lookupStudent = async (req, res) => {
                   'i'
                 ),
               },
+              {
+                qrCode: query
+              },
             ],
           }),
     };
@@ -131,18 +134,33 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // Process and validate items
-    const orderItems = items.map((i) => ({
-      name: i.name.trim(),
-      price: Number(i.price),
-    }));
+    // Process and validate items with quantity and special pricing
+    const orderItems = items.map((i) => {
+      const name = i.name.trim();
+      const basePrice = Number(i.price);
+      const qty = Number(i.qty) || 1;
+      
+      let finalPrice = basePrice * qty;
+      
+      // Special pricing logic: if item price is 15 and qty is 2, total is 25
+      if (basePrice === 15 && qty === 2) {
+        finalPrice = 25;
+      }
+      
+      return {
+        name,
+        price: finalPrice, // Total price for this line item
+        qty,
+        basePrice // Store base price for reference if needed
+      };
+    });
 
     const totalAmount = orderItems.reduce((sum, i) => sum + i.price, 0);
 
     // Create the order
     const order = new ExtraOrder({
       studentId: student._id,
-      items: orderItems,
+      items: orderItems.map(i => ({ name: i.name, price: i.price, qty: i.qty })),
       totalAmount,
       mealType: mealType || 'breakfast',
     });
@@ -155,7 +173,7 @@ exports.createOrder = async (req, res) => {
       type: (mealType || 'breakfast').charAt(0).toUpperCase() + (mealType || 'breakfast').slice(1),
       items: orderItems.map(item => ({
         name: item.name,
-        qty: 1, // Default to 1 as current UI doesn't support quantity per item selection yet
+        qty: item.qty,
         price: item.price
       })),
       totalCost: totalAmount

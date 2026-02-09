@@ -152,7 +152,7 @@ studentSchema.pre('save', async function(next) {
         
         // Generate QR code if not exists
         if (!this.qrCode) {
-            this.qrCode = `${this.rollNo}-${this.hostelNo}`;
+            this.qrCode = `${this.rollNo}-${this.hostelNo}-${this.roomNo}`;
         }
         next();
     } catch (error) {

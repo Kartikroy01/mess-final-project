@@ -41,7 +41,7 @@ export const munshiApi = {
       headers: getAuthHeaders(),
       body: JSON.stringify({
         studentId,
-        items: items.map((i) => ({ name: i.name, price: i.price })),
+        items: items.map((i) => ({ name: i.name, price: i.price, qty: i.qty })),
         mealType,
       }),
     });

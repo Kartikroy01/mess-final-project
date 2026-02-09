@@ -2,12 +2,19 @@ const nodemailer = require('nodemailer');
 
 // Create transporter with Gmail
 const createTransporter = () => {
+  console.log(`Setting up email transporter for: ${process.env.EMAIL_USER}`);
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Use SSL/TLS
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD, // Gmail app password
     },
+    // Add timeout to prevent hanging
+    connectionTimeout: 10000, 
+    greetingTimeout: 10000,
+    socketTimeout: 20000
   });
 };
 
@@ -262,7 +269,70 @@ const sendWelcomeEmail = async (email, studentName, rollNo) => {
   }
 };
 
+// Send registration OTP email
+const sendRegistrationOTP = async (email, otp, name) => {
+  try {
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: `"NITJ Mess Portal" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Verify Your Email - NITJ Mess Portal',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+            .header { background: linear-gradient(135deg, #2563eb 0%, #10b981 100%); padding: 40px 20px; text-align: center; color: white; }
+            .content { padding: 40px 30px; }
+            .otp-box { background-color: #f0f9ff; border: 2px dashed #2563eb; border-radius: 12px; padding: 30px; text-align: center; margin: 30px 0; }
+            .otp { font-size: 42px; font-weight: bold; color: #2563eb; letter-spacing: 8px; font-family: 'Courier New', monospace; }
+            .footer { background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 13px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📧 Verify Your Email</h1>
+            </div>
+            <div class="content">
+              <p style="font-size: 18px; color: #1f2937;">Hello ${name},</p>
+              <p style="color: #4b5563; line-height: 1.6;">
+                Thank you for registering with NITJ Mess Portal. Please use the following One-Time Password (OTP) to verify your email address and complete your registration.
+              </p>
+              
+              <div class="otp-box">
+                <div style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; color: #1f2937;">Your Verification Code</div>
+                <div class="otp">${otp}</div>
+                <div style="color: #dc2626; font-size: 14px; margin-top: 15px; font-weight: 600;">⏰ Expires in 10 minutes</div>
+              </div>
+              
+              <p style="color: #4b5563; line-height: 1.6;">
+                If you didn't initiate this registration, please ignore this email.
+              </p>
+            </div>
+            <div class="footer">
+              <p><strong>NITJ Mess Management Portal</strong><br>Dr B R Ambedkar National Institute of Technology Jalandhar</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('OTP email sent:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('Error sending OTP email:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   sendPasswordResetEmail,
   sendWelcomeEmail,
+  sendRegistrationOTP
 };

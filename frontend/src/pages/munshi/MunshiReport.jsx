@@ -28,44 +28,25 @@ const Button = ({ children, onClick, variant = 'primary', className = '', icon: 
 };
 
 const ReportsPage = ({ orders }) => {
-  const [filter, setFilter] = useState('all');
-  const [customStartDate, setCustomStartDate] = useState('');
-  const [customEndDate, setCustomEndDate] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState('all');
+  const [selectedDay, setSelectedDay] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const getFilteredOrders = () => {
     let filtered = orders;
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
+    
     // Date Filters
-    switch (filter) {
-      case 'today':
-        filtered = filtered.filter(order => new Date(order.date) >= todayStart);
-        break;
-      case 'week':
-        const weekStart = new Date(todayStart);
-        weekStart.setDate(todayStart.getDate() - todayStart.getDay());
-        filtered = filtered.filter(order => new Date(order.date) >= weekStart);
-        break;
-      case 'month':
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        filtered = filtered.filter(order => new Date(order.date) >= monthStart);
-        break;
-      case 'custom':
-        if (customStartDate && customEndDate) {
-          const start = new Date(customStartDate);
-          start.setHours(0, 0, 0, 0);
-          const end = new Date(customEndDate);
-          end.setHours(23, 59, 59, 999);
-          filtered = filtered.filter(order => {
-            const orderDate = new Date(order.date);
-            return orderDate >= start && orderDate <= end;
-          });
-        }
-        break;
-      default:
-        break;
+    if (selectedMonth !== 'all' || selectedDay !== 'all') {
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.date);
+        const orderMonth = orderDate.getMonth(); // 0-11
+        const orderDay = orderDate.getDate(); // 1-31
+
+        const monthMatch = selectedMonth === 'all' || orderMonth === parseInt(selectedMonth);
+        const dayMatch = selectedDay === 'all' || orderDay === parseInt(selectedDay);
+
+        return monthMatch && dayMatch;
+      });
     }
 
     // Search Filter
@@ -205,50 +186,46 @@ const ReportsPage = ({ orders }) => {
              </div>
 
              {/* Filters */}
-             <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200">
-                {['all', 'today', 'week', 'month', 'custom'].map(f => (
-                  <button
-                    key={f}
-                    onClick={() => setFilter(f)}
-                    className={`px-3 py-1.5 text-sm font-bold rounded-lg capitalize transition-all ${
-                      filter === f
-                        ? 'bg-white text-indigo-600 shadow-sm'
-                        : 'text-slate-500 hover:text-slate-700'
-                    }`}
-                  >
-                    {f}
-                  </button>
-                ))}
+             <div className="flex flex-wrap items-center gap-3">
+                <div className="relative group">
+                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500" size={16} />
+                   <select 
+                      value={selectedMonth}
+                      onChange={(e) => setSelectedMonth(e.target.value)}
+                      className="pl-10 pr-8 py-2.5 bg-white border-2 border-slate-100 rounded-xl focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 appearance-none shadow-sm hover:border-slate-200 cursor-pointer text-sm min-w-[140px]"
+                   >
+                      <option value="all">All Months</option>
+                      {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((m, i) => (
+                        <option key={i} value={i}>{m}</option>
+                      ))}
+                   </select>
+                   <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <Filter size={14} />
+                   </div>
+                </div>
+
+                <div className="relative group">
+                   <select 
+                      value={selectedDay}
+                      onChange={(e) => setSelectedDay(e.target.value)}
+                      className="pl-4 pr-8 py-2.5 bg-white border-2 border-slate-100 rounded-xl focus:border-indigo-500 outline-none transition-all font-bold text-slate-700 appearance-none shadow-sm hover:border-slate-200 cursor-pointer text-sm min-w-[100px]"
+                   >
+                      <option value="all">All Days</option>
+                      {[...Array(31)].map((_, i) => (
+                        <option key={i+1} value={i+1}>{i+1}</option>
+                      ))}
+                   </select>
+                   <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <Filter size={14} />
+                   </div>
+                </div>
             </div>
 
-            <Button onClick={handleDownloadPdf} variant="success" icon={Download}>
+            <Button onClick={handleDownloadPdf} variant="success" icon={Download} className="md:w-auto w-full">
               Export PDF
             </Button>
           </div>
         </div>
-
-        {filter === 'custom' && (
-          <div className="bg-slate-50 p-4 rounded-2xl mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 border border-slate-100 animate-in fade-in slide-in-from-top-2">
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Start Date</label>
-              <input
-                type="date"
-                value={customStartDate}
-                onChange={e => setCustomStartDate(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">End Date</label>
-              <input
-                type="date"
-                value={customEndDate}
-                onChange={e => setCustomEndDate(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-              />
-            </div>
-          </div>
-        )}
 
         <div className="overflow-x-auto rounded-xl border border-slate-100">
           <table className="w-full">

@@ -6,8 +6,11 @@ const Bill = require("../models/Bill");
 const MealHistory = require("../models/MealHistory");
 const {
   sendPasswordResetEmail,
+  sendPasswordResetEmail,
   sendWelcomeEmail,
+  sendRegistrationOTP
 } = require("../utils/emailService");
+const TempRegistration = require("../models/TempRegistration");
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key_here";
 const TOKEN_EXPIRY = "7d";
@@ -74,6 +77,7 @@ const buildStudentResponse = async (student) => {
 };
 
 // POST /api/auth/register
+// POST /api/auth/register
 exports.registerStudent = async (req, res) => {
   try {
     const { name, email, password, rollNo, hostelNo, roomNo, phoneNo } =
@@ -90,9 +94,11 @@ exports.registerStudent = async (req, res) => {
       });
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Check if student already exists
     const existingStudent = await Student.findOne({
-      $or: [{ email: email.toLowerCase() }, { rollNo: rollNo }],
+      $or: [{ email: normalizedEmail }, { rollNo: rollNo }],
     });
 
     if (existingStudent) {
@@ -102,22 +108,123 @@ exports.registerStudent = async (req, res) => {
       });
     }
 
+    // Generate 6-digit OTP
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Create or update temporary registration
+    // We use findOneAndUpdate with upsert to handle existing pending registrations
+    await TempRegistration.findOneAndUpdate(
+      { email: normalizedEmail },
+      {
+        name,
+        email: normalizedEmail,
+        password, // Note: storing plaintext password temporarily, should ideally hash or encrypt
+        rollNo,
+        hostelNo: hostelNo || "Not Assigned",
+        roomNo: roomNo || "000",
+        phoneNo,
+        otp,
+        otpExpires
+      },
+      { upsert: true, new: true }
+    );
+
+    console.log(`OTP generated for ${normalizedEmail}: ${otp}`);
+
+    // Send OTP via email
+    try {
+      await sendRegistrationOTP(normalizedEmail, otp, name);
+    } catch (emailError) {
+      console.error("Error sending OTP email:", emailError);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send verification email. Please try again.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Verification code sent to your email",
+      email: normalizedEmail
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error during registration",
+      error: error.message,
+    });
+  }
+};
+
+// POST /api/auth/verify-otp
+exports.verifyRegistrationOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email and verification code"
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Find temporary registration
+    const tempReg = await TempRegistration.findOne({
+      email: normalizedEmail,
+      otp: otp,
+      otpExpires: { $gt: new Date() }
+    });
+
+    if (!tempReg) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired verification code"
+      });
+    }
+
+    // Verify registration doesn't already exist (double check)
+    const existingStudent = await Student.findOne({
+      $or: [{ email: normalizedEmail }, { rollNo: tempReg.rollNo }],
+    });
+
+    if (existingStudent) {
+      await TempRegistration.deleteOne({ _id: tempReg._id });
+      return res.status(400).json({
+        success: false,
+        message: "Student already exists with this email or roll number",
+      });
+    }
+
     // Create new student
     const student = new Student({
-      name,
-      email: email.toLowerCase(),
-      password, // Will be hashed by the pre-save hook in Student model
-      rollNo,
-      hostelNo: hostelNo || "Not Assigned",
-      roomNo: roomNo || "000",
-      phoneNo,
+      name: tempReg.name,
+      email: tempReg.email,
+      password: tempReg.password, // Will be hashed by pre-save hook
+      rollNo: tempReg.rollNo,
+      hostelNo: tempReg.hostelNo,
+      roomNo: tempReg.roomNo,
+      phoneNo: tempReg.phoneNo,
     });
 
     await student.save();
 
-    console.log("Student registered:", student._id);
+    // Delete temporary registration
+    await TempRegistration.deleteOne({ _id: tempReg._id });
 
-    // Generate token
+    // Send welcome email (optional)
+    try {
+      await sendWelcomeEmail(student.email, student.name, student.rollNo);
+    } catch (err) {
+      console.error("Error sending welcome email:", err);
+    }
+
+    console.log("Student registered and verified:", student._id);
+
+    // Generate token and login
     const token = createToken(student);
     const studentPayload = await buildStudentResponse(student);
 
@@ -126,12 +233,14 @@ exports.registerStudent = async (req, res) => {
       message: "Registration successful",
       token,
       student: studentPayload,
+      role: "student"
     });
+
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("OTP verification error:", error);
     return res.status(500).json({
       success: false,
-      message: "Server error during registration",
+      message: "Server error during verification",
       error: error.message,
     });
   }
@@ -366,10 +475,11 @@ exports.forgotPassword = async (req, res) => {
       console.log("Password reset email sent successfully");
     } catch (emailError) {
       console.error("Error sending email:", emailError);
-      // Still return success to not reveal if email exists
-      return res.json({
-        success: true,
-        message: "If the email exists, a reset token has been sent",
+      // Notify the user that there's a problem sending the email
+      // but only if the user actually exists (which we know they do here)
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send reset email due to a server configuration issue. Please contact the administrator.",
       });
     }
 

@@ -10,8 +10,11 @@ const {
 
 const router = express.Router();
 
-// Student registration
+// Student registration (Step 1: Send OTP)
 router.post('/register', registerStudent);
+
+// Verify OTP and complete registration (Step 2)
+router.post('/verify-otp', verifyRegistrationOTP);
 
 // Unified login: handles both student and munshi login automatically
 router.post('/login', login);

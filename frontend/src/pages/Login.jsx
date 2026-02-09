@@ -33,10 +33,19 @@ export default function Login() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
+  // OTP Verification State
+  const [showOTP, setShowOTP] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [verifyingOTP, setVerifyingOTP] = useState(false);
+
   // Clear messages on view change
   useEffect(() => {
     setError("");
     setSuccessMessage("");
+    if (!showRegister) {
+      setShowOTP(false);
+      setOtp("");
+    }
   }, [showRegister, showForgotPassword, showResetPassword]);
 
   // Registration form fields
@@ -231,6 +240,18 @@ export default function Login() {
       // Switch to login view and show success
       setShowRegister(false);
       setEmail(registerData.email);
+      setLoading(false);
+      
+      // Check if OTP was sent
+      if (data.message && data.message.includes("Verification code sent")) {
+        setShowOTP(true);
+        setSuccessMessage(`Verification code sent to ${data.email}`);
+        return;
+      }
+      
+      // Fallback for immediate registration (if OTP disabled)
+      setShowRegister(false);
+      setEmail(registerData.email);
       setSuccessMessage("Registration successful! Please login with your credentials.");
       
       setRegisterData({
@@ -247,6 +268,67 @@ export default function Login() {
       console.error("Registration error:", error);
       setError("Server error. Please try again later.");
       setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    setError("");
+    setVerifyingOTP(true);
+
+    if (!otp || otp.length !== 6) {
+      setError("Please enter a valid 6-digit OTP");
+      setVerifyingOTP(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/auth/verify-otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: registerData.email,
+          otp: otp
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setError(data.message || "Verification failed");
+        setVerifyingOTP(false);
+        return;
+      }
+
+      setVerifyingOTP(false);
+      
+      // Auto login after verification
+      const role = data.role || "student";
+      const user = data.student;
+      const authData = {
+        isAuthenticated: true,
+        token: data.token,
+        role,
+        student: data.student,
+        user,
+        loginTime: new Date().toISOString(),
+      };
+
+      localStorage.setItem("authToken", data.token);
+      localStorage.setItem("authRole", role);
+      localStorage.setItem("authUser", JSON.stringify(authData));
+      sessionStorage.setItem("authUser", JSON.stringify(authData));
+      window.currentUser = authData;
+
+      // Redirect to dashboard
+      window.location.href = "/student/dashboard";
+      
+    } catch (error) {
+      console.error("OTP Verification error:", error);
+      setError("Server error. Please try again later.");
+      setVerifyingOTP(false);
     }
   };
 
@@ -582,12 +664,71 @@ export default function Login() {
               <UserPlus className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-3xl font-bold text-gray-800 mb-2">
-              Create Account
+              {showOTP ? "Verify Email" : "Create Account"}
             </h2>
-            <p className="text-gray-500">Register as a new student at NITJ</p>
+            <p className="text-gray-500">
+              {showOTP 
+                ? "Enter the 6-digit code sent to your email" 
+                : "Register as a new student at NITJ"}
+            </p>
           </div>
 
-          <form onSubmit={handleRegister}>
+          {showOTP ? (
+            <form onSubmit={handleVerifyOTP}>
+              <div className="mb-6">
+                <label className="block mb-2 text-sm font-semibold text-gray-700">
+                  Verification Code <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all tracking-widest text-lg"
+                    placeholder="123456"
+                    maxLength="6"
+                    required
+                    autoFocus
+                  />
+                </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  Code sent to <span className="font-semibold">{registerData.email}</span>
+                </p>
+              </div>
+
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 text-red-700 text-sm">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={verifyingOTP}
+                className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-all transform hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {verifyingOTP ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Verifying...
+                  </span>
+                ) : (
+                  "Verify & Complete Registration"
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowOTP(false)}
+                className="w-full mt-3 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all"
+              >
+                Back to Registration
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleRegister}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Full Name */}
               <div className="md:col-span-2">
@@ -835,6 +976,7 @@ export default function Login() {
               </button>
             </div>
           </form>
+          )}
         </div>
       </div>
     );
