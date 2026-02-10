@@ -28,12 +28,21 @@ const buildStudentResponse = async (student) => {
     .limit(10)
     .lean();
 
-  const mealHistory = meals.map((meal) => ({
-    date: meal.date.toISOString().split('T')[0],
-    type: meal.type,
-    items: meal.items || [],
-    totalCost: meal.totalCost || 0,
-  }));
+  const mealHistory = meals.map((meal) => {
+    const dateObj = new Date(meal.date);
+    const timeStr = dateObj.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit', 
+      hour12: true 
+    });
+    return {
+      date: meal.date.toISOString().split('T')[0],
+      time: timeStr,
+      type: meal.type,
+      items: meal.items || [],
+      totalCost: meal.totalCost || 0,
+    };
+  });
 
   return {
     id: student._id,
@@ -90,12 +99,21 @@ exports.getMealHistory = async (req, res) => {
 
     const meals = await MealHistory.find(query).sort({ date: -1 }).lean();
 
-    const response = meals.map((meal) => ({
-      date: meal.date.toISOString().split('T')[0],
-      type: meal.type,
-      items: meal.items || [],
-      totalCost: meal.totalCost || 0,
-    }));
+    const response = meals.map((meal) => {
+      const dateObj = new Date(meal.date);
+      const timeStr = dateObj.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      });
+      return {
+        date: meal.date.toISOString().split('T')[0],
+        time: timeStr,
+        type: meal.type,
+        items: meal.items || [],
+        totalCost: meal.totalCost || 0,
+      };
+    });
 
     return res.json(response);
   } catch (error) {

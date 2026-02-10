@@ -64,12 +64,14 @@ function toPublicPayload(doc) {
  * Returns the active MenuPage from DB, or DEFAULT_MENU_PAGE if none exists.
  */
 async function getPublicMenu(req, res) {
+  console.log('[MenuPageController] getPublicMenu called - PUBLIC ENDPOINT');
   try {
     const doc = await MenuPage.findOne({ isActive: true })
       .sort({ effectiveFrom: -1 })
       .lean()
       .exec();
 
+    console.log('[MenuPageController] Found menu document:', doc ? 'YES' : 'NO');
     const payload = toPublicPayload(doc);
 
     return res.status(200).json({

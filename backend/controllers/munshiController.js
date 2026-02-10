@@ -373,6 +373,7 @@ exports.getMessOffRequests = async (req, res) => {
       studentId: r.studentId._id ? r.studentId._id.toString() : r.studentId,
       studentName: r.studentId && r.studentId.name ? r.studentId.name : 'Unknown',
       studentRollNo: r.studentId && r.studentId.rollNo ? r.studentId.rollNo : '',
+      studentRoomNo: r.studentId && r.studentId.roomNo ? r.studentId.roomNo : '',
       from: r.fromDate.toISOString().split('T')[0],
       to: r.toDate.toISOString().split('T')[0],
       status: r.status,

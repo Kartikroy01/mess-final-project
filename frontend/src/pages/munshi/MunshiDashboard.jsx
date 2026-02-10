@@ -12,17 +12,20 @@ import {
   User,
   FileText,
   ChevronRight,
+  ChevronDown,
   Bell,
   UtensilsCrossed,
   Home,
   DollarSign,
   QrCode,
+  Trash2,
+  Edit2,
 } from "lucide-react";
 import MessOffRequestsPage from "./MessOffRequest";
 import ReportsPage from "./MunshiReport";
 import AddMealPage from "./MunshiAddMeal";
 import { munshiApi } from "./api";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 
 // ==================== UI COMPONENTS ====================
 const Card = ({ children, className = "" }) => (
@@ -189,6 +192,8 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
       fps: 10,
       qrbox: { width: 250, height: 250 },
       aspectRatio: 1.0,
+      supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+      showTorchButtonIfSupported: true,
     });
 
     scanner.render(onScanSuccess, onScanError);
@@ -219,12 +224,15 @@ const DashboardView = ({
   menuLoading,
   munshiName,
   munshiHostel,
+  onDeleteMeal,
+  onEditMeal,
 }) => {
   const [studentIdInput, setStudentIdInput] = useState("");
   const [error, setError] = useState("");
   const [extraItems, setExtraItems] = useState([]);
   const [notification, setNotification] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [showDeleteId, setShowDeleteId] = useState(null);
 
   const handleScan = async (e) => {
     e.preventDefault();
@@ -240,6 +248,7 @@ const DashboardView = ({
     setError("");
     setExtraItems([]);
     clearScannedStudent();
+    setShowDeleteId(null);
   };
 
   const toggleExtraItem = (item) => {
@@ -478,16 +487,25 @@ const DashboardView = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {(meals[sessionMeal] || []).map((item) => {
                   const isSelected = extraItems.find((i) => i.id === item.id);
+                  const showDelete = showDeleteId === item.id;
+                  
                   return (
-                    <button
+                    <div
                       key={item.id}
-                      disabled={!scannedStudent}
-                      onClick={() => scannedStudent && toggleExtraItem(item)}
-                      className={`group relative overflow-hidden rounded-2xl border-2 text-left transition-all duration-300 ${
+                      onClick={() => {
+                        if (scannedStudent) {
+                          toggleExtraItem(item);
+                        } else {
+                          setShowDeleteId(showDelete ? null : item.id);
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      className={`group relative overflow-hidden rounded-2xl border-2 text-left transition-all duration-300 cursor-pointer ${
                         isSelected
                           ? "border-indigo-500 bg-indigo-50/50"
                           : "border-slate-100 bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-500/5"
-                      } ${!scannedStudent && "opacity-60 grayscale cursor-not-allowed"}`}
+                      } ${!scannedStudent && !showDelete ? "hover:border-rose-200" : ""}`}
                     >
                       <div className="aspect-[4/3] overflow-hidden relative">
                         <img
@@ -509,15 +527,53 @@ const DashboardView = ({
                       </div>
                       <div className="p-5">
                         <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">
+                          <h3 className={`font-bold transition-colors ${showDelete ? 'text-rose-600' : 'text-slate-800 group-hover:text-indigo-700'}`}>
                             {item.name}
                           </h3>
                           <div className="bg-slate-100 px-2 py-1 rounded-lg text-xs font-bold text-slate-600">
                             ₹{item.price}
                           </div>
                         </div>
+
+                        {showDelete && !scannedStudent && (
+                          <div className="flex gap-2 mt-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                             <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newPrice = prompt(`Enter new price for ${item.name}:`, item.price);
+                                if (newPrice !== null && !isNaN(newPrice)) {
+                                  onEditMeal(sessionMeal, item.id, { price: Number(newPrice) });
+                                  setShowDeleteId(null);
+                                }
+                              }}
+                              className="flex-1 py-2 flex items-center justify-center gap-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-xl transition-colors text-xs font-bold"
+                            >
+                              <Edit2 size={14} />
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm(`Are you sure you want to delete ${item.name}?`)) {
+                                  onDeleteMeal(sessionMeal, item.id);
+                                  setShowDeleteId(null);
+                                }
+                              }}
+                              className="flex-1 py-2 flex items-center justify-center gap-1 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl transition-colors text-xs font-bold"
+                            >
+                              <Trash2 size={14} />
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                        
+                        {!scannedStudent && !showDelete && (
+                          <p className="text-[10px] text-slate-400 font-medium mt-1">Click to manage</p>
+                        )}
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
                 {(meals[sessionMeal] || []).length === 0 && (
@@ -650,6 +706,8 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   const [authChecked, setAuthChecked] = useState(false);
   const [munshiName, setMunshiName] = useState("");
   const [munshiHostel, setMunshiHostel] = useState("");
+  const [isSessionMenuOpen, setIsSessionMenuOpen] = useState(false);
+
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -738,12 +796,14 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   };
 
   const handleAddMeal = async (type, meal) => {
-    const created = await munshiApi.addMealItem({ ...meal, mealType: type });
+    const response = await munshiApi.addMealItem({ ...meal, mealType: type });
+    // Backend returns { mealType, item }, we need just the item
+    const newItem = response.item || response;
     setMeals((prev) => ({
       ...prev,
       [type]: [
         ...(prev[type] || []),
-        { ...created, id: created.id || created._id },
+        { ...newItem, id: newItem._id || newItem.id || Date.now() },
       ],
     }));
   };
@@ -754,7 +814,38 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
         <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
-  if (!sessionMeal) return <MealSelectionPage onSelectMeal={setSessionMeal} munshiName={munshiName} />;
+
+
+  const handleDeleteMeal = async (mealType, itemId) => {
+    try {
+      await munshiApi.deleteMealItem(mealType, itemId);
+      
+      setMeals((prev) => ({
+        ...prev,
+        [mealType]: prev[mealType].filter((item) => String(item.id) !== String(itemId)),
+      }));
+    } catch (err) {
+      console.error("Failed to delete meal:", err);
+      alert("Failed to delete meal item: " + err.message);
+    }
+  };
+
+  const handleEditMeal = async (mealType, itemId, updates) => {
+    try {
+      const response = await munshiApi.updateMealItem(mealType, itemId, updates);
+      // Backend returns { success, message, data: updatedItem }
+       const updatedItem = response.data || response;
+      setMeals((prev) => ({
+        ...prev,
+        [mealType]: prev[mealType].map((item) => 
+          (item.id === itemId || item._id === itemId) ? { ...item, ...updatedItem, id: item.id } : item
+        ),
+      }));
+    } catch (err) {
+      console.error("Failed to edit meal:", err);
+      alert("Failed to update meal item: " + err.message);
+    }
+  };
 
   const tabs = [
     { id: "dashboard", label: "Dashboard", icon: ShoppingBag },
@@ -865,6 +956,8 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
 
       {/* Main Content */}
       <main className="flex-1 md:ml-72 min-h-screen relative">
+
+        
         {/* Header */}
         <header className="sticky top-0 z-20 bg-[#F8FAFC]/80 backdrop-blur-md px-8 py-5 flex items-center justify-between">
           <div className="md:hidden">
@@ -886,13 +979,39 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
           </div>
 
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setSessionMeal(null)}
-              className="hidden md:flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:border-indigo-200 hover:text-indigo-600 transition-all shadow-sm"
-            >
-              <Calendar size={16} />
-              <span>Change Session</span>
-            </button>
+            {/* SESSION DROPDOWN */}
+            <div className="relative">
+              <button
+                onClick={() => setIsSessionMenuOpen(!isSessionMenuOpen)}
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:border-indigo-200 hover:text-indigo-600 transition-all shadow-sm"
+              >
+                <Calendar size={16} />
+                <span className="capitalize">{sessionMeal || "Select Session"}</span>
+                <ChevronDown size={14} className={`transition-transform duration-200 ${isSessionMenuOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {isSessionMenuOpen && (
+                <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                  {["breakfast", "lunch", "snacks", "dinner"].map((meal) => (
+                    <button
+                      key={meal}
+                      onClick={() => {
+                        setSessionMeal(meal);
+                        setIsSessionMenuOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors flex items-center justify-between ${
+                        sessionMeal === meal
+                          ? "bg-indigo-50 text-indigo-600"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      }`}
+                    >
+                      <span className="capitalize">{meal}</span>
+                      {sessionMeal === meal && <CheckCircle size={14} />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="w-10 h-10 bg-white rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 shadow-sm">
               <Bell size={20} />
             </div>
@@ -912,6 +1031,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
               menuLoading={menuLoading}
               munshiName={munshiName}
               munshiHostel={munshiHostel}
+              onEditMeal={handleEditMeal}
             />
           )}
           {activeTab === "messoffrequest" && (

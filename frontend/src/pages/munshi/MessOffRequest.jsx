@@ -21,6 +21,8 @@ const MessOffRequestsPage = ({ requests, handleAction }) => {
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="text-left py-4 px-4 font-semibold text-gray-900">Student</th>
+                <th className="text-left py-4 px-4 font-semibold text-gray-900">Roll No</th>
+                <th className="text-left py-4 px-4 font-semibold text-gray-900">Room</th>
                 <th className="text-left py-4 px-4 font-semibold text-gray-900">Duration</th>
                 <th className="text-left py-4 px-4 font-semibold text-gray-900">Reason</th>
                 <th className="text-left py-4 px-4 font-semibold text-gray-900">Status</th>
@@ -33,8 +35,17 @@ const MessOffRequestsPage = ({ requests, handleAction }) => {
                   <td className="py-4 px-4">
                     <div>
                       <p className="font-medium text-gray-900">{req.studentName}</p>
-                      <p className="text-sm text-gray-500">{req.studentId}</p>
                     </div>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold font-mono border border-slate-200">
+                      {req.studentRollNo}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span className="text-sm font-bold text-gray-700">
+                      {req.studentRoomNo || 'N/A'}
+                    </span>
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-2 text-sm">

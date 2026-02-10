@@ -53,11 +53,20 @@ const buildStudentResponse = async (student) => {
     .limit(10)
     .lean();
 
-  const mealHistory = meals.map((meal) => ({
-    date: meal.date.toISOString().split("T")[0],
-    type: meal.type,
-    items: meal.items || [],
-  }));
+  const mealHistory = meals.map((meal) => {
+    const dateObj = new Date(meal.date);
+    const timeStr = dateObj.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit', 
+      hour12: true 
+    });
+    return {
+      date: meal.date.toISOString().split("T")[0],
+      time: timeStr,
+      type: meal.type,
+      items: meal.items || [],
+    };
+  });
 
   return {
     id: student._id,

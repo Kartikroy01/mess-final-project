@@ -1,5 +1,6 @@
 // server.js
 const express = require('express');
+// Force backend restart for menu updates (2)
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -20,7 +21,6 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mess_mana
 .then(() => console.log('MongoDB Connected'))
 .catch(err => console.log('MongoDB Connection Error:', err));
 
-// Import Routes
 const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/student');
 const messOffRoutes = require('./routes/messOff');
@@ -28,15 +28,42 @@ const feedbackRoutes = require('./routes/feedback');
 const menuRoutes = require('./routes/menu');
 const billRoutes = require('./routes/bill');
 const munshiRoutes = require('./routes/munshi');
+const { getPublicMenu, upsertPublicMenu } = require('./controllers/menuPageController');
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`[Request] ${req.method} ${req.path}`);
+  next();
+});
+
+console.log('[Server] Registering routes...');
+
+// PUBLIC MENU ENDPOINT - Must be registered BEFORE protected routes
+app.get('/api/menu/public', getPublicMenu);
+app.put('/api/menu/public', upsertPublicMenu);
+console.log('[Server] Registered /api/menu/public (PUBLIC - NO AUTH)');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
+console.log('[Server] Registered /api/auth');
+
 app.use('/api/student', studentRoutes);
+console.log('[Server] Registered /api/student');
+
 app.use('/api/mess-off', messOffRoutes);
+console.log('[Server] Registered /api/mess-off');
+
 app.use('/api/feedback', feedbackRoutes);
-app.use('/api/menu', menuRoutes);
+console.log('[Server] Registered /api/feedback');
+
+app.use('/api/munshi/menu', menuRoutes); // Munshi-protected menu routes
+console.log('[Server] Registered /api/munshi/menu (PROTECTED)');
+
 app.use('/api/bill', billRoutes);
+console.log('[Server] Registered /api/bill');
+
 app.use('/api/munshi', munshiRoutes);
+console.log('[Server] Registered /api/munshi');
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

@@ -7,8 +7,117 @@ const MealHistory = require('../models/MealHistory');
 const MessOff = require('../models/MessOff');
 const Bill = require('../models/Bill');
 
-// All routes use munshiAuth middleware
 router.use(munshiAuth);
+
+// DEBUG: Log all requests to check if DELETE hits here
+router.use((req, res, next) => {
+  console.log(`[Menu Router] Request received: ${req.method} ${req.path}`);
+  next();
+});
+
+// @route   DELETE /api/munshi/menu/item/:mealType/:itemId
+// @desc    Remove an item from menu
+// @access  Munshi only
+router.delete('/item/:mealType/:itemId', async (req, res) => {
+  console.log(`[Menu DELETE] Attempting to delete: ${req.params.mealType} - ${req.params.itemId}`);
+  try {
+    const { mealType, itemId } = req.params;
+
+    if (!['breakfast', 'lunch', 'snacks', 'dinner'].includes(mealType)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid meal type'
+      });
+    }
+
+    const menu = await Menu.findOne({ mealType, isActive: true });
+
+    if (!menu) {
+      return res.status(404).json({
+        success: false,
+        message: 'Menu not found'
+      });
+    }
+
+    // Filter out the item to be deleted
+    const initialLength = menu.items.length;
+    menu.items = menu.items.filter(item => item._id.toString() !== itemId);
+
+    if (menu.items.length === initialLength) {
+      console.log(`[Menu DELETE] Item not found: ${itemId}`);
+      return res.status(404).json({
+        success: false,
+        message: 'Item not found in menu'
+      });
+    }
+
+    await menu.save();
+    console.log(`[Menu DELETE] Success`);
+
+    res.json({
+      success: true,
+      message: 'Menu item removed successfully'
+    });
+  } catch (error) {
+    console.error('Delete menu item error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error removing menu item'
+    });
+  }
+});
+
+// @route   POST /api/munshi/menu/delete-item/:mealType/:itemId
+// @desc    Remove an item from menu (POST alternative for robustness)
+// @access  Munshi only
+router.post('/delete-item/:mealType/:itemId', async (req, res) => {
+  console.log(`[Menu POST DELETE] Attempting to delete: ${req.params.mealType} - ${req.params.itemId}`);
+  try {
+    const { mealType, itemId } = req.params;
+
+    if (!['breakfast', 'lunch', 'snacks', 'dinner'].includes(mealType)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid meal type'
+      });
+    }
+
+    const menu = await Menu.findOne({ mealType, isActive: true });
+
+    if (!menu) {
+      return res.status(404).json({
+        success: false,
+        message: 'Menu not found'
+      });
+    }
+
+    // Filter out the item to be deleted
+    const initialLength = menu.items.length;
+    menu.items = menu.items.filter(item => item._id.toString() !== itemId);
+
+    if (menu.items.length === initialLength) {
+      console.log(`[Menu POST DELETE] Item not found: ${itemId}`);
+      return res.status(404).json({
+        success: false,
+        message: 'Item not found in menu'
+      });
+    }
+
+    await menu.save();
+    console.log(`[Menu POST DELETE] Success`);
+
+    res.json({
+      success: true,
+      message: 'Menu item removed successfully'
+    });
+  } catch (error) {
+    console.error('Delete menu item error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error removing menu item'
+    });
+  }
+});
 
 // @route   GET /api/munshi/student/search
 // @desc    Search student by ID or room number
@@ -59,6 +168,129 @@ router.get('/student/search', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error'
+    });
+  }
+});
+
+// @route   POST /api/munshi/menu/item
+// @desc    Add a new menu item
+// @access  Munshi only
+router.post('/item', async (req, res) => {
+  try {
+    const { name, price, mealType, image } = req.body;
+
+    if (!name || !price || !mealType) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, price, and meal type are required'
+      });
+    }
+
+    // Validate mealType
+    if (!['breakfast', 'lunch', 'snacks', 'dinner'].includes(mealType.toLowerCase())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid meal type. Must be breakfast, lunch, snacks, or dinner'
+      });
+    }
+
+    // Find or create menu for this meal type
+    // Use findOne without isActive filter to reactivate existing menus if needed
+    let menu = await Menu.findOne({ mealType: mealType.toLowerCase() });
+
+    if (!menu) {
+      // Create new menu for this meal type
+      menu = new Menu({
+        mealType: mealType.toLowerCase(),
+        items: [],
+        isActive: true
+      });
+    } else if (!menu.isActive) {
+      // Reactivate existing menu
+      menu.isActive = true;
+    }
+
+    // Add the new item
+    menu.items.push({
+      name: name.trim(),
+      price: Number(price),
+      image: image || '',
+      isAvailable: true
+    });
+
+    await menu.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Menu item added successfully',
+      data: {
+        mealType: menu.mealType,
+        item: menu.items[menu.items.length - 1]
+      }
+    });
+  } catch (error) {
+    console.error('Add menu item error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error adding menu item: ' + error.message
+    });
+  }
+});
+
+
+
+
+
+// @route   PUT /api/munshi/menu/item/:mealType/:itemId
+// @desc    Update a menu item (price, name, availability)
+// @access  Munshi only
+router.put('/item/:mealType/:itemId', async (req, res) => {
+  try {
+    const { mealType, itemId } = req.params;
+    const { name, price, isAvailable } = req.body;
+
+    if (!['breakfast', 'lunch', 'snacks', 'dinner'].includes(mealType)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid meal type'
+      });
+    }
+
+    const menu = await Menu.findOne({ mealType, isActive: true });
+
+    if (!menu) {
+      return res.status(404).json({
+        success: false,
+        message: 'Menu not found'
+      });
+    }
+
+    const itemIndex = menu.items.findIndex(item => item._id.toString() === itemId);
+
+    if (itemIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Item not found in menu'
+      });
+    }
+
+    // Update fields if provided
+    if (name) menu.items[itemIndex].name = name.trim();
+    if (price !== undefined) menu.items[itemIndex].price = Number(price);
+    if (isAvailable !== undefined) menu.items[itemIndex].isAvailable = isAvailable;
+
+    await menu.save();
+
+    res.json({
+      success: true,
+      message: 'Menu item updated successfully',
+      data: menu.items[itemIndex]
+    });
+  } catch (error) {
+    console.error('Update menu item error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error updating menu item'
     });
   }
 });
@@ -330,75 +562,7 @@ router.get('/current', async (req, res) => {
   }
 });
 
-// @route   POST /api/menu/item
-// @desc    Add a new item to menu
-// @access  Munshi only
-router.post('/item', async (req, res) => {
-  try {
-    const { mealType, name, price, image } = req.body;
 
-    if (!mealType || !name || price === undefined) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide mealType, name, and price'
-      });
-    }
-
-    if (!['breakfast', 'lunch', 'snacks', 'dinner'].includes(mealType)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid meal type'
-      });
-    }
-
-    const priceNum = Number(price);
-    if (isNaN(priceNum) || priceNum < 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Price must be a non-negative number'
-      });
-    }
-
-    let menu = await Menu.findOne({ mealType, isActive: true });
-
-    if (!menu) {
-      menu = new Menu({
-        mealType,
-        items: [],
-        isActive: true
-      });
-    }
-
-    menu.items.push({
-      name: name.trim(),
-      price: priceNum,
-      image: image && typeof image === 'string' ? image.trim() : '',
-      isAvailable: true
-    });
-
-    await menu.save();
-
-    const newItem = menu.items[menu.items.length - 1];
-    res.status(201).json({
-      success: true,
-      message: 'Meal item added successfully',
-      data: {
-        id: newItem._id,
-        name: newItem.name,
-        price: newItem.price,
-        image: newItem.image || `https://placehold.co/300x200/cccccc/FFF?text=${encodeURIComponent(newItem.name)}`,
-        category: mealType,
-        isAvailable: newItem.isAvailable
-      }
-    });
-  } catch (error) {
-    console.error('Add menu item error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error adding menu item'
-    });
-  }
-});
 
 // @route   GET /api/menu/:mealType
 // @desc    Get menu for specific meal type
@@ -449,5 +613,8 @@ router.get('/:mealType', async (req, res) => {
     });
   }
 });
+
+
+
 
 module.exports = router;

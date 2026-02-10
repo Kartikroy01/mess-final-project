@@ -18,14 +18,14 @@ export const munshiApi = {
   },
 
   async getMenu() {
-    const res = await fetch(`${API_BASE}/menu/current`, { headers: getAuthHeaders() });
+    const res = await fetch(`${API_BASE}/munshi/menu/current`, { headers: getAuthHeaders() });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Failed to fetch menu');
     return data.data;
   },
 
   async addMealItem(payload) {
-    const res = await fetch(`${API_BASE}/menu/item`, {
+    const res = await fetch(`${API_BASE}/munshi/menu/item`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(payload),
@@ -33,6 +33,44 @@ export const munshiApi = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Failed to add meal');
     return data.data;
+  },
+
+
+  async deleteMealItem(mealType, itemId) {
+    // Using POST instead of DELETE to avoid potential method blocking/handling issues
+    const res = await fetch(`${API_BASE}/munshi/menu/delete-item/${mealType}/${itemId}`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
+    const text = await res.text();
+    try {
+      const data = JSON.parse(text);
+      if (!res.ok) throw new Error(data.message || "Failed to delete meal item");
+      return data;
+    } catch (e) {
+      console.error("Delete API Error:", text);
+      throw new Error(`Server returned error: ${text.substring(0, 100)}...`);
+    }
+  },
+
+  async updateMealItem(mealType, itemId, updates) {
+    const res = await fetch(`${API_BASE}/munshi/menu/item/${mealType}/${itemId}`, {
+      method: "PUT",
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
+    });
+    const text = await res.text();
+    try {
+      const data = JSON.parse(text);
+      if (!res.ok) throw new Error(data.message || "Failed to update meal item");
+      return data;
+    } catch (e) {
+      console.error("Update API Error:", text);
+      throw new Error(`Server returned error: ${text.substring(0, 100)}...`);
+    }
   },
 
   async createOrder(studentId, items, mealType) {

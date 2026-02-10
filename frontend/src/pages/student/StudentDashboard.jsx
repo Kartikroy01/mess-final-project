@@ -695,7 +695,10 @@ const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) 
                                         return (
                                             <tr key={index} className="hover:bg-blue-50/50 transition-colors group">
                                                 <td className="py-4 px-6">
-                                                    <span className="text-sm font-semibold text-slate-700">{meal.date}</span>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-semibold text-slate-700">{meal.date}</span>
+                                                        <span className="text-xs text-slate-400 mt-0.5">{meal.time || '12:00 PM'}</span>
+                                                    </div>
                                                 </td>
                                                 <td className="py-4 px-6">
                                                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ring-1 ring-inset ${style.ring} ${style.bg} ${style.text}`}>
