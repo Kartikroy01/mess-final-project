@@ -187,7 +187,17 @@ const MealSelectionPage = ({ onSelectMeal, munshiName }) => {
 
 // ==================== QR SCANNER COMPONENT ====================
 const QRScanner = ({ onScanSuccess, onScanError }) => {
+  const scannerRef = React.useRef(null);
+  const scannedRef = React.useRef(false);
+
   useEffect(() => {
+    // Clear any existing scanner if somehow we are re-initializing without unmounting?
+    if (scannerRef.current) {
+        scannerRef.current.clear().catch(console.warn);
+    }
+    
+    scannedRef.current = false;
+
     const scanner = new Html5QrcodeScanner("reader", {
       fps: 10,
       qrbox: { width: 250, height: 250 },
@@ -195,13 +205,34 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
       supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
       showTorchButtonIfSupported: true,
     });
+    scannerRef.current = scanner;
 
-    scanner.render(onScanSuccess, onScanError);
+    const successCallback = (decodedText, result) => {
+        if (scannedRef.current) return;
+        scannedRef.current = true;
+        
+        // Pause creates a better UX than just unmounting immediately if we want to freeze the frame?
+        // But we just want to stop callbacks.
+        scanner.pause(true); 
+        
+        onScanSuccess(decodedText, result);
+    };
+
+    scanner.render(successCallback, onScanError);
 
     return () => {
-      scanner.clear().catch((error) => {
-        console.error("Failed to clear html5QrcodeScanner. ", error);
-      });
+      if (scannerRef.current) {
+         try {
+             // If we paused, we might need to resume before clear? or clear handles it.
+             // clear() returns a promise. We should handle it.
+             scannerRef.current.clear().catch((error) => {
+               console.warn("Failed to clear html5QrcodeScanner. ", error);
+             });
+         } catch (e) {
+             console.warn("Error clearing scanner", e);
+         }
+         scannerRef.current = null;
+      }
     };
   }, [onScanSuccess, onScanError]);
 
@@ -233,6 +264,25 @@ const DashboardView = ({
   const [notification, setNotification] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [showDeleteId, setShowDeleteId] = useState(null);
+
+  const handleQRScanSuccess = React.useCallback(async (decodedText) => {
+    try {
+        const student = await onStudentScan(decodedText);
+        setIsScanning(false);
+        if (!student) {
+            setError("Invalid QR Code: Student not found");
+        } else {
+            setError("");
+        }
+    } catch (e) {
+        setIsScanning(false);
+        setError("Error processing QR Code");
+    }
+  }, [onStudentScan]);
+
+  const handleQRScanError = React.useCallback((err) => {
+    console.warn(err);
+  }, []);
 
   const handleScan = async (e) => {
     e.preventDefault();
@@ -390,11 +440,8 @@ const DashboardView = ({
                 {isScanning && (
                   <div className="animate-in fade-in zoom-in duration-300">
                     <QRScanner
-                      onScanSuccess={(decodedText) => {
-                        onStudentScan(decodedText);
-                        setIsScanning(false);
-                      }}
-                      onScanError={(err) => console.warn(err)}
+                      onScanSuccess={handleQRScanSuccess}
+                      onScanError={handleQRScanError}
                     />
                     <p className="text-center text-slate-400 text-xs mt-3 font-medium">
                       Point your camera at the student's QR code
@@ -768,7 +815,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
     if (activeTab === "messoffrequest") refreshMessOffRequests();
   }, [activeTab]);
 
-  const handleStudentScan = async (q) => {
+  const handleStudentScan = React.useCallback(async (q) => {
     if (!q?.trim()) return null;
     setLoading(true);
     try {
@@ -781,7 +828,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleRequestAction = async (id, status, reason) => {
     await munshiApi.updateMessOffStatus(id, status, reason);

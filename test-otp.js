@@ -33,7 +33,7 @@ fetch('http://localhost:5000/api/auth/register', {
     console.log('The backend is sending the correct response.');
     console.log('Issue is likely in the frontend.');
   } else {
-    console.log('\n❌ Backend is NOT sending OTP response!');
+    console.log('\n Backend is NOT sending OTP response!');
     console.log('The backend might be creating the student directly.');
   }
 })
