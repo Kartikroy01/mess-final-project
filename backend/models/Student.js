@@ -130,6 +130,10 @@ const studentSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
     resetPasswordToken: {
         type: String
     },

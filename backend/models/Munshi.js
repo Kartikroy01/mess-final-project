@@ -52,6 +52,12 @@ const munshiSchema = new mongoose.Schema(
       trim: true,
       uppercase: true,
     },
+    type: {
+      type: String,
+      enum: ['munshi', 'clerk'],
+      default: 'munshi',
+      description: 'Role type - munshi (manager) or clerk (assistant)',
+    },
     isActive: {
       type: Boolean,
       default: true,

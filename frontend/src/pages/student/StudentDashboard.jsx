@@ -5,6 +5,7 @@ import { Home, BarChart2, CalendarOff, LogOut, Menu, X, QrCode, Download, FileTe
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { QRCodeCanvas } from 'qrcode.react';
+import html2canvas from 'html2canvas';
 
 // --- API SERVICE LAYER ---
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -194,6 +195,7 @@ const LoadingSpinner = ({ message = "Loading..." }) => (
 );
 
 // --- DASHBOARD HOME ---
+// --- DASHBOARD HOME ---
 const StudentHome = ({ student, token }) => {
     const [mealHistory, setMealHistory] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -250,16 +252,6 @@ const StudentHome = ({ student, token }) => {
         }
     ];
 
-    const getGradient = (color) => {
-        const gradients = {
-            blue: 'from-blue-500 to-indigo-600',
-            emerald: 'from-emerald-500 to-teal-600',
-            violet: 'from-violet-500 to-purple-600',
-            rose: 'from-rose-500 to-pink-600',
-        };
-        return gradients[color] || gradients.blue;
-    };
-    
     const getLightBg = (color) => {
          const bgs = {
             blue: 'bg-blue-50 text-blue-600',
@@ -271,39 +263,159 @@ const StudentHome = ({ student, token }) => {
     };
 
     return (
-        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-10 transition-opacity duration-700 opacity-100">
             {/* Hero Section */}
             <div className="relative group rounded-[2.5rem] overflow-hidden shadow-2xl shadow-blue-200/40">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800"></div>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -mr-16 -mt-16 transform transition-transform group-hover:scale-110 duration-700"></div>
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-300 opacity-10 rounded-full blur-2xl -ml-10 -mb-10 animate-pulse"></div>
                 
-                <div className="relative z-10 px-10 py-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div>
-                        <div className="inline-flex items-center px-3 py-1 bg-blue-500/30 rounded-full text-blue-50 text-xs font-bold mb-4 backdrop-blur-sm border border-blue-400/30">
+                <div className="relative z-10 px-6 py-8 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div className="text-center lg:text-left max-w-2xl">
+                        <div className="inline-flex items-center px-4 py-1.5 bg-blue-500/20 rounded-full text-blue-50 text-xs font-bold mb-6 backdrop-blur-md border border-blue-400/30">
                             <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span>
-                            Live Dashboard
+                            Live Mess Dashboard
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-2">
-                            Welcome back, {student.name.split(' ')[0]}!
+                        <h1 className="text-3xl md:text-5xl font-black text-white tracking-tighter mb-2 drop-shadow-sm leading-tight">
+                            Hello, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">{student.name.split(' ')[0]}</span>
                         </h1>
-                        <p className="text-blue-100 text-lg max-w-xl leading-relaxed opacity-90">
-                            Here's what's happening with your mess account today.
-                        </p>
                     </div>
-                    <div className="flex flex-col items-center gap-2 group/qr">
-                         <div className="bg-white p-2.5 rounded-2xl shadow-2xl transition-transform duration-500 group-hover/qr:scale-110 group-hover/qr:rotate-2">
+
+                    {/* QR Code Section */}
+                    <div className="flex flex-col items-center justify-center">
+                        {/* 1. VISIBLE DASHBOARD CARD (Simple & Clean) */}
+                        <div className="mb-2 relative bg-white p-2 rounded-lg shadow-lg">
                             <QRCodeCanvas 
                                 value={student.qrCode || `${student.rollNo}-${student.hostelNo}-${student.roomNo}`} 
-                                size={90}
+                                size={100}
                                 level={"H"}
-                                includeMargin={false}
+                                includeMargin={true}
+                                bgColor={"#ffffff"}
+                                fgColor={"#000000"}
                             />
-                         </div>
-                         <div className="text-center md:text-right px-2">
-                             <p className="text-white text-[10px] font-bold uppercase tracking-widest opacity-80">Identification</p>
-                             <p className="text-blue-200 text-[9px] font-mono leading-none mt-0.5">{student.rollNo}</p>
-                         </div>
+                        </div>
+
+                        <div className="mt-2 w-auto">
+                             <button 
+                                onClick={async () => {
+                                    const element = document.getElementById("printable-qr-card");
+                                    if (element) {
+                                        try {
+                                            // Clone the element to ensure it's captured correctly
+                                            const clone = element.cloneNode(true);
+                                            clone.style.position = "fixed";
+                                            clone.style.top = "0";
+                                            clone.style.left = "0";
+                                            clone.style.zIndex = "-9999";
+                                            // Ensure the clone is visible for capture but hidden from user 
+                                            // (z-index handles visibility, but we need display:block)
+                                            document.body.appendChild(clone);
+
+                                            // Wait a moment for images to potentially load in the clone
+                                            // (though they were likely cached from the original)
+                                            await new Promise(resolve => setTimeout(resolve, 100));
+
+                                            const canvas = await html2canvas(clone, {
+                                                backgroundColor: null,
+                                                scale: 3, 
+                                                logging: false,
+                                                useCORS: true,
+                                                allowTaint: true,
+                                            });
+
+                                            document.body.removeChild(clone);
+
+                                            const pngUrl = canvas.toDataURL("image/png");
+                                            const downloadLink = document.createElement("a");
+                                            downloadLink.href = pngUrl;
+                                            downloadLink.download = `NITJ_Mess_Card_${student.rollNo}.png`;
+                                            document.body.appendChild(downloadLink);
+                                            downloadLink.click();
+                                            document.body.removeChild(downloadLink);
+                                        } catch (err) {
+                                            console.error("Failed to capture QR card:", err);
+                                            alert("Failed to download QR card. Please try again.");
+                                        }
+                                    }
+                                }}
+                                className="w-auto bg-white/10 hover:bg-white/20 text-white py-2 px-4 rounded-lg font-medium text-xs backdrop-blur-sm border border-white/10 transition-all flex items-center justify-center gap-2"
+                             >
+                                 <Download size={14} />
+                                 Download ID
+                             </button>
+                        </div>
+
+                        {/* 2. HIDDEN PREMIUM CARD (For Download Only) */}
+                        {/* Positioned off-screen but rendered in DOM for html2canvas */}
+                        <div style={{ position: "absolute", left: "-2500px", top: "0", zIndex: -10, overflow: "hidden" }}>
+                            <div id="printable-qr-card" className="relative w-[320px] bg-gradient-to-br from-[#00BAF2] to-[#0E1E5B] rounded-[2rem] shadow-2xl overflow-hidden border border-white/10 select-none">
+                                {/* Decorative Background Patterns */}
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                                <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full blur-2xl -ml-10 -mb-10"></div>
+                                <img 
+                                    src="https://www.transparenttextures.com/patterns/cubes.png" 
+                                    alt="" 
+                                    crossOrigin="anonymous"
+                                    className="absolute inset-0 w-full h-full opacity-10 object-cover"
+                                />
+
+                                <div className="relative z-10 p-6 flex flex-col items-center h-full">
+                                    {/* Header */}
+                                    <div className="w-full flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+                                        <div className="flex flex-col">
+                                            <span className="font-black text-2xl tracking-tighter text-white">NITJ</span>
+                                            <span className="text-[10px] text-blue-200 uppercase tracking-[0.2em] font-bold">MESS PORTAL</span>
+                                        </div>
+                                        <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
+                                            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-400 to-emerald-400"></div>
+                                        </div>
+                                    </div>
+
+                                    {/* Photo & Verified Badge */}
+                                    <div className="relative mb-4">
+                                        <div className="w-24 h-24 rounded-full p-1 bg-white/10 backdrop-blur-md border border-white/20 shadow-lg">
+                                            <img 
+                                                src={student.photo || "https://ui-avatars.com/api/?name=" + student.name} 
+                                                alt={student.name} 
+                                                crossOrigin="anonymous"
+                                                className="w-full h-full rounded-full object-cover border-2 border-white/50"
+                                            />
+                                        </div>
+                                        <div className="absolute bottom-1 right-1 bg-blue-500 text-white rounded-full p-1 border-2 border-[#0E1E5B] shadow-sm">
+                                            <CheckCircle size={14} strokeWidth={4} />
+                                        </div>
+                                    </div>
+
+                                    {/* Student Name */}
+                                    <h2 className="text-xl font-bold text-white mb-1 text-center">{student.name}</h2>
+                                    <p className="text-blue-200 text-xs font-mono mb-6 bg-black/20 px-3 py-1 rounded-full border border-white/5">
+                                        {student.rollNo}
+                                    </p>
+
+                                    {/* QR Code Container */}
+                                    <div className="bg-white p-3 rounded-2xl shadow-lg mb-6">
+                                        <QRCodeCanvas 
+                                            value={student.qrCode || `${student.rollNo}-${student.hostelNo}-${student.roomNo}`} 
+                                            size={160}
+                                            level={"H"}
+                                            includeMargin={false}
+                                        />
+                                    </div>
+
+                                    {/* Footer Info */}
+                                    <div className="w-full grid grid-cols-2 gap-4 text-center border-t border-white/10 pt-4">
+                                        <div>
+                                            <p className="text-[10px] text-blue-200 uppercase tracking-wider mb-0.5">Hostel</p>
+                                            <p className="text-sm font-bold text-white">{student.hostelNo || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] text-blue-200 uppercase tracking-wider mb-0.5">Room</p>
+                                            <p className="text-sm font-bold text-white">{student.roomNo || 'N/A'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -973,7 +1085,8 @@ function StudentDashboard() {
     const [initialLoading, setInitialLoading] = useState(true);
     const [error, setError] = useState('');
     const [activePage, setActivePage] = useState('home');
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile sidebar
+    const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true); // Desktop sidebar
 
     // Check if user is logged in as student (redirect munshi to munshi dashboard)
     useEffect(() => {
@@ -1064,8 +1177,8 @@ function StudentDashboard() {
             )}
 
             {/* Sidebar */}
-            <aside className={`bg-white w-80 fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-out z-50 shadow-2xl shadow-slate-200/50 flex flex-col border-r border-slate-100`}>
-                <div className="p-8 pb-4">
+            <aside className={`bg-white w-80 fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:${desktopSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-out z-50 shadow-2xl shadow-slate-200/50 flex flex-col border-r border-slate-100`}>
+                <div className="p-8 pb-4 h-full flex flex-col">
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-3">
                             <div className="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-blue-500/30">
@@ -1076,8 +1189,13 @@ function StudentDashboard() {
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Student Portal</p>
                             </div>
                         </div>
+                        {/* Mobile Close Button */}
                         <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-2 text-slate-400 hover:bg-slate-50 rounded-lg transition-colors">
                             <X size={24} />
+                        </button>
+                        {/* Desktop Close Button */}
+                        <button onClick={() => setDesktopSidebarOpen(false)} className="hidden md:block p-2 text-slate-400 hover:bg-slate-50 rounded-lg transition-colors">
+                            <X size={20} />
                         </button>
                     </div>
 
@@ -1093,7 +1211,7 @@ function StudentDashboard() {
                         </div>
                     </div>
 
-                    <nav>
+                    <nav className="flex-1 overflow-y-auto">
                         <ul className="space-y-1">
                             <div className="px-4 mb-2 mt-2">
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Main Menu</p>
@@ -1127,33 +1245,61 @@ function StudentDashboard() {
                             />
                         </ul>
                     </nav>
-                </div>
 
-                <div className="mt-auto p-6 border-t border-slate-100">
-                    <button 
-                        onClick={handleLogout} 
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3.5 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all font-bold text-sm group"
-                    >
-                        <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
-                        <span>Sign Out</span>
-                    </button>
-                    <p className="text-center text-[10px] text-slate-300 mt-4 font-semibold uppercase tracking-widest">v2.5.0 • NITJ MESS</p>
+                    <div className="mt-auto pt-6 border-t border-slate-100">
+                        <button 
+                            onClick={handleLogout} 
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all font-bold text-sm group"
+                        >
+                            <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
+                            <span>Sign Out</span>
+                        </button>
+                        <p className="text-center text-[10px] text-slate-300 mt-4 font-semibold uppercase tracking-widest">v2.5.0 • NITJ MESS</p>
+                    </div>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-auto bg-slate-50 relative w-full">
-                {/* Mobile Header */}
-                <header className="md:hidden bg-white/80 backdrop-blur-md sticky top-0 z-30 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                         <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white">
-                            <span className="font-bold text-sm">NM</span>
-                         </div>
-                         <h1 className="font-bold text-slate-800">NITJ MESS</h1>
+            <main className={`flex-1 overflow-auto bg-slate-50 relative w-full transition-all duration-300 ease-in-out ${desktopSidebarOpen ? 'md:ml-80' : 'md:ml-0'}`}>
+                {/* Header */}
+                <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                         {/* Desktop Menu Toggle */}
+                         <button onClick={() => setDesktopSidebarOpen(!desktopSidebarOpen)} className="hidden md:block p-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
+                            <Menu size={24} />
+                         </button>
+                         {/* Mobile Menu Toggle */}
+                         <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-50 rounded-lg">
+                            <Menu size={24} />
+                         </button>
+
+                         <div className="flex items-center gap-3 md:hidden">
+                             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white">
+                                <span className="font-bold text-sm">NM</span>
+                             </div>
+                             <h1 className="font-bold text-slate-800">NITJ MESS</h1>
+                        </div>
+                        
+                        <div className="hidden md:block">
+                            <h2 className="text-xl font-bold text-slate-800 tracking-tight capitalize">
+                                {activePage === 'messOff' ? 'Mess Leave Application' : activePage}
+                            </h2>
+                        </div>
                     </div>
-                    <button onClick={() => setIsSidebarOpen(true)} className="p-2 -mr-2 text-slate-600 hover:bg-slate-50 rounded-lg">
-                        <Menu size={24} />
-                    </button>
+
+                    <div className="flex items-center gap-3">
+                        <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors relative">
+                            <Bell size={20} />
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border border-white"></span>
+                        </button>
+                        <div className="h-8 w-px bg-slate-200 mx-1 hidden md:block"></div>
+                        <div className="hidden md:flex items-center gap-2">
+                            <span className="text-sm font-bold text-slate-700">{student.rollNo}</span>
+                            <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 overflow-hidden">
+                                <img src={student.photo || "https://ui-avatars.com/api/?name=" + student.name} alt="Profile" className="w-full h-full object-cover"/>
+                            </div>
+                        </div>
+                    </div>
                 </header>
 
                 <div className="p-6 md:p-10 max-w-7xl mx-auto pb-20">

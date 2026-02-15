@@ -146,12 +146,23 @@ export default function Login() {
       localStorage.setItem("authRole", role);
       localStorage.setItem("authUser", JSON.stringify(authData));
       sessionStorage.setItem("authUser", JSON.stringify(authData));
+      
+      // Store hostel for clerk/munshi
+      if (role === "munshi" && data.munshi?.hostel) {
+        localStorage.setItem("hostel", data.munshi.hostel);
+      }
+      
       window.currentUser = authData;
 
       setLoading(false);
 
       if (role === "munshi") {
-        window.location.href = "/munshi/dashboard";
+        const munshiType = data.munshi?.type || "munshi";
+        if (munshiType === "clerk") {
+          window.location.href = "/clerk-dashboard";
+        } else {
+          window.location.href = "/munshi/dashboard";
+        }
       } else {
         window.location.href = "/student/dashboard";
       }

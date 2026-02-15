@@ -15,6 +15,7 @@ import Contact from "./pages/Contact";
 // Dashboards
 import StudentDashboard from "./pages/student/StudentDashboard";
 import MunshiDashboard from "./pages/munshi/MunshiDashboard";
+import ClerkDashboard from "./pages/munshi/ClerkDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard"; // <-- Make sure this file exists
 
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
         {/* 2. Dashboard Routes: These pages will NOT have the public Navbar and Footer */}
         <Route path="/student/dashboard" element={<StudentDashboard />} />
         <Route path="/munshi/dashboard" element={<MunshiDashboard />} />
+        <Route path="/clerk-dashboard" element={<ClerkDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         
       </Routes>

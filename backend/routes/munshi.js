@@ -1,23 +1,24 @@
 /**
  * Munshi Routes
- * 
+ *
  * Routes for munshi (mess manager) operations.
  * All routes require munshi authentication and are scoped to the munshi's hostel.
- * 
+ *
  * @module routes/munshi
  */
 
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const munshiAuth = require('../middleware/munshiAuth');
-const munshiController = require('../controllers/munshiController');
+const munshiAuth = require("../middleware/munshiAuth");
+const munshiController = require("../controllers/munshiController");
+const clerkController = require("../controllers/clerkController");
 const {
   validateStudentLookup,
   validateOrderCreation,
   validateOrdersList,
   validateMessOffList,
   validateMessOffStatus,
-} = require('../validators/munshiValidators');
+} = require("../validators/munshiValidators");
 
 // ==================== MIDDLEWARE ====================
 
@@ -37,10 +38,41 @@ router.use(munshiAuth);
  * @returns Student details with current balance
  */
 router.get(
-  '/student/lookup',
+  "/student/lookup",
   validateStudentLookup,
-  munshiController.lookupStudent
+  munshiController.lookupStudent,
 );
+
+/**
+ * @route   GET /api/munshi/students-for-bill
+ * @desc    Get all students for the clerk's hostel with diet and extra for the given month
+ * @query   month=YYYY-MM
+ * @access  Private (munshi)
+ */
+router.get("/students-for-bill", clerkController.getStudentsForMonth);
+
+/**
+ * @route   POST /api/munshi/generate-bill
+ * @desc    Generate Excel monthly bill for the clerk's hostel
+ * @body    month: YYYY-MM, dietRate: Number
+ * @access  Private (munshi)
+ */
+router.post("/generate-bill", clerkController.generateMonthlyBill);
+
+/**
+ * @route   GET /api/munshi/all-students
+ * @desc    Get all students (verified & pending)
+ * @access  Private (munshi)
+ */
+router.get("/all-students", clerkController.getAllStudents);
+
+/**
+ * @route   POST /api/munshi/verify-student
+ * @desc    Approve or reject student
+ * @body    studentId, action ('approve'|'reject')
+ * @access  Private (munshi)
+ */
+router.post("/verify-student", clerkController.verifyStudent);
 
 // ==================== ORDER OPERATIONS ====================
 
@@ -51,11 +83,7 @@ router.get(
  * @access  Private (munshi)
  * @returns Created order details
  */
-router.post(
-  '/order',
-  validateOrderCreation,
-  munshiController.createOrder
-);
+router.post("/order", validateOrderCreation, munshiController.createOrder);
 
 /**
  * @route   GET /api/munshi/orders
@@ -64,11 +92,7 @@ router.post(
  * @access  Private (munshi)
  * @returns Paginated list of orders
  */
-router.get(
-  '/orders',
-  validateOrdersList,
-  munshiController.getOrders
-);
+router.get("/orders", validateOrdersList, munshiController.getOrders);
 
 // ==================== MESS-OFF OPERATIONS ====================
 
@@ -80,9 +104,9 @@ router.get(
  * @returns Paginated list of mess-off requests
  */
 router.get(
-  '/mess-off-requests',
+  "/mess-off-requests",
   validateMessOffList,
-  munshiController.getMessOffRequests
+  munshiController.getMessOffRequests,
 );
 
 /**
@@ -94,12 +118,11 @@ router.get(
  * @returns Updated request status
  */
 router.patch(
-  '/mess-off/:id/status',
+  "/mess-off/:id/status",
   validateMessOffStatus,
-  munshiController.updateMessOffStatus
+  munshiController.updateMessOffStatus,
 );
 
 // ==================== EXPORT ====================
 
 module.exports = router;
-

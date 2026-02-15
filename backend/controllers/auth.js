@@ -315,6 +315,7 @@ exports.login = async (req, res) => {
         email: munshi.email,
         hostel: munshi.hostel,
         role: "munshi",
+        type: munshi.type || "munshi",
       };
       return res.json({
         success: true,

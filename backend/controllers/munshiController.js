@@ -65,6 +65,7 @@ exports.lookupStudent = async (req, res) => {
               },
             ],
           }),
+      isVerified: true 
     };
 
     const student = await Student.findOne(findQuery).select('-password').lean();
