@@ -21,6 +21,9 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mess_mana
 .then(() => console.log('MongoDB Connected'))
 .catch(err => console.log('MongoDB Connection Error:', err));
 
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
+
 const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/student');
 const messOffRoutes = require('./routes/messOff');
@@ -61,6 +64,10 @@ console.log('[Server] Registered /api/munshi/menu (PROTECTED)');
 
 app.use('/api/bill', billRoutes);
 console.log('[Server] Registered /api/bill');
+
+const addBillRoutes = require('./routes/addBill');
+app.use('/api/munshi/bill', addBillRoutes);
+console.log('[Server] Registered /api/munshi/bill (PROTECTED)');
 
 app.use('/api/munshi', munshiRoutes);
 console.log('[Server] Registered /api/munshi');

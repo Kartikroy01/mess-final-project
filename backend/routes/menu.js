@@ -9,11 +9,7 @@ const Bill = require('../models/Bill');
 
 router.use(munshiAuth);
 
-// DEBUG: Log all requests to check if DELETE hits here
-router.use((req, res, next) => {
-  console.log(`[Menu Router] Request received: ${req.method} ${req.path}`);
-  next();
-});
+
 
 // @route   DELETE /api/munshi/menu/item/:mealType/:itemId
 // @desc    Remove an item from menu
@@ -30,7 +26,7 @@ router.delete('/item/:mealType/:itemId', async (req, res) => {
       });
     }
 
-    const menu = await Menu.findOne({ mealType, isActive: true });
+    const menu = await Menu.findOne({ mealType, isActive: true, hostel: req.hostel });
 
     if (!menu) {
       return res.status(404).json({
@@ -82,7 +78,7 @@ router.post('/delete-item/:mealType/:itemId', async (req, res) => {
       });
     }
 
-    const menu = await Menu.findOne({ mealType, isActive: true });
+    const menu = await Menu.findOne({ mealType, isActive: true, hostel: req.hostel });
 
     if (!menu) {
       return res.status(404).json({
@@ -196,14 +192,15 @@ router.post('/item', async (req, res) => {
 
     // Find or create menu for this meal type
     // Use findOne without isActive filter to reactivate existing menus if needed
-    let menu = await Menu.findOne({ mealType: mealType.toLowerCase() });
+    let menu = await Menu.findOne({ mealType: mealType.toLowerCase(), hostel: req.hostel });
 
     if (!menu) {
       // Create new menu for this meal type
       menu = new Menu({
         mealType: mealType.toLowerCase(),
         items: [],
-        isActive: true
+        isActive: true,
+        hostel: req.hostel
       });
     } else if (!menu.isActive) {
       // Reactivate existing menu
@@ -256,7 +253,7 @@ router.put('/item/:mealType/:itemId', async (req, res) => {
       });
     }
 
-    const menu = await Menu.findOne({ mealType, isActive: true });
+    const menu = await Menu.findOne({ mealType, isActive: true, hostel: req.hostel });
 
     if (!menu) {
       return res.status(404).json({
@@ -518,12 +515,111 @@ router.get('/orders', async (req, res) => {
   }
 });
 
-// @route   GET /api/menu/current
-// @desc    Get current menu for all meal types
+module.exports = router;
+
+// Import upload middleware
+const upload = require('../middleware/upload');
+
+// @route   POST /api/munshi/menu/weekly
+// @desc    Update weekly menu with images
+// @access  Munshi only
+router.post('/weekly', upload.any(), async (req, res) => {
+    try {
+        console.log('[Menu Weekly] Received update request');
+        // req.body should contain 'menuData' as a JSON string
+        // FormData: 
+        // - menuData: JSON string of structure { "Sunday": { "breakfast": [{name, price, ...}], ... }, ... }
+        // - files: images with fieldnames like "image-Sunday-breakfast-0" (or handle mapping by ID/Index)
+
+        if (!req.body.menuData) {
+             return res.status(400).json({ success: false, message: 'Missing menuData' });
+        }
+
+        const weeklyMenu = JSON.parse(req.body.menuData);
+        const files = req.files || [];
+        
+        // Map files to a lookup object or process directly
+        // Client side should probably send file fieldname as `${day}-${mealType}-${itemIndex}` or something similar
+        // OR Client sends items with a temporary ID, and file fieldname matches that ID.
+        
+        // Let's assume the client sends a `tempId` in the item, and the file fieldname is that `tempId`.
+        const fileMap = {};
+        files.forEach(file => {
+            fileMap[file.fieldname] = `/uploads/${file.filename}`;
+        });
+
+        // Loop through days and meal types to update/create menus
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const mealTypes = ['breakfast', 'lunch', 'snacks', 'dinner'];
+
+        for (const day of days) {
+            if (!weeklyMenu[day]) continue;
+
+            for (const mealType of mealTypes) {
+                if (!weeklyMenu[day][mealType]) continue;
+
+                // Find existing menu for Day + MealType
+                let menu = await Menu.findOne({ day, mealType, hostel: req.hostel });
+                
+                if (!menu) {
+                    menu = new Menu({ day, mealType, items: [], hostel: req.hostel });
+                }
+
+                // Process items
+                const newItems = weeklyMenu[day][mealType]
+                    .filter(item => item.name && item.name.trim()) // Only include items with names
+                    .map((item, index) => {
+                    // Check if a new file was uploaded for this item
+                    // We expect the client to use a unique key for the file fieldname corresponding to this item.
+                    // Let's rely on the client sending `imageKey` in the item data which matches file fieldname.
+                    // If no new file, keep existing image if provided in `existingImage`
+                    
+                    let imagePath = item.existingImage || '';
+                    if (item.imageKey && fileMap[item.imageKey]) {
+                        imagePath = fileMap[item.imageKey];
+                    }
+
+                    return {
+                        name: item.name.trim(),
+                        price: Number(item.price) || 0,
+                        image: imagePath,
+                        isAvailable: item.isAvailable !== false // Default true
+                    };
+                });
+
+                // Only save if there are valid items
+                if (newItems.length > 0) {
+                    menu.items = newItems;
+                    menu.isActive = true;
+                    await menu.save();
+                } else if (menu._id) {
+                    // If menu exists but has no items, delete it
+                    await Menu.deleteOne({ _id: menu._id });
+                }
+            }
+        }
+
+        res.json({ success: true, message: 'Weekly menu updated successfully' });
+
+    } catch (error) {
+        console.error('Weekly menu update error:', error);
+        res.status(500).json({ success: false, message: 'Server error updating weekly menu: ' + error.message });
+    }
+});
+
+// @route   GET /api/munshi/menu/current
+// @desc    Get current menu, optionally filtered by day
 // @access  Munshi only
 router.get('/current', async (req, res) => {
   try {
-    const menus = await Menu.find({ isActive: true })
+    const { day } = req.query;
+    
+    let query = { isActive: true, hostel: req.hostel };
+    if (day) {
+        query.day = day;
+    }
+
+    const menus = await Menu.find(query)
       .sort({ mealType: 1 })
       .lean();
 
@@ -536,16 +632,27 @@ router.get('/current', async (req, res) => {
 
     menus.forEach(menu => {
       if (menuByType[menu.mealType]) {
-        menuByType[menu.mealType] = menu.items
-          .filter(item => item.isAvailable)
-          .map(item => ({
-            id: item._id,
-            name: item.name,
-            price: item.price,
-            image: item.image || `https://placehold.co/300x200/cccccc/FFF?text=${encodeURIComponent(item.name || '')}`,
-            category: menu.mealType,
-            isAvailable: item.isAvailable
-          }));
+        // If getting all days (no day filter), we might have collisions or need a different structure.
+        // If day IS provided, this works fine.
+        // If day IS NOT provided, this currently just merges everything, which might be messy if used for anything other than "Today's Menu".
+        // BUT, existing frontend uses this for "Today's session" mostly.
+        // Let's assume if no day is provided, we return ALL valid items across all days? Or maybe just return structure?
+        // The original code returned all items.
+        // If we want to return a specific day's menu, we filter by day.
+
+        menu.items.forEach(item => {
+           if (item.isAvailable) {
+             menuByType[menu.mealType].push({
+                id: item._id,
+                name: item.name,
+                price: item.price,
+                image: item.image ? (item.image.startsWith('http') ? item.image : `${process.env.VITE_API_URL || 'http://localhost:5000'}${item.image}`) : `https://placehold.co/300x200/cccccc/FFF?text=${encodeURIComponent(item.name || '')}`,
+                category: menu.mealType,
+                isAvailable: item.isAvailable,
+                day: menu.day // Include day in response
+             });
+           }
+        });
       }
     });
 
@@ -561,60 +668,3 @@ router.get('/current', async (req, res) => {
     });
   }
 });
-
-
-
-// @route   GET /api/menu/:mealType
-// @desc    Get menu for specific meal type
-// @access  Munshi only
-router.get('/:mealType', async (req, res) => {
-  try {
-    const { mealType } = req.params;
-
-    if (!['breakfast', 'lunch', 'snacks', 'dinner'].includes(mealType)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid meal type'
-      });
-    }
-
-    const menu = await Menu.findOne({ mealType, isActive: true }).lean();
-
-    if (!menu) {
-      return res.status(404).json({
-        success: false,
-        message: 'Menu not found for this meal type'
-      });
-    }
-
-    const items = menu.items
-      .filter(item => item.isAvailable)
-      .map(item => ({
-        id: item._id,
-        name: item.name,
-        price: item.price,
-        image: item.image || `https://placehold.co/300x200/cccccc/FFF?text=${encodeURIComponent(item.name || '')}`,
-        category: menu.mealType,
-        isAvailable: item.isAvailable
-      }));
-
-    res.json({
-      success: true,
-      data: {
-        mealType: menu.mealType,
-        items
-      }
-    });
-  } catch (error) {
-    console.error('Get meal type menu error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error fetching menu'
-    });
-  }
-});
-
-
-
-
-module.exports = router;

@@ -45,19 +45,38 @@ router.get(
 
 /**
  * @route   GET /api/munshi/students-for-bill
- * @desc    Get all students for the clerk's hostel with diet and extra for the given month
- * @query   month=YYYY-MM
- * @access  Private (munshi)
+ * @desc    Get students with meal/extra data for a given month
+ * @access  Private (Munshi/Clerk)
  */
 router.get("/students-for-bill", clerkController.getStudentsForMonth);
 
 /**
+ * @route   GET /api/munshi/students-for-daterange
+ * @desc    Get students with meal/extra data for a given date range
+ * @access  Private (Munshi/Clerk)
+ */
+router.get("/students-for-daterange", clerkController.getStudentsForDateRange);
+
+/**
  * @route   POST /api/munshi/generate-bill
- * @desc    Generate Excel monthly bill for the clerk's hostel
- * @body    month: YYYY-MM, dietRate: Number
- * @access  Private (munshi)
+ * @desc    Generate Excel bill for a month
+ * @access  Private (Munshi/Clerk)
  */
 router.post("/generate-bill", clerkController.generateMonthlyBill);
+
+/**
+ * @route   POST /api/munshi/generate-bill-daterange
+ * @desc    Generate Excel bill for a date range
+ * @access  Private (Munshi/Clerk)
+ */
+router.post("/generate-bill-daterange", clerkController.generateBillForDateRange);
+
+/**
+ * @route   GET /api/munshi/bill-history
+ * @desc    Get bill generation history for the hostel
+ * @access  Private (Munshi/Clerk)
+ */
+router.get("/bill-history", clerkController.getBillHistory);
 
 /**
  * @route   GET /api/munshi/all-students

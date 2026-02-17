@@ -149,6 +149,25 @@ const apiService = {
       console.error('Error downloading report:', error);
       throw error;
     }
+  },
+  fetchBill: async (token) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/bill/current`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch bill');
+      }
+      const data = await response.json();
+      return data.success ? data.data : data;
+    } catch (error) {
+      console.error('Error fetching bill:', error);
+      throw error;
+    }
   }
 };
 
@@ -198,13 +217,18 @@ const LoadingSpinner = ({ message = "Loading..." }) => (
 // --- DASHBOARD HOME ---
 const StudentHome = ({ student, token }) => {
     const [mealHistory, setMealHistory] = useState([]);
+    const [billData, setBillData] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const meals = await apiService.fetchMealHistory(token);
+                const [meals, bill] = await Promise.all([
+                    apiService.fetchMealHistory(token),
+                    apiService.fetchBill(token)
+                ]);
                 setMealHistory(Array.isArray(meals) ? meals.slice(0, 5) : []);
+                setBillData(bill);
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
             } finally {
@@ -214,21 +238,27 @@ const StudentHome = ({ student, token }) => {
         fetchData();
     }, [token]);
 
-    const avgMealCost = student.mealCount > 0 ? (student.bill / student.mealCount).toFixed(0) : 0;
+    const totalBill = billData?.totalBill || student.bill || 0;
+    const mealCount = billData?.mealCount || student.mealCount || 0;
+    const avgMealCost = mealCount > 0 ? (totalBill / mealCount).toFixed(0) : 0;
     
     // Professional color palette & icons
     const stats = [
         { 
-            label: 'Current Bill', 
-            value: `₹${student.bill || 0}`, 
+            label: 'Total Bill', 
+            value: `₹${totalBill}`, 
             icon: <DollarSign size={24} />, 
             color: 'blue',
-            change: '+12%',
-            desc: 'from last month'
+            breakdown: billData ? [
+                { label: 'Meals', value: `₹${billData.mealCharges || 0}` },
+                { label: 'Fines', value: `₹${billData.fines || 0}` },
+                { label: 'Extras', value: `₹${billData.extras || 0}` }
+            ] : null,
+            desc: `${billData ? new Date(0, billData.month - 1).toLocaleString('default', { month: 'long' }) : 'Current'} ${billData?.year || new Date().getFullYear()}`
         },
         { 
             label: 'Meals Taken', 
-            value: student.mealCount || 0, 
+            value: mealCount, 
             icon: <UtensilsCrossed size={24} />, 
             color: 'emerald',
             change: '+5',
@@ -428,15 +458,27 @@ const StudentHome = ({ student, token }) => {
                             <div className={`p-3.5 rounded-2xl ${getLightBg(stat.color)} group-hover:scale-110 transition-transform duration-300`}>
                                 {stat.icon}
                             </div>
-                            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${stat.change.startsWith('+') ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                                {stat.change}
-                            </span>
+                            {stat.change && (
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${stat.change.startsWith('+') ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                    {stat.change}
+                                </span>
+                            )}
                         </div>
                         <h3 className="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">{stat.label}</h3>
-                        <div className="flex items-end gap-2">
+                        <div className="flex items-end gap-2 mb-3">
                             <span className="text-3xl font-extrabold text-slate-800">{stat.value}</span>
                             <span className="text-xs text-slate-400 font-medium mb-1.5">{stat.desc}</span>
                         </div>
+                        {stat.breakdown && (
+                            <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5">
+                                {stat.breakdown.map((item, i) => (
+                                    <div key={i} className="flex justify-between text-xs">
+                                        <span className="text-slate-500 font-medium">{item.label}:</span>
+                                        <span className="text-slate-700 font-bold">{item.value}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>

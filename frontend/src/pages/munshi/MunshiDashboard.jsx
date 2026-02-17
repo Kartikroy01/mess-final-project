@@ -24,6 +24,7 @@ import {
 import MessOffRequestsPage from "./MessOffRequest";
 import ReportsPage from "./MunshiReport";
 import AddMealPage from "./MunshiAddMeal";
+import AddBillPage from "./AddBillPage";
 import { munshiApi } from "./api";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 
@@ -505,14 +506,14 @@ const DashboardView = ({
           </Card>
 
           {/* Menu Items */}
-          <Card className="p-8">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-orange-50 rounded-2xl">
-                  <UtensilsCrossed className="w-6 h-6 text-orange-600" />
+          <Card className="p-4 md:p-6 lg:p-8">
+            <div className="flex items-center justify-between mb-4 md:mb-6 lg:mb-8">
+              <div className="flex items-center gap-2 md:gap-4">
+                <div className="p-2 md:p-3 bg-orange-50 rounded-xl md:rounded-2xl">
+                  <UtensilsCrossed className="w-5 h-5 md:w-6 md:h-6 text-orange-600" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-800">
+                  <h2 className="text-lg md:text-xl font-bold text-slate-800">
                     Available Menu
                   </h2>
                   <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mt-1">
@@ -531,7 +532,7 @@ const DashboardView = ({
                 Loading menu...
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
                 {(meals[sessionMeal] || []).map((item) => {
                   const isSelected = extraItems.find((i) => i.id === item.id);
                   const showDelete = showDeleteId === item.id;
@@ -548,13 +549,13 @@ const DashboardView = ({
                       }}
                       role="button"
                       tabIndex={0}
-                      className={`group relative overflow-hidden rounded-2xl border-2 text-left transition-all duration-300 cursor-pointer ${
+                      className={`group relative overflow-hidden rounded-xl md:rounded-2xl border-2 text-left transition-all duration-300 cursor-pointer ${
                         isSelected
                           ? "border-indigo-500 bg-indigo-50/50"
                           : "border-slate-100 bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-500/5"
                       } ${!scannedStudent && !showDelete ? "hover:border-rose-200" : ""}`}
                     >
-                      <div className="aspect-[4/3] overflow-hidden relative">
+                      <div className="aspect-square md:aspect-[4/3] overflow-hidden relative">
                         <img
                           src={item.image}
                           alt={item.name}
@@ -572,9 +573,9 @@ const DashboardView = ({
                           </div>
                         )}
                       </div>
-                      <div className="p-5">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className={`font-bold transition-colors ${showDelete ? 'text-rose-600' : 'text-slate-800 group-hover:text-indigo-700'}`}>
+                      <div className="p-3 md:p-4 lg:p-5">
+                        <div className="flex justify-between items-start mb-1 md:mb-2">
+                          <h3 className={`font-bold text-sm md:text-base transition-colors ${showDelete ? 'text-rose-600' : 'text-slate-800 group-hover:text-indigo-700'}`}>
                             {item.name}
                           </h3>
                           <div className="bg-slate-100 px-2 py-1 rounded-lg text-xs font-bold text-slate-600">
@@ -792,8 +793,9 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   useEffect(() => {
     if (!authChecked || !sessionMeal) return;
     setMenuLoading(true);
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
     munshiApi
-      .getMenu()
+      .getMenu(today)
       .then(setMeals)
       .catch(() => setMeals(EMPTY_MEALS))
       .finally(() => setMenuLoading(false));
@@ -895,17 +897,18 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   };
 
   const tabs = [
-    { id: "dashboard", label: "Dashboard", icon: ShoppingBag },
+    { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "messoffrequest", label: "Mess Off", icon: Calendar },
     { id: "reports", label: "Reports", icon: TrendingUp },
     { id: "addmeal", label: "Add Meal", icon: Plus },
+    { id: "addbill", label: "Add Bill", icon: DollarSign },
   ];
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-slate-100 transform transition-transform duration-300 ease-in-out md:translate-x-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-slate-100 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="p-8 h-full flex flex-col">
           <div className="flex items-center gap-3 mb-10 px-2">
@@ -997,17 +1000,17 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
       {mobileMenuOpen && (
         <div
           onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-30 md:hidden"
+          className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-30 lg:hidden"
         ></div>
       )}
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-72 min-h-screen relative">
+      <main className="flex-1 lg:ml-72 min-h-screen relative">
 
         
         {/* Header */}
         <header className="sticky top-0 z-20 bg-[#F8FAFC]/80 backdrop-blur-md px-8 py-5 flex items-center justify-between">
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(true)}
               className="p-2 text-slate-600 hover:bg-white rounded-xl transition-colors"
@@ -1089,6 +1092,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
           )}
           {activeTab === "reports" && <ReportsPage orders={orders} />}
           {activeTab === "addmeal" && <AddMealPage onAddMeal={handleAddMeal} />}
+          {activeTab === "addbill" && <AddBillPage />}
         </div>
       </main>
     </div>

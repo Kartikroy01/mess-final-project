@@ -20,13 +20,37 @@ export const munshiApi = {
     return data.data;
   },
 
-  async getMenu() {
-    const res = await fetch(`${API_BASE}/munshi/menu/current`, {
+  async getMenu(day) {
+    const url = day 
+        ? `${API_BASE}/munshi/menu/current?day=${encodeURIComponent(day)}`
+        : `${API_BASE}/munshi/menu/current`;
+        
+    const res = await fetch(url, {
       headers: getAuthHeaders(),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to fetch menu");
     return data.data;
+  },
+
+  async saveWeeklyMenu(formData) {
+    const res = await fetch(`${API_BASE}/munshi/menu/weekly`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("authToken")}` 
+        // Do NOT set Content-Type here, let browser set it with boundary for FormData
+      },
+      body: formData,
+    });
+    const text = await res.text();
+    try {
+      const data = JSON.parse(text);
+      if (!res.ok) throw new Error(data.message || "Failed to save weekly menu");
+      return data;
+    } catch (e) {
+      console.error("Save Weekly Menu API Error:", text);
+      throw new Error(`Server returned error: ${text.substring(0, 200)}...`);
+    }
   },
 
   async addMealItem(payload) {
@@ -175,5 +199,59 @@ export const munshiApi = {
     });
     if (!res.ok) throw new Error("Failed to verify student");
     return res.json();
+  },
+
+  async addBillCharge(payload) {
+    const res = await fetch(`${API_BASE}/munshi/bill/add-charge`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    const text = await res.text();
+    try {
+      const data = JSON.parse(text);
+      if (!res.ok) throw new Error(data.message || "Failed to add bill charge");
+      return data;
+    } catch (e) {
+      console.error("Add Bill Charge API Error:", text);
+      throw new Error(`Server returned error: ${text.substring(0, 200)}...`);
+    }
+  },
+
+  async getStudentsForDateRange(fromDate, toDate) {
+    const res = await fetch(
+      `${API_BASE}/munshi/students-for-daterange?fromDate=${fromDate}&toDate=${toDate}`,
+      {
+        headers: getAuthHeaders(),
+      }
+    );
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to fetch students");
+    return data.data;
+  },
+
+  async generateBillForDateRange(fromDate, toDate, dietRate, billItems) {
+    const res = await fetch(`${API_BASE}/munshi/generate-bill-daterange`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ fromDate, toDate, dietRate, billItems }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || "Failed to generate bill");
+    }
+
+    const blob = await res.blob();
+    return blob;
+  },
+
+  async getBillHistory() {
+    const res = await fetch(`${API_BASE}/munshi/bill-history`, {
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to fetch bill history");
+    return data.data;
   }
 };

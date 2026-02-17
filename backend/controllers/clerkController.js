@@ -2,6 +2,7 @@ const ExcelJS = require("exceljs");
 const Student = require("../models/Student");
 const MealHistory = require("../models/MealHistory");
 const ExtraOrder = require("../models/ExtraOrder");
+const BillRecord = require("../models/BillRecord");
 
 // Helper: parse month string YYYY-MM to start and end Date
 function parseMonth(monthStr) {
@@ -189,7 +190,19 @@ exports.generateMonthlyBill = async (req, res) => {
       const diet = mealMap.get(String(s._id)) || 0;
       const extra = extraMap.get(String(s._id)) || 0;
       const dietTotal = Number(diet) * Number(dietRate);
-      const total = dietTotal + Number(extra) + billItemsTotal;
+      
+      // Calculate bill items total for THIS student only
+      let studentBillItemsTotal = 0;
+      safeBillItems.forEach((item) => {
+        // Check if this student is selected for this item
+        // If selectedStudents is null/undefined, apply to all students
+        // If selectedStudents exists, only apply if student ID is in the array
+        if (!item.selectedStudents || item.selectedStudents.includes(String(s._id))) {
+          studentBillItemsTotal += Number(item.amount) || 0;
+        }
+      });
+      
+      const total = dietTotal + Number(extra) + studentBillItemsTotal;
 
       const row = {
         serial: idx + 1,
@@ -203,9 +216,14 @@ exports.generateMonthlyBill = async (req, res) => {
         total,
       };
 
-      // Add dynamic item amounts to row
+      // Add dynamic item amounts to row (0 if student not selected)
       safeBillItems.forEach((item, index) => {
-          row[`item_${index}`] = Number(item.amount);
+          // Check if this student should be charged for this item
+          if (!item.selectedStudents || item.selectedStudents.includes(String(s._id))) {
+            row[`item_${index}`] = Number(item.amount);
+          } else {
+            row[`item_${index}`] = 0;  // Student not selected for this item
+          }
       });
 
       ws.addRow(row);
@@ -233,6 +251,38 @@ exports.generateMonthlyBill = async (req, res) => {
     await workbook.xlsx.write(res);
     res.end();
     console.log(`Bill generated successfully: ${filename}`);
+    
+    // Save bill record to database (async, don't wait)
+    try {
+      const totalAmount = students.reduce((sum, s) => {
+        const diet = mealMap.get(String(s._id)) || 0;
+        const extra = extraMap.get(String(s._id)) || 0;
+        const dietTotal = Number(diet) * Number(dietRate);
+        
+        let studentBillItemsTotal = 0;
+        safeBillItems.forEach((item) => {
+          if (!item.selectedStudents || item.selectedStudents.includes(String(s._id))) {
+            studentBillItemsTotal += Number(item.amount) || 0;
+          }
+        });
+        
+        return sum + dietTotal + Number(extra) + studentBillItemsTotal;
+      }, 0);
+      
+      await BillRecord.create({
+        hostel,
+        generatedBy: req.munshi?._id || req.user?._id,
+        month,
+        mealRate: Number(dietRate),
+        billItems: safeBillItems,
+        studentCount: students.length,
+        totalAmount,
+      });
+      console.log(`Bill record saved for ${month}`);
+    } catch (saveErr) {
+      console.error("Error saving bill record:", saveErr);
+      // Don't fail the request if saving fails
+    }
   } catch (err) {
     console.error("Error in generateMonthlyBill:", err);
     res.status(500).json({ success: false, message: "Server error: " + err.message });
@@ -280,6 +330,304 @@ exports.verifyStudent = async (req, res) => {
     }
   } catch (err) {
     console.error("Error in verifyStudent:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Helper: parse date range
+function parseDateRange(fromDate, toDate) {
+  const start = new Date(fromDate);
+  const end = new Date(toDate);
+  end.setHours(23, 59, 59, 999); // Include the entire end date
+  return { start, end };
+}
+
+exports.getStudentsForDateRange = async (req, res) => {
+  try {
+    const hostel = req.hostel || req.munshi?.hostel;
+    if (!hostel)
+      return res
+        .status(401)
+        .json({ success: false, message: "Hostel not found on clerk account" });
+
+    const { fromDate, toDate } = req.query;
+    if (!fromDate || !toDate)
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: 'Query parameters "fromDate" and "toDate" are required (format: YYYY-MM-DD)',
+        });
+
+    const range = parseDateRange(fromDate, toDate);
+
+    // Fetch students from this hostel
+    const students = await Student.find({
+      hostelNo: new RegExp("^" + hostel + "$", "i"),
+    })
+      .select("roomNo name rollNo")
+      .lean();
+
+    const studentIds = students.map((s) => s._id);
+
+    // Aggregate meal counts per student
+    const meals = await MealHistory.aggregate([
+      {
+        $match: {
+          studentId: { $in: studentIds },
+          date: { $gte: range.start, $lt: range.end },
+        },
+      },
+      { $group: { _id: "$studentId", dietCount: { $sum: 1 } } },
+    ]);
+
+    const mealMap = new Map(meals.map((m) => [String(m._id), m.dietCount]));
+
+    // Aggregate extras
+    const extras = await ExtraOrder.aggregate([
+      {
+        $match: {
+          studentId: { $in: studentIds },
+          date: { $gte: range.start, $lt: range.end },
+        },
+      },
+      { $group: { _id: "$studentId", extraTotal: { $sum: "$totalAmount" } } },
+    ]);
+
+    const extraMap = new Map(extras.map((e) => [String(e._id), e.extraTotal]));
+
+    const result = students.map((s, idx) => ({
+      serial: idx + 1,
+      studentId: s._id,
+      roomNo: s.roomNo,
+      name: s.name,
+      rollNo: s.rollNo,
+      diet: mealMap.get(String(s._id)) || 0,
+      extra: extraMap.get(String(s._id)) || 0,
+    }));
+
+    res.json({ success: true, data: result });
+  } catch (err) {
+    console.error("Error in getStudentsForDateRange:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.generateBillForDateRange = async (req, res) => {
+  try {
+    const hostel = req.hostel || req.munshi?.hostel;
+    if (!hostel)
+      return res
+        .status(401)
+        .json({ success: false, message: "Hostel not found on clerk account" });
+
+    const { fromDate, toDate, dietRate, billItems } = req.body;
+
+    if (!fromDate || !toDate)
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: 'Body params "fromDate" and "toDate" are required (format: YYYY-MM-DD)',
+        });
+    if (dietRate === undefined)
+      return res
+        .status(400)
+        .json({ success: false, message: 'Body param "dietRate" is required' });
+
+    const range = parseDateRange(fromDate, toDate);
+
+    const students = await Student.find({
+      hostelNo: new RegExp("^" + hostel + "$", "i"),
+    })
+      .select("roomNo name rollNo")
+      .lean();
+
+    if (!students.length)
+      return res
+        .status(404)
+        .json({ success: false, message: "No students found for this hostel" });
+
+    const studentIds = students.map((s) => s._id);
+
+    const meals = await MealHistory.aggregate([
+      {
+        $match: {
+          studentId: { $in: studentIds },
+          date: { $gte: range.start, $lt: range.end },
+        },
+      },
+      { $group: { _id: "$studentId", dietCount: { $sum: 1 } } },
+    ]);
+
+    const mealMap = new Map(meals.map((m) => [String(m._id), m.dietCount]));
+
+    const extras = await ExtraOrder.aggregate([
+      {
+        $match: {
+          studentId: { $in: studentIds },
+          date: { $gte: range.start, $lt: range.end },
+        },
+      },
+      { $group: { _id: "$studentId", extraTotal: { $sum: "$totalAmount" } } },
+    ]);
+
+    const extraMap = new Map(extras.map((e) => [String(e._id), e.extraTotal]));
+
+    // Build Excel
+    const workbook = new ExcelJS.Workbook();
+    const ws = workbook.addWorksheet("Bill");
+
+    const columns = [
+      { header: "Serial No", key: "serial", width: 10 },
+      { header: "Room No", key: "roomNo", width: 12 },
+      { header: "Name", key: "name", width: 30 },
+      { header: "Roll No", key: "rollNo", width: 18 },
+      { header: "Diet", key: "diet", width: 10 },
+      { header: "Diet Rate", key: "dietRate", width: 12 },
+      { header: "DietRate × Diet", key: "dietTotal", width: 16 },
+      { header: "Extra", key: "extra", width: 12 },
+    ];
+
+    // Add dynamic columns for bill items
+    const safeBillItems = Array.isArray(billItems) ? billItems : [];
+    
+    safeBillItems.forEach((item, index) => {
+        columns.push({ header: item.name, key: `item_${index}`, width: 15 });
+    });
+    
+    columns.push({ header: "Total Bill", key: "total", width: 14 });
+
+    ws.columns = columns;
+
+    students.forEach((s, idx) => {
+      const diet = mealMap.get(String(s._id)) || 0;
+      const extra = extraMap.get(String(s._id)) || 0;
+      const dietTotal = Number(diet) * Number(dietRate);
+      
+      // Calculate bill items total for THIS student only
+      let studentBillItemsTotal = 0;
+      safeBillItems.forEach((item) => {
+        if (!item.selectedStudents || item.selectedStudents.includes(String(s._id))) {
+          studentBillItemsTotal += Number(item.amount) || 0;
+        }
+      });
+      
+      const total = dietTotal + Number(extra) + studentBillItemsTotal;
+
+      const row = {
+        serial: idx + 1,
+        roomNo: s.roomNo,
+        name: s.name,
+        rollNo: s.rollNo,
+        diet,
+        dietRate: Number(dietRate),
+        dietTotal,
+        extra,
+        total,
+      };
+
+      // Add dynamic item amounts to row (0 if student not selected)
+      safeBillItems.forEach((item, index) => {
+          if (!item.selectedStudents || item.selectedStudents.includes(String(s._id))) {
+            row[`item_${index}`] = Number(item.amount);
+          } else {
+            row[`item_${index}`] = 0;
+          }
+      });
+
+      ws.addRow(row);
+    });
+
+    // Formatting
+    ws.columns.forEach((col, index) => {
+        if (index >= 4) {
+            col.numFmt = "#,##0.00";
+        }
+    });
+
+    const safeHostelName = String(hostel).replace(/[^a-zA-Z0-9_-]/g, "_");
+    const filename = `${safeHostelName}_${fromDate}_to_${toDate}_Bill.xlsx`;
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+
+    await workbook.xlsx.write(res);
+    res.end();
+    console.log(`Bill generated successfully: ${filename}`);
+    
+    // Save bill record to database (async, don't wait)
+    try {
+      const totalAmount = students.reduce((sum, s) => {
+        const diet = mealMap.get(String(s._id)) || 0;
+        const extra = extraMap.get(String(s._id)) || 0;
+        const dietTotal = Number(diet) * Number(dietRate);
+        
+        let studentBillItemsTotal = 0;
+        safeBillItems.forEach((item) => {
+          if (!item.selectedStudents || item.selectedStudents.includes(String(s._id))) {
+            studentBillItemsTotal += Number(item.amount) || 0;
+          }
+        });
+        
+        return sum + dietTotal + Number(extra) + studentBillItemsTotal;
+      }, 0);
+      
+      await BillRecord.create({
+        hostel,
+        generatedBy: req.munshi?._id || req.user?._id,
+        fromDate: new Date(fromDate),
+        toDate: new Date(toDate),
+        mealRate: Number(dietRate),
+        billItems: safeBillItems,
+        studentCount: students.length,
+        totalAmount,
+      });
+      console.log(`Bill record saved for ${fromDate} to ${toDate}`);
+    } catch (saveErr) {
+      console.error("Error saving bill record:", saveErr);
+      // Don't fail the request if saving fails
+    }
+  } catch (err) {
+    console.error("Error in generateBillForDateRange:", err);
+    res.status(500).json({ success: false, message: "Server error: " + err.message });
+  }
+};
+
+exports.getBillHistory = async (req, res) => {
+  try {
+    const hostel = req.hostel || req.munshi?.hostel;
+    if (!hostel)
+      return res
+        .status(401)
+        .json({ success: false, message: "Hostel not found on clerk account" });
+
+    const billRecords = await BillRecord.find({ hostel })
+      .sort({ generatedAt: -1 })
+      .limit(100)
+      .lean();
+
+    // Format the response
+    const formattedRecords = billRecords.map((record) => ({
+      _id: record._id,
+      period: record.month || `${record.fromDate.toISOString().split('T')[0]} to ${record.toDate.toISOString().split('T')[0]}`,
+      type: record.month ? 'monthly' : 'daterange',
+      month: record.month,
+      fromDate: record.fromDate,
+      toDate: record.toDate,
+      mealRate: record.mealRate,
+      billItems: record.billItems,
+      studentCount: record.studentCount,
+      totalAmount: record.totalAmount,
+      generatedAt: record.generatedAt,
+    }));
+
+    res.json({ success: true, data: formattedRecords });
+  } catch (err) {
+    console.error("Error in getBillHistory:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
