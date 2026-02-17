@@ -23,6 +23,10 @@ const extraOrderSchema = new mongoose.Schema(
       enum: ['breakfast', 'lunch', 'snacks', 'dinner'],
       default: 'breakfast',
     },
+    dietCount: {
+      type: Number,
+      default: 0,
+    },
     date: {
       type: Date,
       default: Date.now,

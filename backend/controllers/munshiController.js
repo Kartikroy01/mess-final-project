@@ -118,7 +118,7 @@ exports.createOrder = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { studentId, items, mealType } = req.body;
+    const { studentId, items, mealType, dietCount } = req.body;
     const hostel = req.munshi.hostel;
 
     // Verify student exists and belongs to munshi's hostel
@@ -136,7 +136,7 @@ exports.createOrder = async (req, res) => {
     }
 
     // Process and validate items with quantity and special pricing
-    const orderItems = items.map((i) => {
+    const orderItems = (items || []).map((i) => {
       const name = i.name.trim();
       const basePrice = Number(i.price);
       const qty = Number(i.qty) || 1;
@@ -158,12 +158,33 @@ exports.createOrder = async (req, res) => {
 
     const totalAmount = orderItems.reduce((sum, i) => sum + i.price, 0);
 
+    // Determine diet count
+    // If dietCount is explicitly provided, use it.
+    // Otherwise, if items exist, default to 1 (unless it's snacks?).
+    // Actually, per user request: "if any students take other breakfast item more then one then this is not count of diet at a time only one diet will count"
+    // So by default 1 diet if not specified and items > 0.
+    // But if dietCount is sent (e.g. 0 or 2), we use that.
+    
+    let finalDietCount = 0;
+    if (dietCount !== undefined) {
+        finalDietCount = dietCount;
+    } else if (orderItems.length > 0) {
+        // Default behavior: buying items implies 1 diet, unless it's snacks which typically implies 0?
+        // But user said "snack did not count under the diet".
+        // Frontend should probably send dietCount=0 for snacks or we handle it here.
+        // Let's rely on frontend sending dietCount=1 for meals and 0 for snacks if they use the buttons.
+        // But for backward validity or manual item addition:
+        // If mealType is NOT snacks, count as 1.
+        finalDietCount = (mealType === 'snacks') ? 0 : 1;
+    }
+
     // Create the order
     const order = new ExtraOrder({
       studentId: student._id,
       items: orderItems.map(i => ({ name: i.name, price: i.price, qty: i.qty })),
       totalAmount,
       mealType: mealType || 'breakfast',
+      dietCount: finalDietCount
     });
     await order.save({ session });
 
@@ -286,13 +307,14 @@ exports.getOrders = async (req, res) => {
 
     const data = orders.map((o) => ({
       id: o._id.toString(),
-      studentId: o.studentId._id ? o.studentId._id.toString() : o.studentId,
+      studentId: o.studentId ? (o.studentId._id ? o.studentId._id.toString() : o.studentId) : null,
       studentName: o.studentId && o.studentId.name ? o.studentId.name : 'Unknown',
       studentRollNo: o.studentId && o.studentId.rollNo ? o.studentId.rollNo : '',
       studentRoomNo: o.studentId?.roomNo || 'N/A',
-      items: o.items,
+      items: o.items || [],
       totalAmount: o.totalAmount,
       mealType: o.mealType,
+      dietCount: o.dietCount !== undefined ? o.dietCount : (o.mealType === 'snacks' ? 0 : 1), 
       date: o.date,
     }));
 
@@ -460,7 +482,29 @@ exports.updateMessOffStatus = async (req, res) => {
     console.error('[Munshi Controller] Mess-off update error:', error);
     res.status(500).json({
       success: false,
-      message: ERROR_MESSAGES.SERVER_ERROR,
+    });
+  }
+};
+
+/**
+ * Get all available extra items for the day
+ * 
+ * @route GET /api/munshi/extra-items
+ * @access Private (munshi)
+ */
+exports.getExtraItems = async (req, res) => {
+  try {
+    const ExtraItem = require('../models/extra');
+    const items = await ExtraItem.find({ isAvailable: true }).sort({ category: 1, name: 1 });
+    res.json({
+      success: true,
+      data: items
+    });
+  } catch (error) {
+    console.error('[Munshi Controller] Get extra items error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server Error'
     });
   }
 };

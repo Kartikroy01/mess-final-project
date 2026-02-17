@@ -116,11 +116,86 @@ export default function ClerkDashboard() {
       setLoading(false);
     }
   };
+
+  // Fetch Extras when tab active
   useEffect(() => {
-    if (activeTab === 'students') {
-        fetchAllStudents();
+    if (activeTab === "extras") {
+        fetchExtraItems();
     }
   }, [activeTab]);
+
+  const fetchExtraItems = async () => {
+    try {
+        setLoading(true);
+        const items = await munshiApi.getExtraItems();
+        setExtraItems(items);
+    } catch(err) {
+        setError(err.message);
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const handleAddExtra = async () => {
+    if (!newExtraName || !newExtraPrice) {
+        setError("Please enter name and price for the extra item");
+        return;
+    }
+
+    setLoading(true);
+    try {
+        const formData = new FormData();
+        formData.append('name', newExtraName);
+        formData.append('price', newExtraPrice);
+        formData.append('category', newExtraCategory);
+        
+        if (newExtraImageFile) {
+            formData.append('image', newExtraImageFile);
+        }
+
+        await munshiApi.addExtraItem(formData);
+        
+        setSuccessMessage("Extra item added successfully!");
+        setNewExtraName("");
+        setNewExtraPrice("");
+        setNewExtraCategory("Snacks");
+        setNewExtraImageFile(null);
+        setNewExtraImagePreview("");
+        setTimeout(() => setSuccessMessage(""), 3000);
+        
+        // Refresh list
+        fetchExtraItems();
+    } catch (err) {
+        setError(err.message);
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const handleExtraImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        setNewExtraImageFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setNewExtraImagePreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDeleteExtra = async (id) => {
+      if(!window.confirm("Are you sure?")) return;
+      try {
+          await munshiApi.deleteExtraItem(id);
+          setSuccessMessage("Item deleted");
+          fetchExtraItems();
+          setTimeout(() => setSuccessMessage(""), 3000);
+      } catch(err) {
+          setError(err.message);
+      }
+  };
+
 
   const fetchAllStudents = async () => {
     try {
@@ -168,6 +243,15 @@ export default function ClerkDashboard() {
   const mealTypes = ['breakfast', 'lunch', 'snacks', 'dinner'];
   const [weeklyMenu, setWeeklyMenu] = useState({}); // { Day: { MealType: [{ name, price, image }] } }
   const [menuImages, setMenuImages] = useState({}); // { "Day-MealType-Index": File }
+  
+  // Extra Items State
+  const [extraItems, setExtraItems] = useState([]);
+  const [newExtraName, setNewExtraName] = useState("");
+  const [newExtraPrice, setNewExtraPrice] = useState("");
+  const [newExtraCategory, setNewExtraCategory] = useState("Snacks");
+  // const [newExtraImage, setNewExtraImage] = useState(""); // Deprecated in favor of file upload
+  const [newExtraImageFile, setNewExtraImageFile] = useState(null);
+  const [newExtraImagePreview, setNewExtraImagePreview] = useState("");
 
   useEffect(() => {
     const auth = JSON.parse(localStorage.getItem("authUser")) || {};
@@ -433,6 +517,7 @@ export default function ClerkDashboard() {
   const tabs = [
     { key: "students", label: "Students", icon: Users },
     { key: "menu", label: "Weekly Menu", icon: UtensilsCrossed },
+    { key: "extras", label: "Manage Extras", icon: Plus }, // New Tab
     { key: "reports", label: "Reports", icon: BarChart3 },
     { key: "bill", label: "Generate Bill", icon: FileText },
   ];
@@ -577,6 +662,130 @@ export default function ClerkDashboard() {
               <CheckCircle size={20} />
               {successMessage}
             </div>
+          )}
+
+          {activeTab === "extras" && (
+             <div className="space-y-8">
+                {/* Add New Item Card */}
+                <Card className="p-8">
+                     <div className="flex items-center gap-4 mb-6">
+                        <div className="p-3 bg-indigo-50 rounded-2xl">
+                             <Plus className="w-6 h-6 text-indigo-600"/>
+                        </div>
+                         <div>
+                            <h2 className="text-xl font-bold text-slate-800">
+                              Add New Extra Item
+                            </h2>
+                            <p className="text-slate-500 text-sm">
+                              Create items available for purchase
+                            </p>
+                         </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Item Name</label>
+                            <input 
+                                type="text" 
+                                value={newExtraName} 
+                                onChange={(e) => setNewExtraName(e.target.value)}
+                                placeholder="e.g. Cold Drink" 
+                                className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:bg-white focus:border-indigo-500 transition-all font-bold outline-none text-slate-800"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Price (₹)</label>
+                            <input 
+                                type="number" 
+                                value={newExtraPrice} 
+                                onChange={(e) => setNewExtraPrice(e.target.value)}
+                                placeholder="0" 
+                                className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:bg-white focus:border-indigo-500 transition-all font-bold outline-none text-slate-800"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Image</label>
+                            <label className="flex items-center gap-2 w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors group relative overflow-hidden">
+                                <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    onChange={handleExtraImageChange}
+                                    className="hidden" 
+                                />
+                                {newExtraImagePreview ? (
+                                    <>
+                                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-slate-200 flex-shrink-0">
+                                            <img src={newExtraImagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                        </div>
+                                        <span className="text-sm font-bold text-slate-700 truncate flex-1">
+                                            {newExtraImageFile ? newExtraImageFile.name : "Image Selected"}
+                                        </span>
+                                        <div className="p-1 bg-emerald-100 text-emerald-600 rounded-lg">
+                                            <Check size={16} />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload size={20} className="text-slate-400 group-hover:text-indigo-600 transition-colors"/>
+                                        <span className="text-slate-400 font-bold group-hover:text-indigo-600 transition-colors">Upload Image</span>
+                                    </>
+                                )}
+                            </label>
+                        </div>
+                    </div>
+                    <div className="mt-6 flex justify-end">
+                        <Button onClick={handleAddExtra} disabled={loading} variant="primary">
+                            <Plus size={18} /> Add Item
+                        </Button>
+                    </div>
+                </Card>
+
+                {/* List of Extras */}
+                <div>
+                    <h3 className="text-lg font-bold text-slate-800 mb-4 px-1">Active Extra Items</h3>
+                    
+                    {extraItems.length === 0 ? (
+                        <div className="p-12 text-center bg-white rounded-3xl border-2 border-dashed border-slate-200 text-slate-400">
+                            No extra items added yet.
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {extraItems.map((item) => (
+                                <div key={item._id} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 group hover:shadow-md transition-all">
+                                    <div className="w-16 h-16 rounded-xl bg-slate-100 flex-shrink-0 overflow-hidden border border-slate-200 relative">
+                                        {item.image ? (
+                                            <img 
+                                                src={item.image.startsWith('http') || item.image.startsWith('data:') ? item.image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${item.image}`} 
+                                                alt={item.name} 
+                                                className="w-full h-full object-cover" 
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                    e.target.parentElement.classList.add('flex', 'items-center', 'justify-center');
+                                                    e.target.parentElement.innerHTML = '<span class="text-2xl">🍔</span>';
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-2xl">🍔</div>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-0.5">{item.category}</p>
+                                        <h4 className="font-bold text-slate-800 truncate">{item.name}</h4>
+                                        <p className="font-black text-slate-900">₹{item.price}</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => handleDeleteExtra(item._id)}
+                                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+             </div>
           )}
 
           {activeTab === "bill" && (

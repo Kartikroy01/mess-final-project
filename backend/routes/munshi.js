@@ -144,4 +144,13 @@ router.patch(
 
 // ==================== EXPORT ====================
 
+// ==================== EXTRA ITEMS ====================
+
+/**
+ * @route   GET /api/munshi/extra-items
+ * @desc    Get all available extra items
+ * @access  Private (munshi)
+ */
+router.get("/extra-items", munshiController.getExtraItems);
+
 module.exports = router;

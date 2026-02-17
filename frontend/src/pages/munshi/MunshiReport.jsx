@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, DollarSign, ShoppingBag, TrendingUp, Search, Calendar, Filter } from 'lucide-react';
+import { Download, DollarSign, ShoppingBag, TrendingUp, Search, Calendar, Filter, UtensilsCrossed } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -27,7 +27,15 @@ const Button = ({ children, onClick, variant = 'primary', className = '', icon: 
   );
 };
 
-const ReportsPage = ({ orders }) => {
+// Helper to safely get diet count
+const getDietCount = (order) => {
+  if (order.dietCount !== undefined) return order.dietCount;
+  // Fallback for old data: 
+  // If it's snacks, 0 diets. Otherwise 1 diet.
+  return order.mealType === 'snacks' ? 0 : 1;
+};
+
+const ReportsPage = ({ orders = [] }) => {
   const [selectedMonth, setSelectedMonth] = useState('all');
   const [selectedDay, setSelectedDay] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,12 +60,19 @@ const ReportsPage = ({ orders }) => {
     // Search Filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(order => 
-        order.studentName?.toLowerCase().includes(q) ||
-        order.studentRoomNo?.toLowerCase().includes(q) ||
-        order.studentRollNo?.toLowerCase().includes(q) ||
-        order.id.toLowerCase().includes(q)
-      );
+      filtered = filtered.filter(order => {
+        const studentName = order.studentName || '';
+        const roomNo = order.studentRoomNo || '';
+        const rollNo = order.studentRollNo || '';
+        const id = order.id || '';
+        
+        return (
+          studentName.toLowerCase().includes(q) ||
+          roomNo.toLowerCase().includes(q) ||
+          rollNo.toLowerCase().includes(q) ||
+          id.toLowerCase().includes(q)
+        );
+      });
     }
 
     return filtered;
@@ -67,6 +82,7 @@ const ReportsPage = ({ orders }) => {
   
   const totalSales = filteredOrders.reduce((total, order) => total + order.totalAmount, 0);
   const totalOrders = filteredOrders.length;
+  const totalDiets = filteredOrders.reduce((total, order) => total + getDietCount(order), 0);
   const avgOrderValue = totalOrders > 0 ? Math.round(totalSales / totalOrders) : 0;
 
   const handleDownloadPdf = () => {
@@ -88,23 +104,28 @@ const ReportsPage = ({ orders }) => {
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(12);
     doc.text(`Total Sales: Rs ${totalSales}`, 14, 50);
-    doc.text(`Total Orders: ${totalOrders}`, 80, 50);
-    doc.text(`Avg Value: Rs ${avgOrderValue}`, 150, 50);
+    doc.text(`Total Orders: ${totalOrders}`, 70, 50);
+    doc.text(`Total Diets: ${totalDiets}`, 120, 50); // Added Total Diets
+    doc.text(`Avg Value: Rs ${avgOrderValue}`, 160, 50);
 
     // Table
-    const tableColumn = ["Date", "Student Name", "Room", "Meal", "Items", "Total"];
+    const tableColumn = ["Date", "Student Name", "Room", "Meal", "Diet", "Items", "Total"];
     const tableRows = [];
 
     filteredOrders.forEach(order => {
-      const orderData = [
+      const diet = getDietCount(order);
+      const dietText = diet > 0 ? diet.toString() : "-";
+      
+      const tableRow = [
         new Date(order.date).toLocaleDateString('en-IN'),
         order.studentName || 'Unknown',
         order.studentRoomNo || '-',
         order.mealType ? order.mealType.charAt(0).toUpperCase() + order.mealType.slice(1) : '-',
-        order.items.map(i => `${i.name} (x1)`).join(', '),
+        dietText,
+        order.items.length > 0 ? order.items.map(i => `${i.name} (x${i.qty || 1})`).join(', ') : (diet > 0 ? "Diet Only" : "-"),
         `Rs ${order.totalAmount}`
       ];
-      tableRows.push(orderData);
+      tableRows.push(tableRow);
     });
 
     doc.autoTable({
@@ -115,6 +136,10 @@ const ReportsPage = ({ orders }) => {
       headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' },
       styles: { fontSize: 9, cellPadding: 3 },
       alternateRowStyles: { fillColor: [249, 250, 251] },
+      columnStyles: {
+        4: { halign: 'center' }, // Center Diet column
+        6: { halign: 'right' }   // Right align Total column
+      }
     });
 
     doc.save(`mess_report_${new Date().toISOString().slice(0, 10)}.pdf`);
@@ -123,13 +148,13 @@ const ReportsPage = ({ orders }) => {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="p-6 relative overflow-hidden group">
           <div className="absolute right-0 top-0 w-24 h-24 bg-indigo-500/10 rounded-bl-[4rem] transition-transform group-hover:scale-110"></div>
           <div className="relative z-10">
             <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Total Sales</p>
             <div className="flex items-center gap-3">
-               <span className="text-4xl font-bold text-slate-800">₹{totalSales}</span>
+               <span className="text-3xl lg:text-4xl font-bold text-slate-800">₹{totalSales}</span>
                <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
                   <DollarSign size={24} />
                </div>
@@ -142,9 +167,22 @@ const ReportsPage = ({ orders }) => {
           <div className="relative z-10">
             <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Total Orders</p>
              <div className="flex items-center gap-3">
-               <span className="text-4xl font-bold text-slate-800">{totalOrders}</span>
+               <span className="text-3xl lg:text-4xl font-bold text-slate-800">{totalOrders}</span>
                <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
                   <ShoppingBag size={24} />
+               </div>
+            </div>
+          </div>
+        </Card>
+        
+        <Card className="p-6 relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-orange-500/10 rounded-bl-[4rem] transition-transform group-hover:scale-110"></div>
+           <div className="relative z-10">
+            <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Total Diets</p>
+             <div className="flex items-center gap-3">
+               <span className="text-3xl lg:text-4xl font-bold text-slate-800">{totalDiets}</span>
+               <div className="p-2 bg-orange-50 rounded-xl text-orange-600">
+                  <UtensilsCrossed size={24} />
                </div>
             </div>
           </div>
@@ -155,7 +193,7 @@ const ReportsPage = ({ orders }) => {
            <div className="relative z-10">
             <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Avg Order Value</p>
              <div className="flex items-center gap-3">
-               <span className="text-4xl font-bold text-slate-800">₹{avgOrderValue}</span>
+               <span className="text-3xl lg:text-4xl font-bold text-slate-800">₹{avgOrderValue}</span>
                <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
                   <TrendingUp size={24} />
                </div>
@@ -235,56 +273,72 @@ const ReportsPage = ({ orders }) => {
                 <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Student</th>
                 <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Room</th>
                 <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Meal</th>
+                <th className="text-center py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Diet</th>
                 <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider w-1/3">Items</th>
                 <th className="text-right py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Total</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredOrders.length > 0 ? (
-                filteredOrders.map(order => (
-                  <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-4 px-6 text-sm font-medium text-slate-600">
-                      {new Date(order.date).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
-                      })}
-                      <div className="text-xs text-slate-400 font-normal">
-                         {new Date(order.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                        <div className="font-bold text-slate-800">{order.studentName}</div>
-                        <div className="text-xs text-slate-400 font-medium">#{order.studentRollNo || 'N/A'}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                        <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded-lg text-xs font-bold">
-                            {order.studentRoomNo || '-'}
-                        </span>
-                    </td>
-                    <td className="py-4 px-6">
-                        <span className={`px-2 py-1 rounded-lg text-xs font-bold capitalize ${
-                            order.mealType === 'breakfast' ? 'bg-orange-50 text-orange-600' :
-                            order.mealType === 'lunch' ? 'bg-yellow-50 text-yellow-600' :
-                            order.mealType === 'snacks' ? 'bg-emerald-50 text-emerald-600' :
-                            'bg-indigo-50 text-indigo-600'
-                        }`}>
-                            {order.mealType}
-                        </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="text-sm text-slate-600 font-medium">
-                        {order.items.map(i => i.name).join(', ')}
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                        <span className="font-bold text-slate-800">₹{order.totalAmount}</span>
-                    </td>
-                  </tr>
-                ))
+                filteredOrders.map(order => {
+                  const diet = getDietCount(order);
+                  return (
+                    <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-4 px-6 text-sm font-medium text-slate-600">
+                        {new Date(order.date).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                        <div className="text-xs text-slate-400 font-normal">
+                           {new Date(order.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                          <div className="font-bold text-slate-800">{order.studentName}</div>
+                          <div className="text-xs text-slate-400 font-medium">#{order.studentRollNo || 'N/A'}</div>
+                      </td>
+                      <td className="py-4 px-6">
+                          <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded-lg text-xs font-bold">
+                              {order.studentRoomNo || '-'}
+                          </span>
+                      </td>
+                      <td className="py-4 px-6">
+                          <span className={`px-2 py-1 rounded-lg text-xs font-bold capitalize ${
+                              order.mealType === 'breakfast' ? 'bg-orange-50 text-orange-600' :
+                              order.mealType === 'lunch' ? 'bg-yellow-50 text-yellow-600' :
+                              order.mealType === 'snacks' ? 'bg-emerald-50 text-emerald-600' :
+                              'bg-indigo-50 text-indigo-600'
+                          }`}>
+                              {order.mealType}
+                          </span>
+                      </td>
+                      <td className="py-4 px-6 text-center">
+                          {diet > 0 ? (
+                              <span className="bg-orange-50 text-orange-700 px-2 py-1 rounded-md text-xs font-bold border border-orange-100">
+                                {diet}
+                              </span>
+                          ) : (
+                              <span className="text-slate-300 font-bold">-</span>
+                          )}
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="text-sm text-slate-600 font-medium">
+                          {order.items.length > 0 
+                             ? order.items.map(i => `${i.name}${i.qty > 1 ? ` (x${i.qty})` : ''}`).join(', ')
+                             : (diet > 0 ? <span className="text-slate-400 italic text-xs">Diet Only</span> : '-')
+                          }
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                          <span className="font-bold text-slate-800">₹{order.totalAmount}</span>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan="6" className="py-12 text-center text-slate-400">
+                  <td colSpan="7" className="py-12 text-center text-slate-400">
                      <div className="flex flex-col items-center justify-center">
                         <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
                             <Filter size={20} />

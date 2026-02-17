@@ -20,6 +20,11 @@ import {
   QrCode,
   Trash2,
   Edit2,
+  Coffee,
+  IceCream,
+  Pizza,
+  Zap,
+  LayoutGrid
 } from "lucide-react";
 import MessOffRequestsPage from "./MessOffRequest";
 import ReportsPage from "./MunshiReport";
@@ -244,6 +249,235 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
   );
 };
 
+// ==================== ADD MEAL MODAL ====================
+const SimpleAddMealModal = ({ isOpen, onClose, onAdd, sessionMeal }) => {
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name || !price) return;
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("price", price);
+      formData.append("mealType", sessionMeal); // Use current session
+      if (image) {
+        formData.append("image", image);
+      }
+
+      await onAdd(sessionMeal, formData);
+      onClose();
+      setName("");
+      setPrice("");
+      setImage(null);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to add meal: " + (error.message || "Unknown error"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-bold text-slate-800">Add Meal Item</h3>
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+            <X size={20} className="text-slate-500" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Item Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none font-medium transition-all"
+              placeholder="e.g. Masala Dosa"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Price (₹)</label>
+            <input
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none font-medium transition-all"
+              placeholder="e.g. 50"
+              required
+              min="0"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Image</label>
+            <div className="relative group">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImage(e.target.files[0])}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
+              <div className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-dashed border-slate-300 group-hover:border-indigo-500 group-hover:bg-indigo-50/50 transition-all flex items-center gap-3">
+                <div className="p-2 bg-white rounded-lg shadow-sm">
+                   {image ? <CheckCircle size={18} className="text-emerald-500" /> : <Plus size={18} className="text-slate-400" />}
+                </div>
+                <span className={`text-sm font-medium ${image ? "text-slate-800" : "text-slate-400"}`}>
+                  {image ? image.name : "Click to upload image"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-200 disabled:opacity-70 disabled:cursor-not-allowed mt-4"
+          >
+            {loading ? "Adding..." : "Add Item"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+
+const EditExtraItemModal = ({ isOpen, onClose, onEdit, item }) => {
+  const [name, setName] = useState(item?.name || "");
+  const [price, setPrice] = useState(item?.price || "");
+  const [category, setCategory] = useState(item?.category || "Snacks");
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Update state when item changes
+  useEffect(() => {
+    if (item) {
+        setName(item.name);
+        setPrice(item.price);
+        setCategory(item.category || "Snacks");
+        setImage(null);
+    }
+  }, [item]);
+
+  if (!isOpen || !item) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("price", price);
+      formData.append("category", category);
+      if (image) {
+        formData.append("image", image);
+      }
+
+      await onEdit(item._id || item.id, formData);
+      onClose();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to update item");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-bold text-slate-800">Edit Extra Item</h3>
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+            <X size={20} className="text-slate-500" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Item Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none font-medium transition-all"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Price (₹)</label>
+                <input
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none font-medium transition-all"
+                required
+                min="0"
+                />
+            </div>
+             <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Category</label>
+                <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none font-medium transition-all"
+                >
+                    <option value="Snacks">Snacks</option>
+                    <option value="Drinks">Drinks</option>
+                    <option value="Desserts">Desserts</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Update Image (Optional)</label>
+            <div className="relative group">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImage(e.target.files[0])}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
+              <div className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-dashed border-slate-300 group-hover:border-indigo-500 group-hover:bg-indigo-50/50 transition-all flex items-center gap-3">
+                <div className="p-2 bg-white rounded-lg shadow-sm">
+                   {image ? <CheckCircle size={18} className="text-emerald-500" /> : <Plus size={18} className="text-slate-400" />}
+                </div>
+                <span className={`text-sm font-medium ${image ? "text-slate-800" : "text-slate-400"}`}>
+                  {image ? image.name : "Click to replace image"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-200 disabled:opacity-70 disabled:cursor-not-allowed mt-4"
+          >
+            {loading ? "Updating..." : "Update Item"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // ==================== DASHBOARD VIEW ====================
 const DashboardView = ({
   sessionMeal,
@@ -258,6 +492,13 @@ const DashboardView = ({
   munshiHostel,
   onDeleteMeal,
   onEditMeal,
+  extraItemsList,
+  categories,
+  selectedCategory,
+  setSelectedCategory,
+  onNavigate, // Renamed from onAddMealClick
+  onEditExtra,
+  onDeleteExtra
 }) => {
   const [studentIdInput, setStudentIdInput] = useState("");
   const [error, setError] = useState("");
@@ -340,12 +581,25 @@ const DashboardView = ({
     return item.price * item.qty;
   };
 
+  const getCategoryIcon = (category) => {
+    switch (category.toLowerCase()) {
+      case 'snacks': return <Pizza size={14} />;
+      case 'beverages': return <Coffee size={14} />;
+      case 'dessert': return <IceCream size={14} />;
+      case 'daily specials': return <Zap size={14} />;
+      default: return <LayoutGrid size={14} />;
+    }
+  };
+
   const handleSubmitExtras = async () => {
-    if (!scannedStudent || extraItems.length === 0) return;
+    if (!scannedStudent) return;
     try {
+      // If no items selected, we treat it as a "Diet Only" mark (dietCount = 1)
+      const dietCount = extraItems.length === 0 ? 1 : undefined;
+
       // Send items with their calculated total price or send qty and let backend handle?
       // Our backend now handles qty and special pricing, so we should send qty.
-      await onAddExtraItems(scannedStudent.id, extraItems);
+      await onAddExtraItems(scannedStudent.id, extraItems, dietCount);
       setNotification({
         type: "success",
         message: `Marked ${extraItems.length} item(s) for ${scannedStudent.name}`,
@@ -493,6 +747,14 @@ const DashboardView = ({
                       </p>
                     </div>
                     <div className="h-8 w-px bg-slate-200"></div>
+                    <Button 
+                        onClick={handleSubmitExtras}
+                        variant="success"
+                        className="py-2 px-4 shadow-emerald-200 text-sm"
+                    >
+                        Process
+                    </Button>
+                    <div className="h-8 w-px bg-slate-200"></div>
                     <button
                       onClick={handleClear}
                       className="p-2 hover:bg-white rounded-xl transition-colors text-slate-400 hover:text-rose-500"
@@ -521,10 +783,74 @@ const DashboardView = ({
                     <span className="text-indigo-600">{sessionMeal}</span>
                   </p>
                 </div>
+                </div>
+
+               {/* Category Tabs - Beside Available Menu */}
+              <div className="hidden md:flex items-center gap-2 overflow-x-auto no-scrollbar max-w-[50%]">
+                
+                {/* Add Meal Button */}
+                <button
+                  onClick={onNavigate} // Changed from onAddMealClick
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold whitespace-nowrap border border-indigo-600 hover:bg-indigo-700 hover:shadow-md transition-all active:scale-95"
+                >
+                  <Plus size={14} />
+                  Add Meal
+                </button>
+                
+                <div className="h-4 w-px bg-slate-200 mx-1"></div>
+
+                {/* Extra Items Indicator */}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold whitespace-nowrap border border-slate-200">
+                  <ShoppingBag size={14} />
+                  <span>Extra Items</span>
+                </div>
+                
+                <div className="h-4 w-px bg-slate-200 mx-1"></div>
+
+                {categories
+                  .filter(cat => cat !== 'Snacks')
+                  .map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCategory(cat);
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${
+                      selectedCategory === cat
+                        ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200"
+                        : "bg-white text-slate-600 border-slate-100 hover:border-indigo-100 hover:bg-indigo-50"
+                    }`}
+                  >
+                    {getCategoryIcon(cat)}
+                    {cat}
+                  </button>
+                ))}
               </div>
-              {scannedStudent && extraItems.length > 0 && (
-                <Badge variant="success">{extraItems.length} selected</Badge>
-              )}
+
+               {/* Mobile Badge */}
+               <div className="md:hidden">
+                  {scannedStudent && extraItems.length > 0 && (
+                    <Badge variant="success">{extraItems.length}</Badge>
+                  )}
+               </div>
+            </div>
+
+            {/* Mobile Category List */}
+            <div className="md:hidden flex overflow-x-auto gap-2 pb-2 mb-4 no-scrollbar">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${
+                      selectedCategory === cat
+                        ? "bg-indigo-600 text-white border-indigo-600"
+                        : "bg-slate-50 text-slate-600 border-slate-100"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
             </div>
 
             {menuLoading ? (
@@ -557,9 +883,13 @@ const DashboardView = ({
                     >
                       <div className="aspect-square md:aspect-[4/3] overflow-hidden relative">
                         <img
-                          src={item.image}
+                          src={item.image ? (item.image.startsWith('http') ? item.image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${item.image}`) : "https://placehold.co/400?text=No+Image"}
                           alt={item.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          onError={(e) => {
+                               e.target.onerror = null; 
+                               e.target.src = "https://placehold.co/400?text=No+Image"; 
+                           }}
                         />
                         {isSelected && (
                           <div className="absolute inset-0 bg-indigo-900/20 flex items-center justify-center backdrop-blur-[2px]">
@@ -624,11 +954,121 @@ const DashboardView = ({
                     </div>
                   );
                 })}
-                {(meals[sessionMeal] || []).length === 0 && (
+                {(meals[sessionMeal] || []).length === 0 && extraItemsList.filter(item => selectedCategory === "All" || item.category === selectedCategory).length === 0 && (
                   <div className="col-span-full py-12 text-center text-slate-400 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
                     No items available for this session.
                   </div>
                 )}
+
+                {/* Extra Items merged into grid */}
+                {extraItemsList
+                  .filter(item => selectedCategory === "All" || item.category === selectedCategory)
+                  .map(item => {
+                    const isSelected = extraItems.find((i) => i.name === item.name);
+                    const showExtraActions = showDeleteId === item._id; // Use _id for extra items
+                    
+                    return (
+                    <div
+                      key={item._id}
+                      onClick={() => {
+                        if (scannedStudent) {
+                           const existingItem = extraItems.find(i => i.name === item.name);
+                           if (existingItem) {
+                               updateItemQty(existingItem.id, 1);
+                           } else {
+                               toggleExtraItem({ name: item.name, price: item.price, id: Date.now() }); // Map to frontend format
+                           }
+                        } else {
+                           setShowDeleteId(showExtraActions ? null : item._id); // Toggle actions for extra items
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      className={`group relative overflow-hidden rounded-xl md:rounded-2xl border-2 text-left transition-all duration-300 cursor-pointer ${
+                        isSelected
+                          ? "border-indigo-500 bg-indigo-50/50"
+                          : "border-slate-100 bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-500/5 hover:border-indigo-500"
+                      } ${!scannedStudent && !showExtraActions ? "hover:border-rose-200" : ""}`}
+                    >
+                      <div className="aspect-square md:aspect-[4/3] overflow-hidden relative">
+                         {item.image ? (
+                          <img
+                            src={item.image.startsWith('http') ? item.image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${item.image}`}
+                            alt={item.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            onError={(e) => {
+                              e.target.onerror = null; 
+                              e.target.src = "https://placehold.co/400?text=No+Image"; // Fallback
+                            }}
+                          />
+                         ) : (
+                          <div className="w-full h-full bg-slate-50 flex items-center justify-center text-4xl">
+                            🍔
+                          </div>
+                         )}
+                        
+                        {isSelected && (
+                          <div className="absolute inset-0 bg-indigo-900/20 flex items-center justify-center backdrop-blur-[2px]">
+                            <div className="bg-white rounded-full p-2 text-indigo-600 shadow-xl scale-100 animate-in zoom-in duration-200">
+                              <CheckCircle
+                                size={24}
+                                fill="currentColor"
+                                className="text-white"
+                              />
+                              <div className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-white">
+                                {isSelected.qty}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3 md:p-4 lg:p-5">
+                        <div className="flex justify-between items-start mb-1 md:mb-2">
+                          <h3 className={`font-bold text-sm md:text-base transition-colors ${showExtraActions ? 'text-rose-600' : 'text-slate-800 group-hover:text-indigo-700'}`}>
+                            {item.name}
+                          </h3>
+                          <div className="bg-slate-100 px-2 py-1 rounded-lg text-xs font-bold text-slate-600">
+                            ₹{item.price}
+                          </div>
+                        </div>
+                        
+                        {showExtraActions && !scannedStudent && (
+                          <div className="flex gap-2 mt-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                             <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditExtra(item);
+                                setShowDeleteId(null);
+                              }}
+                              className="flex-1 py-2 flex items-center justify-center gap-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-xl transition-colors text-xs font-bold"
+                            >
+                              <Edit2 size={14} />
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm(`Are you sure you want to delete ${item.name}?`)) {
+                                  onDeleteExtra(item._id);
+                                  setShowDeleteId(null);
+                                }
+                              }}
+                              className="flex-1 py-2 flex items-center justify-center gap-1 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl transition-colors text-xs font-bold"
+                            >
+                              <Trash2 size={14} />
+                              Delete
+                            </button>
+                          </div>
+                        )}
+
+                        {!scannedStudent && !showExtraActions && (
+                          <p className="text-[10px] text-slate-400 font-medium mt-1">Click to manage</p>
+                        )}
+                      </div>
+                    </div>
+                  )})}
               </div>
             )}
           </Card>
@@ -642,62 +1082,76 @@ const DashboardView = ({
               Current Order
             </h3>
 
-            {scannedStudent && extraItems.length > 0 ? (
+            {scannedStudent ? (
               <>
-                <div className="space-y-3 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                  {extraItems.map((item) => {
-                    const itemTotal = calculateItemPrice(item);
-                    return (
-                      <div
-                        key={item.id}
-                        className="flex flex-col p-4 bg-slate-50 rounded-2xl group hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 transition-all gap-3"
-                      >
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-700 font-bold text-sm tracking-tight">
-                            {item.name}
-                          </span>
-                          <button
-                            onClick={() => toggleExtraItem(item)}
-                            className="text-slate-300 hover:text-rose-500 transition-colors p-1 rounded-lg hover:bg-rose-50"
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
+                {extraItems.length > 0 ? (
+                  <div className="space-y-3 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                    {extraItems.map((item) => {
+                      const itemTotal = calculateItemPrice(item);
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex flex-col p-4 bg-slate-50 rounded-2xl group hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 transition-all gap-3"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-700 font-bold text-sm tracking-tight">
+                              {item.name}
+                            </span>
+                            <button
+                              onClick={() => toggleExtraItem(item)}
+                              className="text-slate-300 hover:text-rose-500 transition-colors p-1 rounded-lg hover:bg-rose-50"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
 
-                        <div className="flex justify-between items-center bg-white/50 p-2 rounded-xl border border-slate-100/50">
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => updateItemQty(item.id, -1)}
-                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all active:scale-95 disabled:opacity-30"
-                              disabled={item.qty <= 1}
-                            >
-                              -
-                            </button>
-                            <span className="w-10 text-center font-black text-slate-800">
-                              {item.qty}
-                            </span>
-                            <button
-                              onClick={() => updateItemQty(item.id, 1)}
-                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all active:scale-95"
-                            >
-                              +
-                            </button>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-indigo-600 font-black text-sm">
-                              ₹{itemTotal}
-                            </span>
-                            {item.qty > 1 && item.price === 15 && (
-                              <p className="text-[9px] text-emerald-500 font-bold uppercase tracking-tighter">
-                                Bundle Applied
-                              </p>
-                            )}
+                          <div className="flex justify-between items-center bg-white/50 p-2 rounded-xl border border-slate-100/50">
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => updateItemQty(item.id, -1)}
+                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all active:scale-95 disabled:opacity-30"
+                                disabled={item.qty <= 1}
+                              >
+                                -
+                              </button>
+                              <span className="w-10 text-center font-black text-slate-800">
+                                {item.qty}
+                              </span>
+                              <button
+                                onClick={() => updateItemQty(item.id, 1)}
+                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all active:scale-95"
+                              >
+                                +
+                              </button>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-indigo-600 font-black text-sm">
+                                ₹{itemTotal}
+                              </span>
+                              {item.qty > 1 && item.price === 15 && (
+                                <p className="text-[9px] text-emerald-500 font-bold uppercase tracking-tighter">
+                                  Bundle Applied
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 px-4 rounded-2xl bg-indigo-50 border border-dashed border-indigo-200 mb-6">
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-500 shadow-sm">
+                      <UtensilsCrossed size={24} />
+                    </div>
+                    <p className="text-indigo-900 font-bold text-sm mb-1">
+                      Mark Diet Only
+                    </p>
+                    <p className="text-indigo-600 text-xs">
+                      Click Process to mark 1 diet for this student
+                    </p>
+                  </div>
+                )}
 
                 <div className="bg-slate-900 rounded-2xl p-5 text-white mb-4 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
@@ -719,17 +1173,20 @@ const DashboardView = ({
                   variant="success"
                   className="w-full py-4 text-lg shadow-emerald-200"
                 >
-                  Process Order
+                  {extraItems.length === 0 ? "Mark Diet Only" : "Process Order"}
                 </Button>
               </>
             ) : (
-              <div className="text-center py-12 px-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200">
-                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                  <ShoppingBag size={24} />
+              <div className="flex flex-col gap-4">
+                 <div className="text-center py-12 px-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                      <QrCode size={32} />
+                    </div>
+                    <h4 className="text-slate-700 font-bold mb-2">Ready to Scan</h4>
+                    <p className="text-slate-400 font-medium text-sm">
+                      Scan a student QR code to view their details and process orders.
+                    </p>
                 </div>
-                <p className="text-slate-400 font-medium text-sm">
-                  Select a student and add items to create an order.
-                </p>
               </div>
             )}
           </Card>
@@ -745,6 +1202,11 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   const [sessionMeal, setSessionMeal] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAddMealModalOpen, setIsAddMealModalOpen] = useState(false);
+  
+  // Extra Item Edit State
+  const [editingExtraItem, setEditingExtraItem] = useState(null);
+  const [isEditExtraModalOpen, setIsEditExtraModalOpen] = useState(false); // Add Meal Modal State
   const [scannedStudent, setScannedStudent] = useState(null);
   const [messOffRequests, setMessOffRequests] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -755,7 +1217,10 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   const [munshiName, setMunshiName] = useState("");
   const [munshiHostel, setMunshiHostel] = useState("");
   const [isSessionMenuOpen, setIsSessionMenuOpen] = useState(false);
-
+  const [notification, setNotification] = useState(null);
+  const [extraItemsList, setExtraItemsList] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [categories, setCategories] = useState(["All"]);
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -764,6 +1229,39 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
     window.location.href = "/login";
   };
   const onLogout = onLogoutProp || handleLogout;
+
+  const fetchExtraItems = async () => {
+    try {
+      const items = await munshiApi.getExtraItems();
+      setExtraItemsList(items);
+      const uniqueCats = ["All", ...new Set(items.map(i => i.category))];
+      setCategories(uniqueCats);
+    } catch (err) {
+      console.error("Failed to fetch extra items:", err);
+    }
+  };
+
+  const handleEditExtra = async (id, formData) => {
+      try {
+          await munshiApi.updateExtraItem(id, formData);
+          setNotification({ type: "success", message: "Item updated successfully" });
+          fetchExtraItems();
+          setTimeout(() => setNotification(null), 2000);
+      } catch (err) {
+          setNotification({ type: "error", message: err.message });
+      }
+  };
+
+  const handleDeleteExtra = async (id) => {
+      try {
+          await munshiApi.deleteExtraItem(id);
+          setNotification({ type: "success", message: "Item deleted successfully" });
+          fetchExtraItems(); // Refresh
+          setTimeout(() => setNotification(null), 2000);
+      } catch (err) {
+          setNotification({ type: "error", message: err.message });
+      }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -799,7 +1297,12 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
       .then(setMeals)
       .catch(() => setMeals(EMPTY_MEALS))
       .finally(() => setMenuLoading(false));
+
+    // Fetch Extra Items
+    fetchExtraItems();
   }, [authChecked, sessionMeal]);
+
+
 
   const refreshOrders = () =>
     munshiApi
@@ -813,8 +1316,12 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
       .catch(() => setMessOffRequests([]));
 
   useEffect(() => {
-    if (activeTab === "reports") refreshOrders();
-    if (activeTab === "messoffrequest") refreshMessOffRequests();
+    if (activeTab === "reports") { 
+        refreshOrders();
+    }
+    if (activeTab === "messoffrequest") {
+        refreshMessOffRequests();
+    }
   }, [activeTab]);
 
   const handleStudentScan = React.useCallback(async (q) => {
@@ -839,13 +1346,55 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
     );
   };
 
-  const handleAddExtraItems = async (studentId, items) => {
-    await munshiApi.createOrder(studentId, items, sessionMeal);
+  const getSessionByTime = () => {
+    const hour = new Date().getHours();
+    if (hour >= 4 && hour < 10) return "breakfast";
+    if (hour >= 10 && hour < 15) return "lunch";
+    if (hour >= 15 && hour < 18) return "snacks";
+    if (hour >= 18 && hour < 23) return "dinner";
+    return "breakfast"; // Default to breakfast for late night
+  };
+
+  const handleAddExtraItems = async (studentId, items, dietCount) => {
+    let currentSession = sessionMeal;
+
+    if (!currentSession) {
+        currentSession = getSessionByTime();
+        setSessionMeal(currentSession);
+        // Optional: Notify user that session was auto-selected
+        setNotification({
+            type: "success",
+            message: `Auto-selected session: ${currentSession.charAt(0).toUpperCase() + currentSession.slice(1)}`,
+        });
+    }
+
+    // If buying items, default dietCount logic handled by backend (usually 1 unless snacks)
+    // But if coming from buttons with explicit dietCount (like Guest Diet), we pass it.
+    await munshiApi.createOrder(studentId, items, currentSession, dietCount);
+    
+    setNotification({
+        type: "success",
+        message: items.length === 0 ? "Diet recorded successfully" : "Order processed successfully",
+    });
+    setTimeout(() => {
+        setNotification(null);
+    }, 1500);
+
+    // Clear selection after success
+    setScannedStudent(null);
+    
     refreshOrders();
   };
 
   const handleAddMeal = async (type, meal) => {
-    const response = await munshiApi.addMealItem({ ...meal, mealType: type });
+    let payload = meal;
+    // If it's NOT FormData, we combine it with type. 
+    // If it IS FormData, the modal has already appended 'mealType'.
+    if (!(meal instanceof FormData)) {
+        payload = { ...meal, mealType: type };
+    }
+
+    const response = await munshiApi.addMealItem(payload);
     // Backend returns { mealType, item }, we need just the item
     const newItem = response.item || response;
     setMeals((prev) => ({
@@ -906,6 +1455,22 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
+      {notification && (
+        <div
+          className={`fixed bottom-6 right-6 p-4 rounded-2xl shadow-2xl flex items-center gap-3 z-50 animate-in slide-in-from-right duration-300 ${
+            notification.type === "success"
+              ? "bg-emerald-600 text-white"
+              : "bg-rose-600 text-white"
+          }`}
+        >
+          {notification.type === "success" ? (
+            <CheckCircle size={24} />
+          ) : (
+            <X size={24} />
+          )}
+          <span className="font-bold">{notification.message}</span>
+        </div>
+      )}
       {/* Sidebar Navigation */}
       <aside
         className={`fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-slate-100 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
@@ -1070,19 +1635,54 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
 
         <div className="p-6 md:p-8 md:pt-4 pb-24 max-w-7xl mx-auto">
           {activeTab === "dashboard" && (
-            <DashboardView
-              sessionMeal={sessionMeal}
-              onStudentScan={handleStudentScan}
-              scannedStudent={scannedStudent}
-              clearScannedStudent={() => setScannedStudent(null)}
-              onAddExtraItems={handleAddExtraItems}
-              meals={meals}
-              scanLoading={loading}
-              menuLoading={menuLoading}
-              munshiName={munshiName}
-              munshiHostel={munshiHostel}
-              onEditMeal={handleEditMeal}
-            />
+            <>
+              <DashboardView
+                sessionMeal={sessionMeal}
+                onStudentScan={handleStudentScan}
+                scannedStudent={scannedStudent}
+                clearScannedStudent={() => setScannedStudent(null)}
+                onAddExtraItems={handleAddExtraItems}
+                meals={meals}
+                scanLoading={loading}
+                menuLoading={menuLoading}
+                munshiName={munshiName}
+                munshiHostel={munshiHostel}
+                onEditMeal={handleEditMeal}
+                onDeleteMeal={handleDeleteMeal}
+                extraItemsList={extraItemsList}
+                categories={categories}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                onNavigate={() => setIsAddMealModalOpen(true)} // Reuse this flow or create dedicated
+                onEditExtra={(item) => {
+                    setEditingExtraItem(item);
+                    setIsEditExtraModalOpen(true);
+                }}
+                onDeleteExtra={handleDeleteExtra}
+              />
+              
+              {/* Modals */}
+              {isAddMealModalOpen && (
+                <SimpleAddMealModal
+                  isOpen={isAddMealModalOpen}
+                  onClose={() => setIsAddMealModalOpen(false)}
+                  onAdd={handleAddMeal}
+                  sessionMeal={sessionMeal}
+                />
+              )}
+
+              {isEditExtraModalOpen && (
+                <EditExtraItemModal
+                    isOpen={isEditExtraModalOpen}
+                    onClose={() => {
+                        setIsEditExtraModalOpen(false);
+                        setEditingExtraItem(null);
+                    }}
+                    onEdit={handleEditExtra}
+                    item={editingExtraItem}
+                />
+              )}
+            </>
           )}
           {activeTab === "messoffrequest" && (
             <MessOffRequestsPage

@@ -6,6 +6,7 @@ const Menu = require('../models/menu');
 const MealHistory = require('../models/MealHistory');
 const MessOff = require('../models/MessOff');
 const Bill = require('../models/Bill');
+const upload = require('../middleware/upload'); // Import upload middleware
 
 router.use(munshiAuth);
 
@@ -17,7 +18,9 @@ router.use(munshiAuth);
 router.delete('/item/:mealType/:itemId', async (req, res) => {
   console.log(`[Menu DELETE] Attempting to delete: ${req.params.mealType} - ${req.params.itemId}`);
   try {
-    const { mealType, itemId } = req.params;
+    const { mealType: rawMealType, itemId: rawItemId } = req.params;
+    const mealType = rawMealType.toLowerCase();
+    const itemId = rawItemId.trim();
 
     if (!['breakfast', 'lunch', 'snacks', 'dinner'].includes(mealType)) {
       return res.status(400).json({
@@ -40,10 +43,11 @@ router.delete('/item/:mealType/:itemId', async (req, res) => {
     menu.items = menu.items.filter(item => item._id.toString() !== itemId);
 
     if (menu.items.length === initialLength) {
+      const availableIds = menu.items.map(i => i._id.toString()).join(', ');
       console.log(`[Menu DELETE] Item not found: ${itemId}`);
       return res.status(404).json({
         success: false,
-        message: 'Item not found in menu'
+        message: `Item not found. Requested: '${itemId}' (${mealType}). Available: [${availableIds}]`
       });
     }
 
@@ -69,7 +73,9 @@ router.delete('/item/:mealType/:itemId', async (req, res) => {
 router.post('/delete-item/:mealType/:itemId', async (req, res) => {
   console.log(`[Menu POST DELETE] Attempting to delete: ${req.params.mealType} - ${req.params.itemId}`);
   try {
-    const { mealType, itemId } = req.params;
+    const { mealType: rawMealType, itemId: rawItemId } = req.params;
+    const mealType = rawMealType.toLowerCase();
+    const itemId = rawItemId.trim();
 
     if (!['breakfast', 'lunch', 'snacks', 'dinner'].includes(mealType)) {
       return res.status(400).json({
@@ -89,13 +95,15 @@ router.post('/delete-item/:mealType/:itemId', async (req, res) => {
 
     // Filter out the item to be deleted
     const initialLength = menu.items.length;
+    console.log(`[Menu POST DELETE] Items available: ${menu.items.map(i => i._id.toString()).join(', ')}`);
     menu.items = menu.items.filter(item => item._id.toString() !== itemId);
 
     if (menu.items.length === initialLength) {
-      console.log(`[Menu POST DELETE] Item not found: ${itemId}`);
+      const availableIds = menu.items.map(i => i._id.toString()).join(', ');
+      console.log(`[Menu POST DELETE] Item not found: ${itemId} in [${availableIds}]`);
       return res.status(404).json({
         success: false,
-        message: 'Item not found in menu'
+        message: `Item not found. Requested: '${itemId}' (${mealType}). Available: [${availableIds}]`
       });
     }
 
@@ -171,9 +179,15 @@ router.get('/student/search', async (req, res) => {
 // @route   POST /api/munshi/menu/item
 // @desc    Add a new menu item
 // @access  Munshi only
-router.post('/item', async (req, res) => {
+router.post('/item', upload.single('image'), async (req, res) => {
   try {
-    const { name, price, mealType, image } = req.body;
+    const { name, price, mealType } = req.body;
+    
+    // Handle image from file upload or body
+    let imagePath = req.body.image || '';
+    if (req.file) {
+      imagePath = `/uploads/${req.file.filename}`;
+    }
 
     if (!name || !price || !mealType) {
       return res.status(400).json({
@@ -211,7 +225,7 @@ router.post('/item', async (req, res) => {
     menu.items.push({
       name: name.trim(),
       price: Number(price),
-      image: image || '',
+      image: imagePath,
       isAvailable: true
     });
 
@@ -516,9 +530,6 @@ router.get('/orders', async (req, res) => {
 });
 
 module.exports = router;
-
-// Import upload middleware
-const upload = require('../middleware/upload');
 
 // @route   POST /api/munshi/menu/weekly
 // @desc    Update weekly menu with images

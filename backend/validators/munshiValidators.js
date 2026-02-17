@@ -64,10 +64,32 @@ const validateOrderCreation = [
     .withMessage(ERROR_MESSAGES.INVALID_OBJECT_ID),
   
   body('items')
-    .isArray({ min: 1 })
-    .withMessage('Items must be a non-empty array'),
+    .isArray()
+    .withMessage('Items must be an array'),
+    
+  body('dietCount')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('Diet count must be a non-negative integer'),
+
+  // Custom validator: Either items array must be non-empty OR dietCount must be > 0
+  body().custom((value) => {
+    const hasItems = value.items && value.items.length > 0;
+    const hasDiet = value.dietCount && value.dietCount > 0;
+    
+    if (!hasItems && !hasDiet) {
+        throw new Error('Order must contain either items or a diet count');
+    }
+    
+    if (value.items && value.items.length > ORDER_LIMITS.MAX_ITEMS) {
+        throw new Error(`Cannot have more than ${ORDER_LIMITS.MAX_ITEMS} items in one order`);
+    }
+    
+    return true;
+  }),
   
   body('items.*.name')
+    .optional()
     .trim()
     .notEmpty()
     .withMessage('Item name is required')
@@ -75,6 +97,7 @@ const validateOrderCreation = [
     .withMessage('Item name must be between 1 and 100 characters'),
   
   body('items.*.price')
+    .optional()
     .isNumeric()
     .withMessage('Item price must be a number')
     .custom((value) => value >= ORDER_LIMITS.MIN_ITEM_PRICE)
@@ -86,15 +109,7 @@ const validateOrderCreation = [
     .optional()
     .isIn(MEAL_TYPES_ARRAY)
     .withMessage(`Meal type must be one of: ${MEAL_TYPES_ARRAY.join(', ')}`),
-  
-  // Custom validator to check total items count
-  body('items').custom((items) => {
-    if (items.length > ORDER_LIMITS.MAX_ITEMS) {
-      throw new Error(`Cannot have more than ${ORDER_LIMITS.MAX_ITEMS} items in one order`);
-    }
-    return true;
-  }),
-  
+
   handleValidationErrors,
 ];
 

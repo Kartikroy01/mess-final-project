@@ -54,10 +54,21 @@ export const munshiApi = {
   },
 
   async addMealItem(payload) {
+    let body;
+    let headers = getAuthHeaders();
+
+    if (payload instanceof FormData) {
+      body = payload;
+      const { "Content-Type": ct, ...restHeaders } = headers;
+      headers = restHeaders;
+    } else {
+      body = JSON.stringify(payload);
+    }
+
     const res = await fetch(`${API_BASE}/munshi/menu/item`, {
       method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(payload),
+      headers: headers,
+      body: body,
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to add meal");
@@ -109,7 +120,7 @@ export const munshiApi = {
     }
   },
 
-  async createOrder(studentId, items, mealType) {
+  async createOrder(studentId, items, mealType, dietCount) {
     const res = await fetch(`${API_BASE}/munshi/order`, {
       method: "POST",
       headers: getAuthHeaders(),
@@ -117,6 +128,7 @@ export const munshiApi = {
         studentId,
         items: items.map((i) => ({ name: i.name, price: i.price, qty: i.qty })),
         mealType,
+        dietCount, 
       }),
     });
     const data = await res.json();
@@ -250,8 +262,67 @@ export const munshiApi = {
     const res = await fetch(`${API_BASE}/munshi/bill-history`, {
       headers: getAuthHeaders(),
     });
-    const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to fetch bill history");
     return data.data;
-  }
+  },
+  async getExtraItems() {
+    const res = await fetch(`${API_BASE}/munshi/extra-items`, {
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to fetch extra items");
+    return data.data;
+  },
+  async addExtraItem(itemData) {
+    let body;
+    let headers = getAuthHeaders();
+
+    if (itemData instanceof FormData) {
+      body = itemData;
+      // When sending FormData, let the browser set the Content-Type with the boundary
+      const { "Content-Type": ct, ...restHeaders } = headers; 
+      headers = restHeaders;
+    } else {
+      body = JSON.stringify(itemData);
+    }
+
+    const res = await fetch(`${API_BASE}/extra-items/add`, {
+      method: "POST",
+      headers: headers,
+      body: body,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to add extra item");
+    return data.data;
+  },
+  async deleteExtraItem(id) {
+    const res = await fetch(`${API_BASE}/extra-items/${id}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to delete extra item");
+    return data;
+  },
+  async updateExtraItem(id, itemData) {
+    let body;
+    let headers = getAuthHeaders();
+
+    if (itemData instanceof FormData) {
+      body = itemData;
+      const { "Content-Type": ct, ...restHeaders } = headers;
+      headers = restHeaders;
+    } else {
+      body = JSON.stringify(itemData);
+    }
+
+    const res = await fetch(`${API_BASE}/extra-items/${id}`, {
+      method: "PUT",
+      headers: headers,
+      body: body,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to update extra item");
+    return data.data;
+  },
 };

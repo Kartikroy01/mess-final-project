@@ -62,6 +62,10 @@ console.log('[Server] Registered /api/feedback');
 app.use('/api/munshi/menu', menuRoutes); // Munshi-protected menu routes
 console.log('[Server] Registered /api/munshi/menu (PROTECTED)');
 
+const extraItemRoutes = require('./routes/extraItemRoutes');
+app.use('/api/extra-items', extraItemRoutes);
+console.log('[Server] Registered /api/extra-items');
+
 app.use('/api/bill', billRoutes);
 console.log('[Server] Registered /api/bill');
 
