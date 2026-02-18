@@ -153,4 +153,28 @@ router.patch(
  */
 router.get("/extra-items", munshiController.getExtraItems);
 
+/**
+ * @route   GET /api/munshi/session-stats
+ * @desc    Get session statistics (Taken, Not Taken, Mess Off)
+ * @query   mealType
+ * @access  Private (munshi)
+ */
+router.get("/session-stats", munshiController.getSessionStats);
+
+/**
+ * @route   PATCH /api/munshi/mess-on
+ * @desc    Enable mess for a student (Mess On)
+ * @body    studentId
+ * @access  Private (munshi)
+ */
+router.patch("/mess-on", munshiController.enableMessOn);
+
+/**
+ * @route   POST /api/munshi/fine
+ * @desc    Add a manual fine/bill to a student
+ * @body    studentId, amount, reason
+ * @access  Private (munshi)
+ */
+router.post("/fine", munshiController.addFine);
+
 module.exports = router;

@@ -41,6 +41,7 @@ const buildStudentResponse = async (student) => {
       type: meal.type,
       items: meal.items || [],
       totalCost: meal.totalCost || 0,
+      dietCount: meal.dietCount || 0
     };
   });
 
@@ -112,6 +113,7 @@ exports.getMealHistory = async (req, res) => {
         type: meal.type,
         items: meal.items || [],
         totalCost: meal.totalCost || 0,
+        dietCount: meal.dietCount || 0
       };
     });
 
@@ -173,26 +175,51 @@ exports.downloadMealReport = async (req, res) => {
     if (!meals.length) {
       doc.text('No meal records found for this month.');
     } else {
+      // PDF Table Header
+      const startX = 50;
+      let y = doc.y;
+      
+      doc.fontSize(10).font('Helvetica-Bold');
+      doc.text('Date', startX, y);
+      doc.text('Type', startX + 70, y);
+      doc.text('Diet', startX + 130, y);
+      doc.text('Extra Items', startX + 170, y);
+      doc.text('Total', startX + 350, y, { align: 'right' });
+      
+      y += 15;
+      doc.moveTo(startX, y).lineTo(startX + 400, y).stroke();
+      y += 10;
+
       meals.forEach((meal) => {
         const dateStr = meal.date.toISOString().split('T')[0];
-        doc.fontSize(12).text(`${dateStr} - ${meal.type}`);
+        
+        // Ensure new page if content overflows
+        if (y > 700) {
+            doc.addPage();
+            y = 50;
+        }
 
-        (meal.items || []).forEach((item) => {
-          doc
-            .fontSize(10)
-            .text(
-              `  - ${item.name} x${item.qty} @ ₹${item.price} = ₹${
-                (item.qty || 0) * (item.price || 0)
-              }`
-            );
-        });
+        doc.fontSize(10).font('Helvetica');
+        doc.text(dateStr, startX, y);
+        doc.text(meal.type, startX + 70, y);
+        doc.text(meal.dietCount ? meal.dietCount.toString() : '0', startX + 130, y);
+        
+        let extraCost = 0;
+        if (meal.items && meal.items.length > 0) {
+             const itemsText = meal.items.map(i => `${i.name} (x${i.qty})`).join(', ');
+             doc.text(itemsText, startX + 170, y, { width: 170 });
+             
+             // Calculate extra cost for verification/display if needed, but totalCost is stored
+             extraCost = meal.items.reduce((sum, item) => sum + (item.qty * item.price), 0);
+        } else {
+             doc.text('-', startX + 170, y);
+        }
 
-        const total = (meal.items || []).reduce(
-          (sum, item) => sum + (item.qty || 0) * (item.price || 0),
-          0
-        );
-        doc.fontSize(10).text(`  Total: ₹${total}`);
-        doc.moveDown(0.5);
+        doc.text(`₹${meal.totalCost}`, startX + 350, y, { align: 'right' });
+        
+        // Move down based on items height if wrapped code needed, or fixed spacing
+        y += 20; 
+        
       });
     }
 

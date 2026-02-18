@@ -3,6 +3,7 @@ const router = express.Router();
 const munshiAuth = require('../middleware/munshiAuth');
 const Student = require('../models/Student');
 const Bill = require('../models/Bill');
+const MealHistory = require('../models/MealHistory');
 
 router.use(munshiAuth);
 
@@ -75,7 +76,8 @@ router.post('/add-charge', async (req, res) => {
     }
 
     // Update bills for selected students
-    const updatePromises = students.map(student => {
+    // Update bills and create history for selected students
+    const updatePromises = students.map(async (student) => {
       const update = {
         $inc: {
           [chargeType]: amount,
@@ -83,7 +85,8 @@ router.post('/add-charge', async (req, res) => {
         }
       };
 
-      return Bill.findOneAndUpdate(
+      // 1. Update Bill
+      const billPromise = Bill.findOneAndUpdate(
         { 
           studentId: student._id, 
           month: parseInt(month), 
@@ -96,6 +99,26 @@ router.post('/add-charge', async (req, res) => {
           setDefaultsOnInsert: true 
         }
       );
+
+      // 2. Create Meal History Record
+      // chargeType is 'fines' or 'extras'
+      // Map 'fines' -> 'Fine', 'extras' -> 'Snacks'
+      const historyType = chargeType === 'fines' ? 'Fine' : 'Snacks';
+      
+      const historyPromise = new MealHistory({
+          studentId: student._id,
+          date: new Date(),
+          type: historyType,
+          items: [{
+              name: description,
+              qty: 1,
+              price: amount
+          }],
+          totalCost: amount,
+          dietCount: 0
+      }).save();
+
+      return Promise.all([billPromise, historyPromise]);
     });
 
     await Promise.all(updatePromises);

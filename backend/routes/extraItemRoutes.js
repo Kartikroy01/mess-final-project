@@ -31,14 +31,18 @@ router.post('/add', munshiAuth, upload.single('image'), async (req, res) => {
       imagePath = `/uploads/${req.file.filename}`;
     }
 
+    console.log('[Extra Items Add] Adding item for munshi:', req.munshi ? req.munshi._id : 'NULL');
+
     const newItem = new ExtraItem({
       name,
       price,
       category,
-      image: imagePath
+      image: imagePath,
+      munshiId: req.munshi ? req.munshi._id : null
     });
 
     const savedItem = await newItem.save();
+    console.log('[Extra Items Add] Item saved with munshiId:', savedItem.munshiId);
     res.status(201).json({ success: true, data: savedItem });
   } catch (err) {
     console.error(err);

@@ -325,4 +325,35 @@ export const munshiApi = {
     if (!res.ok) throw new Error(data.message || "Failed to update extra item");
     return data.data;
   },
+
+  async getSessionStats(mealType) {
+    const res = await fetch(`${API_BASE}/munshi/session-stats?mealType=${mealType}`, {
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to fetch session stats");
+    return data.data;
+  },
+
+  async enableMessOn(studentId) {
+    const res = await fetch(`${API_BASE}/munshi/mess-on`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ studentId })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to enable mess");
+    return data;
+  },
+
+  async addFine(studentId, amount, reason) {
+    const res = await fetch(`${API_BASE}/munshi/fine`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ studentId, amount, reason }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to add fine");
+    return data;
+  }
 };

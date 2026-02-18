@@ -371,14 +371,35 @@ const AddBillPage = () => {
             </div>
           </div>
 
-          {/* Charge Type - Only Extras */}
+          {/* Charge Type */}
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-2">
               <FileText size={16} className="inline mr-2" />
               Charge Type
             </label>
-            <div className="px-6 py-4 rounded-xl font-bold border-2 bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200 text-center">
-              Extras
+            <div className="grid grid-cols-2 gap-4">
+               <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, chargeType: 'extras' }))}
+                className={`px-4 py-3 rounded-xl font-bold border-2 transition-all ${
+                  formData.chargeType === 'extras'
+                    ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-indigo-200 hover:bg-indigo-50"
+                }`}
+              >
+                Extras
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, chargeType: 'fines' }))}
+                className={`px-4 py-3 rounded-xl font-bold border-2 transition-all ${
+                  formData.chargeType === 'fines'
+                    ? "bg-rose-600 text-white border-rose-600 shadow-lg shadow-rose-200"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-rose-200 hover:bg-rose-50"
+                }`}
+              >
+                Fine
+              </button>
             </div>
           </div>
 

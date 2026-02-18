@@ -93,6 +93,19 @@ exports.lookupStudent = async (req, res) => {
         roomNumber: student.roomNo,
         hostelName: student.hostelNo,
         balance,
+        // Check mess status
+        isMessClosed: !!(await MessOff.findOne({
+          studentId: student._id,
+          status: 'Approved',
+          fromDate: { $lte: new Date() },
+          toDate: { $gte: new Date().setHours(0,0,0,0) }
+        })),
+        // Check diet status for today
+        takenMeals: await ExtraOrder.find({
+            studentId: student._id,
+            date: { $gte: new Date().setHours(0,0,0,0) },
+            dietCount: { $gt: 0 }
+        }).distinct('mealType')
       },
     });
   } catch (error) {
@@ -165,16 +178,42 @@ exports.createOrder = async (req, res) => {
     // So by default 1 diet if not specified and items > 0.
     // But if dietCount is sent (e.g. 0 or 2), we use that.
     
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    // Check Mess Closed Status
+    const messOff = await MessOff.findOne({
+      studentId: student._id,
+      status: 'Approved',
+      fromDate: { $lte: new Date() },
+      toDate: { $gte: todayStart }
+    });
+    const isMessClosed = !!messOff;
+
+    // Check if diet already taken for this meal type
+    const existingDiet = await ExtraOrder.findOne({
+        studentId: student._id,
+        mealType: mealType,
+        date: { $gte: todayStart },
+        dietCount: { $gt: 0 }
+    });
+
+    // Determine final diet count
     let finalDietCount = 0;
-    if (dietCount !== undefined) {
+
+    // Priority Rules:
+    // 1. If Mess is Closed -> Diet Count is ALWAYS 0
+    // 2. If Diet already taken -> Diet Count is 0 (prevent duplicates)
+    // 3. Otherwise -> Use requested count OR default to 1 (unless snacks)
+
+    if (isMessClosed) {
+        finalDietCount = 0;
+    } else if (existingDiet) {
+        finalDietCount = 0;
+    } else if (dietCount !== undefined) {
         finalDietCount = dietCount;
-    } else if (orderItems.length > 0) {
-        // Default behavior: buying items implies 1 diet, unless it's snacks which typically implies 0?
-        // But user said "snack did not count under the diet".
-        // Frontend should probably send dietCount=0 for snacks or we handle it here.
-        // Let's rely on frontend sending dietCount=1 for meals and 0 for snacks if they use the buttons.
-        // But for backward validity or manual item addition:
-        // If mealType is NOT snacks, count as 1.
+    } else {
+        // Default Logic: Meal (not snacks) = 1 diet
         finalDietCount = (mealType === 'snacks') ? 0 : 1;
     }
 
@@ -198,7 +237,8 @@ exports.createOrder = async (req, res) => {
         qty: item.qty,
         price: item.price
       })),
-      totalCost: totalAmount
+      totalCost: totalAmount,
+      dietCount: finalDietCount
     });
     await mealHistory.save({ session });
 
@@ -212,6 +252,7 @@ exports.createOrder = async (req, res) => {
         $inc: {
           extras: totalAmount,
           totalBill: totalAmount,
+          mealCount: finalDietCount
         },
       },
       { upsert: true, new: true, session }
@@ -495,7 +536,21 @@ exports.updateMessOffStatus = async (req, res) => {
 exports.getExtraItems = async (req, res) => {
   try {
     const ExtraItem = require('../models/extra');
-    const items = await ExtraItem.find({ isAvailable: true }).sort({ category: 1, name: 1 });
+    
+    // Filter: Show global items (no munshiId) AND items created by this specific munshi
+    const query = {
+        isAvailable: true,
+        $or: [
+            { munshiId: req.munshi._id },
+            { munshiId: { $exists: false } }, // Legacy items
+            { munshiId: null }               // Explicitly global items
+        ]
+    };
+    
+    console.log('[Munshi Controller] Fetching extra items for munshi:', req.munshi._id);
+    console.log('[Munshi Controller] Query:', JSON.stringify(query));
+
+    const items = await ExtraItem.find(query).sort({ category: 1, name: 1 });
     res.json({
       success: true,
       data: items
@@ -508,3 +563,246 @@ exports.getExtraItems = async (req, res) => {
     });
   }
 };
+/**
+ * Get session statistics (Taken, Not Taken, Mess Off) for a specific meal type
+ * 
+ * @route GET /api/munshi/session-stats
+ * @query mealType (optional, defaults to current time-based meal)
+ * @access Private (munshi)
+ */
+exports.getSessionStats = async (req, res) => {
+  try {
+    const { mealType } = req.query;
+    const hostel = req.munshi.hostel;
+
+    // determine meal type if not provided (simple logic based on time, or just default to breakfast)
+    // For now, if not provided, we might want to throw error or handle it. 
+    // But frontend should send it.
+    
+    const targetMeal = mealType || 'breakfast'; // Fallback
+    
+    // Get all students in hostel
+    const allStudents = await Student.find({ hostelNo: hostel })
+      .select('name rollNo roomNo')
+      .sort({ roomNo: 1 })
+      .lean();
+
+    const studentIds = allStudents.map(s => s._id);
+
+    // Get Approved Mess Offs for today
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    const messOffs = await MessOff.find({
+      studentId: { $in: studentIds },
+      status: 'Approved',
+      fromDate: { $lte: new Date() },
+      toDate: { $gte: today }
+    }).distinct('studentId');
+    
+    const messOffSet = new Set(messOffs.map(id => id.toString()));
+
+    // Get Diet Taken for today & mealType
+    // We want students who have dietCount > 0 for this meal
+    const takenOrders = await ExtraOrder.find({
+      studentId: { $in: studentIds },
+      mealType: targetMeal,
+      date: { $gte: today },
+      dietCount: { $gt: 0 }
+    }).distinct('studentId');
+    
+    const takenSet = new Set(takenOrders.map(id => id.toString()));
+
+    // Categorize
+    const stats = {
+      taken: [],
+      notTaken: [],
+      messOff: []
+    };
+
+    allStudents.forEach(student => {
+      const idStr = student._id.toString();
+      
+      if (messOffSet.has(idStr)) {
+        stats.messOff.push(student);
+      } else if (takenSet.has(idStr)) {
+        stats.taken.push(student);
+      } else {
+        stats.notTaken.push(student);
+      }
+    });
+
+    res.json({
+      success: true,
+      data: stats
+    });
+
+  } catch (error) {
+    console.error('[Munshi Controller] Session stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: ERROR_MESSAGES.SERVER_ERROR
+    });
+  }
+};
+
+/**
+ * Enable mess for a student (Mess On)
+ * Ends their current mess-off period effectively immediately
+ * 
+ * @route PATCH /api/munshi/mess-on
+ * @access Private (munshi)
+ */
+exports.enableMessOn = async (req, res) => {
+  try {
+    const { studentId } = req.body;
+    const hostel = req.munshi.hostel;
+
+    // Verify student belongs to hostel
+    const student = await Student.findOne({ _id: studentId, hostelNo: hostel });
+    if (!student) {
+        return res.status(404).json({ success: false, message: 'Student not found.' });
+    }
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    // Find active mess off
+    const messOff = await MessOff.findOne({
+        studentId: studentId,
+        status: 'Approved',
+        fromDate: { $lte: new Date() },
+        toDate: { $gte: today }
+    });
+
+    if (!messOff) {
+        return res.status(400).json({ success: false, message: 'No active mess off found for this student.' });
+    }
+
+    // Logic:
+    // If fromDate is today -> Cancel the whole request
+    // If fromDate is before today -> Set toDate to yesterday
+    
+    const fromDate = new Date(messOff.fromDate);
+    fromDate.setHours(0,0,0,0);
+
+    if (fromDate.getTime() === today.getTime()) {
+        messOff.status = 'Cancelled';
+        messOff.rejectionReason = 'Mess On by Munshi'; // Or just generic note
+    } else {
+         const yesterday = new Date(today);
+         yesterday.setDate(yesterday.getDate() - 1);
+         yesterday.setHours(23,59,59,999); // End of yesterday
+         messOff.toDate = yesterday;
+    }
+
+    await messOff.save();
+
+    res.json({
+        success: true,
+        message: 'Mess enabled successfully for the student.'
+    });
+
+  } catch (error) {
+    console.error('[Munshi Controller] Mess On error:', error);
+    res.status(500).json({
+      success: false,
+      message: ERROR_MESSAGES.SERVER_ERROR
+    });
+  }
+};
+
+/**
+ * Add a manual fine/bill to a student
+ * 
+ * @route POST /api/munshi/fine
+ * @access Private (munshi)
+ */
+exports.addFine = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { studentId, amount, reason } = req.body;
+    const hostel = req.munshi.hostel;
+
+    // Verify student exists and belongs to munshi's hostel
+    const student = await Student.findOne({
+      _id: studentId,
+      hostelNo: hostel,
+    }).session(session);
+
+    if (!student) {
+      await session.abortTransaction();
+      return res.status(404).json({
+        success: false,
+        message: ERROR_MESSAGES.NOT_IN_HOSTEL,
+      });
+    }
+
+    const fineAmount = Number(amount);
+    if (!fineAmount || fineAmount <= 0) {
+        await session.abortTransaction();
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid amount',
+        });
+    }
+
+    // Create meal history record for the fine
+    const mealHistory = new MealHistory({
+      studentId: student._id,
+      date: new Date(),
+      type: 'Fine',
+      items: [{
+        name: reason || 'Manual Fine',
+        qty: 1,
+        price: fineAmount
+      }],
+      totalCost: fineAmount,
+      dietCount: 0 
+    });
+    await mealHistory.save({ session });
+
+    // Update bill
+    const month = new Date().getMonth() + 1;
+    const year = new Date().getFullYear();
+
+    await Bill.findOneAndUpdate(
+      { studentId: student._id, month, year },
+      {
+        $inc: {
+          fines: fineAmount,
+          totalBill: fineAmount, // Adding to total bill per user request
+        },
+      },
+      { upsert: true, new: true, session }
+    );
+
+    await session.commitTransaction();
+
+    console.log(
+      `[Munshi Controller] Fine added: ${fineAmount} for student ${student.rollNo} by munshi ${req.munshi.email}`
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Fine added successfully',
+      data: {
+        amount: fineAmount,
+        reason: reason
+      }
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    console.error('[Munshi Controller] Add fine error:', error);
+    res.status(500).json({
+      success: false,
+      message: ERROR_MESSAGES.SERVER_ERROR,
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
+module.exports = exports;

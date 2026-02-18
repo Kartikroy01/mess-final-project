@@ -26,6 +26,11 @@ const extraItemSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    munshiId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Munshi',
+      required: false // Optional for backward compatibility with existing items
+    }
   },
   { timestamps: true }
 );

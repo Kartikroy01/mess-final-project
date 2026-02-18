@@ -13,7 +13,7 @@ const mealHistorySchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['Breakfast', 'Lunch', 'Snacks', 'Dinner'],
+      enum: ['Breakfast', 'Lunch', 'Snacks', 'Dinner', 'Fine'],
       required: true,
     },
     items: [
@@ -27,6 +27,10 @@ const mealHistorySchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    dietCount: {
+      type: Number,
+      default: 0
+    }
   },
   { timestamps: true }
 );

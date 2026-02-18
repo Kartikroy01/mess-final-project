@@ -219,6 +219,7 @@ const StudentHome = ({ student, token }) => {
     const [mealHistory, setMealHistory] = useState([]);
     const [billData, setBillData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -249,11 +250,6 @@ const StudentHome = ({ student, token }) => {
             value: `₹${totalBill}`, 
             icon: <DollarSign size={24} />, 
             color: 'blue',
-            breakdown: billData ? [
-                { label: 'Meals', value: `₹${billData.mealCharges || 0}` },
-                { label: 'Fines', value: `₹${billData.fines || 0}` },
-                { label: 'Extras', value: `₹${billData.extras || 0}` }
-            ] : null,
             desc: `${billData ? new Date(0, billData.month - 1).toLocaleString('default', { month: 'long' }) : 'Current'} ${billData?.year || new Date().getFullYear()}`
         },
         { 
@@ -300,26 +296,26 @@ const StudentHome = ({ student, token }) => {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -mr-16 -mt-16 transform transition-transform group-hover:scale-110 duration-700"></div>
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-300 opacity-10 rounded-full blur-2xl -ml-10 -mb-10 animate-pulse"></div>
                 
-                <div className="relative z-10 px-6 py-8 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div className="text-center lg:text-left max-w-2xl">
-                        <div className="inline-flex items-center px-4 py-1.5 bg-blue-500/20 rounded-full text-blue-50 text-xs font-bold mb-6 backdrop-blur-md border border-blue-400/30">
+                <div className="relative z-10 px-4 py-6 md:px-6 md:py-8 flex flex-row justify-between items-center gap-2 md:gap-6">
+                    <div className="text-left max-w-[60%] md:max-w-2xl">
+                        <div className="hidden md:inline-flex items-center px-4 py-1.5 bg-blue-500/20 rounded-full text-blue-50 text-xs font-bold mb-6 backdrop-blur-md border border-blue-400/30">
                             <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span>
                             Live Mess Dashboard
                         </div>
-                        <h1 className="text-3xl md:text-5xl font-black text-white tracking-tighter mb-2 drop-shadow-sm leading-tight">
+                        <h1 className="text-2xl md:text-5xl font-black text-white tracking-tighter mb-1 md:mb-2 drop-shadow-sm leading-tight">
                             Hello, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">{student.name.split(' ')[0]}</span>
                         </h1>
                     </div>
 
                     {/* QR Code Section */}
-                    <div className="flex flex-col items-center justify-center">
+                    <div className="flex flex-col items-center justify-center shrink-0">
                         {/* 1. VISIBLE DASHBOARD CARD (Simple & Clean) */}
-                        <div className="mb-2 relative bg-white p-2 rounded-lg shadow-lg">
+                        <div className="mb-2 relative bg-white rounded-xl shadow-lg p-1 overflow-hidden">
                             <QRCodeCanvas 
                                 value={student.qrCode || `${student.rollNo}-${student.hostelNo}-${student.roomNo}`} 
-                                size={100}
+                                size={window.innerWidth < 768 ? 90 : 100}
                                 level={"H"}
-                                includeMargin={true}
+                                includeMargin={false}
                                 bgColor={"#ffffff"}
                                 fgColor={"#000000"}
                             />
@@ -327,30 +323,41 @@ const StudentHome = ({ student, token }) => {
 
                         <div className="mt-2 w-auto">
                              <button 
+                                disabled={isDownloading}
                                 onClick={async () => {
-                                    const element = document.getElementById("printable-qr-card");
-                                    if (element) {
-                                        try {
-                                            // Clone the element to ensure it's captured correctly
+                                    try {
+                                        setIsDownloading(true);
+                                        const element = document.getElementById("printable-qr-card");
+                                        if (element) {
+                                            // 1. Clone the element
                                             const clone = element.cloneNode(true);
                                             clone.style.position = "fixed";
                                             clone.style.top = "0";
                                             clone.style.left = "0";
                                             clone.style.zIndex = "-9999";
-                                            // Ensure the clone is visible for capture but hidden from user 
-                                            // (z-index handles visibility, but we need display:block)
+                                            clone.style.transform = "none";
+                                            clone.style.visibility = "visible";
+                                            
+                                            // 2. Fix: Copy Canvas Content (QRCode)
+                                            // cloneNode() does not copy canvas data
+                                            const originalCanvas = element.querySelector('canvas');
+                                            const cloneCanvas = clone.querySelector('canvas');
+                                            if (originalCanvas && cloneCanvas) {
+                                                const ctx = cloneCanvas.getContext('2d');
+                                                ctx.drawImage(originalCanvas, 0, 0);
+                                            }
+
                                             document.body.appendChild(clone);
 
-                                            // Wait a moment for images to potentially load in the clone
-                                            // (though they were likely cached from the original)
-                                            await new Promise(resolve => setTimeout(resolve, 100));
+                                            // Wait for fonts/images
+                                            await new Promise(resolve => setTimeout(resolve, 500));
 
                                             const canvas = await html2canvas(clone, {
                                                 backgroundColor: null,
-                                                scale: 3, 
+                                                scale: 4, 
                                                 logging: false,
-                                                useCORS: true,
-                                                allowTaint: true,
+                                                useCORS: false, // No external assets, disable CORS checks
+                                                allowTaint: false,
                                             });
 
                                             document.body.removeChild(clone);
@@ -362,86 +369,79 @@ const StudentHome = ({ student, token }) => {
                                             document.body.appendChild(downloadLink);
                                             downloadLink.click();
                                             document.body.removeChild(downloadLink);
-                                        } catch (err) {
-                                            console.error("Failed to capture QR card:", err);
-                                            alert("Failed to download QR card. Please try again.");
                                         }
+                                    } catch (err) {
+                                        console.error("Failed to capture QR card:", err);
+                                        alert("Failed to download QR card. Please try again.");
+                                    } finally {
+                                        setIsDownloading(false);
                                     }
                                 }}
-                                className="w-auto bg-white/10 hover:bg-white/20 text-white py-2 px-4 rounded-lg font-medium text-xs backdrop-blur-sm border border-white/10 transition-all flex items-center justify-center gap-2"
+                                className={`w-auto bg-white/10 hover:bg-white/20 text-white py-2 px-4 rounded-lg font-medium text-xs backdrop-blur-sm border border-white/10 transition-all flex items-center justify-center gap-2 ${isDownloading ? 'opacity-70 cursor-wait' : ''}`}
                              >
-                                 <Download size={14} />
-                                 Download ID
+                                 {isDownloading ? (
+                                    <>
+                                        <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <span>Saving...</span>
+                                    </>
+                                 ) : (
+                                    <>
+                                        <Download size={14} />
+                                        <span>Download ID</span>
+                                    </>
+                                 )}
                              </button>
                         </div>
 
                         {/* 2. HIDDEN PREMIUM CARD (For Download Only) */}
                         {/* Positioned off-screen but rendered in DOM for html2canvas */}
-                        <div style={{ position: "absolute", left: "-2500px", top: "0", zIndex: -10, overflow: "hidden" }}>
-                            <div id="printable-qr-card" className="relative w-[320px] bg-gradient-to-br from-[#00BAF2] to-[#0E1E5B] rounded-[2rem] shadow-2xl overflow-hidden border border-white/10 select-none">
+                        <div style={{ position: "absolute", left: "-9999px", top: "0", zIndex: -10, visibility: 'hidden' }}>
+                            <div id="printable-qr-card" style={{ 
+                                position: 'relative', 
+                                width: '320px', 
+                                background: 'linear-gradient(135deg, #00BAF2, #0E1E5B)', 
+                                borderRadius: '2rem', 
+                                overflow: 'hidden', 
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                                userSelect: 'none',
+                                fontFamily: 'sans-serif' /* Ensure font consistency */
+                            }}>
                                 {/* Decorative Background Patterns */}
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
-                                <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full blur-2xl -ml-10 -mb-10"></div>
-                                <img 
-                                    src="https://www.transparenttextures.com/patterns/cubes.png" 
-                                    alt="" 
-                                    crossOrigin="anonymous"
-                                    className="absolute inset-0 w-full h-full opacity-10 object-cover"
-                                />
-
-                                <div className="relative z-10 p-6 flex flex-col items-center h-full">
+                                <div style={{ position: 'absolute', top: 0, right: 0, width: '16rem', height: '16rem', background: 'rgba(255,255,255,0.05)', borderRadius: '9999px', filter: 'blur(64px)', marginRight: '-5rem', marginTop: '-5rem' }}></div>
+                                <div style={{ position: 'absolute', bottom: 0, left: 0, width: '12rem', height: '12rem', background: 'rgba(0,0,0,0.1)', borderRadius: '9999px', filter: 'blur(40px)', marginLeft: '-2.5rem', marginBottom: '-2.5rem' }}></div>
+                                
+                                <div style={{ position: 'relative', zIndex: 10, padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
                                     {/* Header */}
-                                    <div className="w-full flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                                        <div className="flex flex-col">
-                                            <span className="font-black text-2xl tracking-tighter text-white">NITJ</span>
-                                            <span className="text-[10px] text-blue-200 uppercase tracking-[0.2em] font-bold">MESS PORTAL</span>
-                                        </div>
-                                        <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                                            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-400 to-emerald-400"></div>
+                                    <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                                            <span style={{ fontWeight: 900, fontSize: '1.5rem', letterSpacing: '-0.05em', color: '#ffffff', lineHeight: 1 }}>NITJ</span>
+                                            <span style={{ fontSize: '10px', color: '#BFDBFE', textTransform: 'uppercase', letterSpacing: '0.2em', fontWeight: 'bold' }}>MESS PORTAL</span>
                                         </div>
                                     </div>
 
-                                    {/* Photo & Verified Badge */}
-                                    <div className="relative mb-4">
-                                        <div className="w-24 h-24 rounded-full p-1 bg-white/10 backdrop-blur-md border border-white/20 shadow-lg">
-                                            <img 
-                                                src={student.photo || "https://ui-avatars.com/api/?name=" + student.name} 
-                                                alt={student.name} 
-                                                crossOrigin="anonymous"
-                                                className="w-full h-full rounded-full object-cover border-2 border-white/50"
-                                            />
-                                        </div>
-                                        <div className="absolute bottom-1 right-1 bg-blue-500 text-white rounded-full p-1 border-2 border-[#0E1E5B] shadow-sm">
-                                            <CheckCircle size={14} strokeWidth={4} />
-                                        </div>
+                                    {/* Student Name & Roll - Prominent */}
+                                    <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                                        <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '0.5rem', lineHeight: '1.2' }}>{student.name}</h2>
+                                        <p style={{ color: '#BFDBFE', fontSize: '1rem', fontFamily: 'monospace', background: 'rgba(0,0,0,0.2)', padding: '0.25rem 1rem', borderRadius: '9999px', border: '1px solid rgba(255,255,255,0.05)', display: 'inline-block', margin: 0 }}>
+                                            {student.rollNo}
+                                        </p>
                                     </div>
 
-                                    {/* Student Name */}
-                                    <h2 className="text-xl font-bold text-white mb-1 text-center">{student.name}</h2>
-                                    <p className="text-blue-200 text-xs font-mono mb-6 bg-black/20 px-3 py-1 rounded-full border border-white/5">
-                                        {student.rollNo}
-                                    </p>
-
-                                    {/* QR Code Container */}
-                                    <div className="bg-white p-3 rounded-2xl shadow-lg mb-6">
+                                    {/* QR Code Container - Centered and Large */}
+                                    <div style={{ background: '#ffffff', padding: '0.5rem', borderRadius: '1.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', marginBottom: '2rem' }}>
                                         <QRCodeCanvas 
                                             value={student.qrCode || `${student.rollNo}-${student.hostelNo}-${student.roomNo}`} 
-                                            size={160}
+                                            size={200}
                                             level={"H"}
                                             includeMargin={false}
                                         />
                                     </div>
 
-                                    {/* Footer Info */}
-                                    <div className="w-full grid grid-cols-2 gap-4 text-center border-t border-white/10 pt-4">
-                                        <div>
-                                            <p className="text-[10px] text-blue-200 uppercase tracking-wider mb-0.5">Hostel</p>
-                                            <p className="text-sm font-bold text-white">{student.hostelNo || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] text-blue-200 uppercase tracking-wider mb-0.5">Room</p>
-                                            <p className="text-sm font-bold text-white">{student.roomNo || 'N/A'}</p>
-                                        </div>
+                                    {/* Footer Info - Hostel Only */}
+                                    <div style={{ width: '100%', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem' }}>
+                                        <p style={{ fontSize: '12px', color: '#BFDBFE', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem' }}>Hostel</p>
+                                        <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>{student.hostelNo || 'N/A'}</p>
                                     </div>
                                 </div>
                             </div>
@@ -451,23 +451,23 @@ const StudentHome = ({ student, token }) => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 px-1">
                 {stats.map((stat, index) => (
-                    <div key={index} className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className={`p-3.5 rounded-2xl ${getLightBg(stat.color)} group-hover:scale-110 transition-transform duration-300`}>
-                                {stat.icon}
+                    <div key={index} className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                        <div className="flex justify-between items-start mb-3 md:mb-4">
+                            <div className={`p-2.5 md:p-3.5 rounded-xl md:rounded-2xl ${getLightBg(stat.color)} group-hover:scale-110 transition-transform duration-300`}>
+                                {React.cloneElement(stat.icon, { size: window.innerWidth < 768 ? 18 : 24 })}
                             </div>
                             {stat.change && (
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${stat.change.startsWith('+') ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                <span className={`text-[10px] md:text-xs font-bold px-2 py-0.5 md:px-2.5 md:py-1 rounded-full ${stat.change.startsWith('+') ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
                                     {stat.change}
                                 </span>
                             )}
                         </div>
-                        <h3 className="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">{stat.label}</h3>
-                        <div className="flex items-end gap-2 mb-3">
-                            <span className="text-3xl font-extrabold text-slate-800">{stat.value}</span>
-                            <span className="text-xs text-slate-400 font-medium mb-1.5">{stat.desc}</span>
+                        <h3 className="text-slate-500 text-xs md:text-sm font-bold uppercase tracking-wider mb-1">{stat.label}</h3>
+                        <div className="flex items-end gap-1 md:gap-2 mb-1 md:mb-3">
+                            <span className="text-xl md:text-3xl font-extrabold text-slate-800">{stat.value}</span>
+                            <span className="text-[10px] md:text-xs text-slate-400 font-medium mb-1 md:mb-1.5">{stat.desc}</span>
                         </div>
                         {stat.breakdown && (
                             <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5">
@@ -484,24 +484,8 @@ const StudentHome = ({ student, token }) => {
             </div>
 
             {/* Recent Activity Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2">
-                    <StudentReports mealHistory={mealHistory} studentName={student.name} isSummary={true} token={token} />
-                </div>
-                <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden flex flex-col justify-center min-h-[300px]">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] opacity-20 pointer-events-none"></div>
-                    <div className="relative z-10">
-                        <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-6">
-                            <Calendar className="text-indigo-300" size={24} />
-                        </div>
-                        <h3 className="text-2xl font-bold mb-2">Review Today's Menu</h3>
-                        <p className="text-indigo-200 mb-8 leading-relaxed">Check out what's being served today and plan your meals ahead.</p>
-                        <button className="bg-white text-indigo-900 px-6 py-4 rounded-xl font-bold hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2 group w-full sm:w-auto">
-                            View Full Menu
-                            <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                        </button>
-                    </div>
-                </div>
+            <div className="w-full">
+                <StudentReports mealHistory={mealHistory} studentName={student.name} isSummary={true} token={token} />
             </div>
         </div>
     );
@@ -742,7 +726,7 @@ const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) 
             doc.text(`Period: ${monthNames[selectedMonth] || ''}, ${year}`, 14, 58);
 
             // Table
-            const tableColumn = ["Date", "Meal Type", "Items", "Total"];
+            const tableColumn = ["Date", "Meal Type", "Diet", "Items", "Total"];
             const tableRows = [];
             let grandTotal = 0;
 
@@ -753,6 +737,7 @@ const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) 
                 const mealData = [
                     meal.date || '-',
                     meal.type || '-',
+                    meal.dietCount !== undefined ? meal.dietCount : '-',
                     itemsStr || 'No items',
                     `Rs ${cost}`
                 ];
@@ -786,6 +771,7 @@ const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) 
             'Lunch': { bg: 'bg-emerald-50 text-emerald-700 ring-emerald-100', dot: 'bg-emerald-400' },
             'Snacks': { bg: 'bg-pink-50 text-pink-700 ring-pink-100', dot: 'bg-pink-400' },
             'Dinner': { bg: 'bg-indigo-50 text-indigo-700 ring-indigo-100', dot: 'bg-indigo-400' },
+            'Fine': { bg: 'bg-rose-50 text-rose-700 ring-rose-100', dot: 'bg-rose-400' },
         };
         return styles[type] || { bg: 'bg-slate-50 text-slate-700 ring-slate-100', dot: 'bg-slate-400' };
     };
@@ -837,6 +823,7 @@ const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) 
                             <tr className="bg-slate-50/80 border-b border-slate-100">
                                 <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Date</th>
                                 <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Meal Type</th>
+                                <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Diet</th>
                                 <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider w-1/2">Items</th>
                                 <th className="text-right py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Total</th>
                             </tr>
@@ -861,6 +848,9 @@ const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) 
                                                     </span>
                                                 </td>
                                                 <td className="py-4 px-6">
+                                                    <span className="text-sm font-bold text-slate-700">{meal.dietCount !== undefined ? meal.dietCount : '-'}</span>
+                                                </td>
+                                                <td className="py-4 px-6">
                                                     <div className="flex flex-wrap gap-2">
                                                         {meal.items && meal.items.length > 0 ? (
                                                             meal.items.map((item, idx) => (
@@ -881,13 +871,13 @@ const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) 
                                         ); 
                                     })}
                                     <tr className="bg-slate-50/50 font-bold border-t-2 border-slate-100">
-                                        <td colSpan="3" className="py-4 px-6 text-right text-slate-500 uppercase text-xs tracking-wider">Grand Total</td>
+                                        <td colSpan="4" className="py-4 px-6 text-right text-slate-500 uppercase text-xs tracking-wider">Grand Total</td>
                                         <td className="py-4 px-6 text-right text-lg text-blue-600">₹{grandTotal}</td>
                                     </tr>
                                 </>
                             ) : (
                                 <tr>
-                                    <td colSpan="4" className="text-center py-16">
+                                    <td colSpan="5" className="text-center py-16">
                                         <div className="inline-flex items-center justify-center p-4 bg-slate-50 rounded-full mb-3">
                                             <FileText size={32} className="text-slate-300"/>
                                         </div>

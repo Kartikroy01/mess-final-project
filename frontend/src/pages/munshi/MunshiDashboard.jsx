@@ -103,7 +103,7 @@ const MealSelectionPage = ({ onSelectMeal, munshiName }) => {
       label: "Breakfast",
       icon: "🌅",
       color: "from-orange-400 to-pink-500",
-      time: "7:30 AM - 9:30 AM",
+      time: "12:30 AM - 2:30 AM",
     },
     {
       id: "lunch",
@@ -117,14 +117,14 @@ const MealSelectionPage = ({ onSelectMeal, munshiName }) => {
       label: "Snacks",
       icon: "🍵",
       color: "from-green-400 to-teal-500",
-      time: "4:30 PM - 6:00 PM",
+      time: "5:30 PM - 6:10 PM",
     },
     {
       id: "dinner",
       label: "Dinner",
       icon: "🌙",
       color: "from-indigo-400 to-purple-500",
-      time: "7:30 PM - 9:30 PM",
+      time: "8:00 PM - 10:30 PM",
     },
   ];
 
@@ -418,7 +418,7 @@ const EditExtraItemModal = ({ isOpen, onClose, onEdit, item }) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div>
             <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Price (₹)</label>
                 <input
@@ -430,19 +430,7 @@ const EditExtraItemModal = ({ isOpen, onClose, onEdit, item }) => {
                 min="0"
                 />
             </div>
-             <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Category</label>
-                <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none font-medium transition-all"
-                >
-                    <option value="Snacks">Snacks</option>
-                    <option value="Drinks">Drinks</option>
-                    <option value="Desserts">Desserts</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
+
           </div>
 
           <div>
@@ -478,6 +466,114 @@ const EditExtraItemModal = ({ isOpen, onClose, onEdit, item }) => {
   );
 };
 
+const AddExtraItemModal = ({ isOpen, onClose, onAdd }) => {
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
+  const [category, setCategory] = useState("Snacks");
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("price", price);
+      formData.append("category", category);
+      if (image) {
+        formData.append("image", image);
+      }
+      // Default availability is true
+      formData.append("isAvailable", "true");
+
+      await onAdd(formData);
+      onClose();
+      setName("");
+      setPrice("");
+      setCategory("Snacks");
+      setImage(null);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to add item");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-bold text-slate-800">Add New Item</h3>
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+            <X size={20} className="text-slate-500" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Item Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none font-medium transition-all"
+              placeholder="e.g. Lays Classic"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Price (₹)</label>
+                <input
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none font-medium transition-all"
+                placeholder="20"
+                required
+                min="0"
+                />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Image (Optional)</label>
+            <div className="relative group">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImage(e.target.files[0])}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
+              <div className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-dashed border-slate-300 group-hover:border-indigo-500 group-hover:bg-indigo-50/50 transition-all flex items-center gap-3">
+                <div className="p-2 bg-white rounded-lg shadow-sm">
+                   {image ? <CheckCircle size={18} className="text-emerald-500" /> : <Plus size={18} className="text-slate-400" />}
+                </div>
+                <span className={`text-sm font-medium ${image ? "text-slate-800" : "text-slate-400"}`}>
+                  {image ? image.name : "Click to upload image"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-200 disabled:opacity-70 disabled:cursor-not-allowed mt-4"
+          >
+            {loading ? "Adding..." : "Add Item"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // ==================== DASHBOARD VIEW ====================
 const DashboardView = ({
   sessionMeal,
@@ -497,8 +593,10 @@ const DashboardView = ({
   selectedCategory,
   setSelectedCategory,
   onNavigate, // Renamed from onAddMealClick
+  onAddExtraClick, // New Prop
   onEditExtra,
-  onDeleteExtra
+  onDeleteExtra,
+  sessionStats
 }) => {
   const [studentIdInput, setStudentIdInput] = useState("");
   const [error, setError] = useState("");
@@ -594,15 +692,42 @@ const DashboardView = ({
   const handleSubmitExtras = async () => {
     if (!scannedStudent) return;
     try {
-      // If no items selected, we treat it as a "Diet Only" mark (dietCount = 1)
-      const dietCount = extraItems.length === 0 ? 1 : undefined;
+      // Logic Checks
+      const isMessClosed = scannedStudent.isMessClosed;
+      const isDietTaken = scannedStudent.takenMeals?.includes(sessionMeal);
+      
+      const shouldCountDiet = ["breakfast", "lunch", "dinner"].includes(
+        (sessionMeal || "").toLowerCase(),
+      );
 
-      // Send items with their calculated total price or send qty and let backend handle?
-      // Our backend now handles qty and special pricing, so we should send qty.
+      if (shouldCountDiet) {
+          if (isMessClosed) {
+             throw new Error("Mess is CLOSED for this student. Diet cannot be counted.");
+          }
+          if (isDietTaken) {
+             // If diet taken, allow extras but warn?
+             // Or if user intends to just add extras, that's fine.
+             // But if extraItems is empty (Diet Only mark), we should block.
+             if (extraItems.length === 0) {
+                 throw new Error("Diet already taken for this session.");
+             }
+          }
+      }
+
+      if (!shouldCountDiet && extraItems.length === 0) {
+        setNotification({
+          type: "error",
+          message: "Diet can only be marked for Breakfast, Lunch, or Dinner.",
+        });
+        return;
+      }
+
+      const dietCount = shouldCountDiet ? 1 : 0;
+
       await onAddExtraItems(scannedStudent.id, extraItems, dietCount);
       setNotification({
         type: "success",
-        message: `Marked ${extraItems.length} item(s) for ${scannedStudent.name}`,
+        message: `Marked ${extraItems.length > 0 ? extraItems.length + " item(s)" : "Diet"} for ${scannedStudent.name}`,
       });
       handleClear();
       setTimeout(() => {
@@ -643,8 +768,8 @@ const DashboardView = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           {/* Student Lookup */}
-          <Card className="p-8">
-            <div className="flex items-center gap-4 mb-8">
+          <Card className="p-4 md:p-6 lg:p-8">
+            <div className="hidden lg:flex items-center gap-4 mb-8">
               <div className="p-3 bg-indigo-50 rounded-2xl">
                 <Search className="w-6 h-6 text-indigo-600" />
               </div>
@@ -660,7 +785,7 @@ const DashboardView = ({
 
             {!scannedStudent ? (
               <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-row gap-2 md:gap-4">
                   <form onSubmit={handleScan} className="flex-1 relative group">
                     <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                     <input
@@ -688,7 +813,7 @@ const DashboardView = ({
                     className="sm:w-auto px-8"
                     icon={isScanning ? X : QrCode}
                   >
-                    {isScanning ? "Close Scanner" : "Scan QR"}
+                    {isScanning ? "Close" : "Scan"}
                   </Button>
                 </div>
 
@@ -712,54 +837,60 @@ const DashboardView = ({
                 )}
               </div>
             ) : (
-              <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-3xl p-6 border border-indigo-100 relative overflow-hidden">
+              <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-3xl p-4 md:p-6 border border-indigo-100 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm text-indigo-600 text-xl font-bold">
+                <div className="flex flex-row items-center justify-between gap-2 relative z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 md:w-16 md:h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm text-indigo-600 text-lg md:text-xl font-bold shrink-0">
                       {scannedStudent.name.charAt(0)}
                     </div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-slate-800">
+                    <div className="min-w-0">
+                      <h3 className="text-lg md:text-2xl font-bold text-slate-800 truncate">
                         {scannedStudent.name}
                       </h3>
-                      <div className="flex gap-2 mt-1">
+                      <div className="flex flex-wrap gap-1 md:gap-2 mt-0.5 md:mt-1">
                         <Badge variant="info">
                           {scannedStudent.rollNumber}
                         </Badge>
                         <Badge variant="warning">
-                          Room {scannedStudent.roomNumber}
+                          {scannedStudent.roomNumber}
                         </Badge>
+                        {scannedStudent.isMessClosed && (
+                            <Badge variant="danger">Mess Closed</Badge>
+                        )}
+                        {!scannedStudent.isMessClosed && scannedStudent.takenMeals?.includes(sessionMeal) && (
+                            <Badge variant="success">Diet Taken</Badge>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 bg-white/60 p-4 rounded-2xl backdrop-blur-sm">
+                  <div className="flex items-center gap-2 md:gap-4 md:bg-white/60 md:p-4 rounded-2xl backdrop-blur-sm shrink-0">
                     <div className="text-right">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      <p className="hidden md:block text-xs font-bold text-slate-400 uppercase tracking-wider">
                         Balance
                       </p>
                       <p
-                        className={`text-xl font-bold ${scannedStudent.balance > 0 ? "text-emerald-600" : "text-slate-800"}`}
+                        className={`text-base md:text-xl font-bold ${scannedStudent.balance > 0 ? "text-emerald-600" : "text-slate-800"}`}
                       >
                         ₹{scannedStudent.balance}
                       </p>
                     </div>
-                    <div className="h-8 w-px bg-slate-200"></div>
+                    <div className="hidden md:block h-8 w-px bg-slate-200"></div>
                     <Button 
                         onClick={handleSubmitExtras}
                         variant="success"
-                        className="py-2 px-4 shadow-emerald-200 text-sm"
+                        className="py-1.5 px-3 md:py-2 md:px-4 shadow-emerald-200 text-xs md:text-sm"
                     >
                         Process
                     </Button>
-                    <div className="h-8 w-px bg-slate-200"></div>
+                    <div className="hidden md:block h-8 w-px bg-slate-200"></div>
                     <button
                       onClick={handleClear}
-                      className="p-2 hover:bg-white rounded-xl transition-colors text-slate-400 hover:text-rose-500"
+                      className="p-1.5 md:p-2 hover:bg-white rounded-xl transition-colors text-slate-400 hover:text-rose-500"
                     >
-                      <X size={20} />
+                      <X size={18} className="md:w-5 md:h-5" />
                     </button>
                   </div>
                 </div>
@@ -769,8 +900,8 @@ const DashboardView = ({
 
           {/* Menu Items */}
           <Card className="p-4 md:p-6 lg:p-8">
-            <div className="flex items-center justify-between mb-4 md:mb-6 lg:mb-8">
-              <div className="flex items-center gap-2 md:gap-4">
+            <div className="flex flex-row items-center justify-between gap-4 mb-4 md:mb-6 lg:mb-8">
+              <div className="flex items-center gap-2 md:gap-4 shrink-0">
                 <div className="p-2 md:p-3 bg-orange-50 rounded-xl md:rounded-2xl">
                   <UtensilsCrossed className="w-5 h-5 md:w-6 md:h-6 text-orange-600" />
                 </div>
@@ -783,29 +914,22 @@ const DashboardView = ({
                     <span className="text-indigo-600">{sessionMeal}</span>
                   </p>
                 </div>
-                </div>
+              </div>
 
                {/* Category Tabs - Beside Available Menu */}
-              <div className="hidden md:flex items-center gap-2 overflow-x-auto no-scrollbar max-w-[50%]">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar w-full justify-end">
                 
-                {/* Add Meal Button */}
-                <button
-                  onClick={onNavigate} // Changed from onAddMealClick
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold whitespace-nowrap border border-indigo-600 hover:bg-indigo-700 hover:shadow-md transition-all active:scale-95"
-                >
-                  <Plus size={14} />
-                  Add Meal
-                </button>
-                
-                <div className="h-4 w-px bg-slate-200 mx-1"></div>
-
-                {/* Extra Items Indicator */}
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold whitespace-nowrap border border-slate-200">
-                  <ShoppingBag size={14} />
-                  <span>Extra Items</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={onAddExtraClick}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold whitespace-nowrap border border-indigo-600 hover:bg-indigo-700 hover:shadow-md transition-all active:scale-95"
+                  >
+                    <Plus size={14} />
+                    Add Extra Item
+                  </button>
                 </div>
                 
-                <div className="h-4 w-px bg-slate-200 mx-1"></div>
+                <div className="h-4 w-px bg-slate-200 mx-1 shrink-0"></div>
 
                 {categories
                   .filter(cat => cat !== 'Snacks')
@@ -816,7 +940,7 @@ const DashboardView = ({
                       e.stopPropagation();
                       setSelectedCategory(cat);
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border shrink-0 ${
                       selectedCategory === cat
                         ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200"
                         : "bg-white text-slate-600 border-slate-100 hover:border-indigo-100 hover:bg-indigo-50"
@@ -836,29 +960,12 @@ const DashboardView = ({
                </div>
             </div>
 
-            {/* Mobile Category List */}
-            <div className="md:hidden flex overflow-x-auto gap-2 pb-2 mb-4 no-scrollbar">
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${
-                      selectedCategory === cat
-                        ? "bg-indigo-600 text-white border-indigo-600"
-                        : "bg-slate-50 text-slate-600 border-slate-100"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-            </div>
-
             {menuLoading ? (
               <div className="text-center py-12 text-slate-400">
                 Loading menu...
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+              <div className="grid grid-cols-4 md:grid-cols-5 gap-2 md:gap-4">
                 {(meals[sessionMeal] || []).map((item) => {
                   const isSelected = extraItems.find((i) => i.id === item.id);
                   const showDelete = showDeleteId === item.id;
@@ -1152,8 +1259,24 @@ const DashboardView = ({
                     </p>
                   </div>
                 )}
+                
+                {scannedStudent && scannedStudent.isMessClosed && (
+                    <div className="mb-4 text-center p-3 bg-rose-50 text-rose-600 rounded-xl text-sm font-bold border border-rose-100">
+                        Mess is Closed for this student.
+                        <br/>
+                        <span className="text-xs font-normal">Diet cannot be marked.</span>
+                    </div>
+                )}
 
-                <div className="bg-slate-900 rounded-2xl p-5 text-white mb-4 relative overflow-hidden">
+                 {scannedStudent && !scannedStudent.isMessClosed && scannedStudent.takenMeals?.includes(sessionMeal) && (
+                    <div className="mb-4 text-center p-3 bg-emerald-50 text-emerald-600 rounded-xl text-sm font-bold border border-emerald-100">
+                        Diet already taken.
+                        <br/>
+                        <span className="text-xs font-normal">Only extras can be added.</span>
+                    </div>
+                )}
+
+                 <div className="bg-slate-900 rounded-2xl p-5 text-white mb-4 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
                   <div className="flex justify-between items-end relative z-10">
                     <div>
@@ -1172,6 +1295,7 @@ const DashboardView = ({
                   onClick={handleSubmitExtras}
                   variant="success"
                   className="w-full py-4 text-lg shadow-emerald-200"
+                  disabled={scannedStudent.isMessClosed || (extraItems.length === 0 && scannedStudent.takenMeals?.includes(sessionMeal))}
                 >
                   {extraItems.length === 0 ? "Mark Diet Only" : "Process Order"}
                 </Button>
@@ -1191,10 +1315,12 @@ const DashboardView = ({
             )}
           </Card>
         </div>
-      </div>
+        </div>
+
     </div>
   );
 };
+
 const EMPTY_MEALS = { breakfast: [], lunch: [], snacks: [], dinner: [] };
 
 // ==================== MAIN COMPONENT ====================
@@ -1206,7 +1332,8 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   
   // Extra Item Edit State
   const [editingExtraItem, setEditingExtraItem] = useState(null);
-  const [isEditExtraModalOpen, setIsEditExtraModalOpen] = useState(false); // Add Meal Modal State
+  const [isEditExtraModalOpen, setIsEditExtraModalOpen] = useState(false);
+  const [isAddExtraModalOpen, setIsAddExtraModalOpen] = useState(false); // Add Extra Modal State
   const [scannedStudent, setScannedStudent] = useState(null);
   const [messOffRequests, setMessOffRequests] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -1220,7 +1347,9 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   const [notification, setNotification] = useState(null);
   const [extraItemsList, setExtraItemsList] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
+
   const [categories, setCategories] = useState(["All"]);
+  const [sessionStats, setSessionStats] = useState({ taken: [], notTaken: [], messOff: [] });
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -1228,6 +1357,24 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
     sessionStorage.clear();
     window.location.href = "/login";
   };
+
+  const refreshSessionStats = React.useCallback(async () => {
+      if (!sessionMeal) return;
+      try {
+          const stats = await munshiApi.getSessionStats(sessionMeal);
+          setSessionStats(stats);
+      } catch (error) {
+          console.error("Failed to fetch session stats:", error);
+      }
+  }, [sessionMeal]);
+
+  useEffect(() => {
+    if (sessionMeal) {
+      refreshSessionStats();
+      const interval = setInterval(refreshSessionStats, 30000); // Auto-refresh every 30s
+      return () => clearInterval(interval);
+    }
+  }, [sessionMeal, refreshSessionStats]);
   const onLogout = onLogoutProp || handleLogout;
 
   const fetchExtraItems = async () => {
@@ -1346,6 +1493,23 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
     );
   };
 
+  const handleMessOn = async (studentId) => {
+    if(!window.confirm("Are you sure you want to enable mess for this student?")) return;
+    try {
+        await munshiApi.enableMessOn(studentId);
+        setNotification({ type: "success", message: "Mess enabled successfully" });
+        refreshSessionStats(); 
+        // Also clear scanned student if it matches
+        if (scannedStudent && scannedStudent.id === studentId) {
+            setScannedStudent(prev => ({ ...prev, isMessClosed: false }));
+        }
+         setTimeout(() => setNotification(null), 3000);
+    } catch (err) {
+        setNotification({ type: "error", message: err.message });
+        setTimeout(() => setNotification(null), 3000);
+    }
+  };
+
   const getSessionByTime = () => {
     const hour = new Date().getHours();
     if (hour >= 4 && hour < 10) return "breakfast";
@@ -1386,25 +1550,26 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
     refreshOrders();
   };
 
-  const handleAddMeal = async (type, meal) => {
-    let payload = meal;
-    // If it's NOT FormData, we combine it with type. 
-    // If it IS FormData, the modal has already appended 'mealType'.
-    if (!(meal instanceof FormData)) {
-        payload = { ...meal, mealType: type };
-    }
 
-    const response = await munshiApi.addMealItem(payload);
-    // Backend returns { mealType, item }, we need just the item
-    const newItem = response.item || response;
-    setMeals((prev) => ({
-      ...prev,
-      [type]: [
-        ...(prev[type] || []),
-        { ...newItem, id: newItem._id || newItem.id || Date.now() },
-      ],
-    }));
+
+  const handleAddExtraSubmit = async (formData) => {
+      try {
+          await munshiApi.addExtraItem(formData);
+          setNotification({ type: "success", message: "Item added successfully" });
+          fetchExtraItems(); // Refresh list
+      } catch (err) {
+          setNotification({ type: "error", message: err.message });
+          throw err;
+      }
   };
+
+  const tabs = [
+    { id: "dashboard", label: "Dashboard", icon: Home },
+    { id: "messoffrequest", label: "Mess Off", icon: Calendar },
+    { id: "reports", label: "Reports", icon: TrendingUp },
+    { id: "adddiet", label: "Add Diet", icon: Plus },
+    { id: "addbill", label: "Add Bill", icon: DollarSign },
+  ];
 
   if (!authChecked)
     return (
@@ -1412,46 +1577,6 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
         <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
-
-
-  const handleDeleteMeal = async (mealType, itemId) => {
-    try {
-      await munshiApi.deleteMealItem(mealType, itemId);
-      
-      setMeals((prev) => ({
-        ...prev,
-        [mealType]: prev[mealType].filter((item) => String(item.id) !== String(itemId)),
-      }));
-    } catch (err) {
-      console.error("Failed to delete meal:", err);
-      alert("Failed to delete meal item: " + err.message);
-    }
-  };
-
-  const handleEditMeal = async (mealType, itemId, updates) => {
-    try {
-      const response = await munshiApi.updateMealItem(mealType, itemId, updates);
-      // Backend returns { success, message, data: updatedItem }
-       const updatedItem = response.data || response;
-      setMeals((prev) => ({
-        ...prev,
-        [mealType]: prev[mealType].map((item) => 
-          (item.id === itemId || item._id === itemId) ? { ...item, ...updatedItem, id: item.id } : item
-        ),
-      }));
-    } catch (err) {
-      console.error("Failed to edit meal:", err);
-      alert("Failed to update meal item: " + err.message);
-    }
-  };
-
-  const tabs = [
-    { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "messoffrequest", label: "Mess Off", icon: Calendar },
-    { id: "reports", label: "Reports", icon: TrendingUp },
-    { id: "addmeal", label: "Add Meal", icon: Plus },
-    { id: "addbill", label: "Add Bill", icon: DollarSign },
-  ];
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
@@ -1598,7 +1723,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
             <div className="relative">
               <button
                 onClick={() => setIsSessionMenuOpen(!isSessionMenuOpen)}
-                className="hidden md:flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:border-indigo-200 hover:text-indigo-600 transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:border-indigo-200 hover:text-indigo-600 transition-all shadow-sm"
               >
                 <Calendar size={16} />
                 <span className="capitalize">{sessionMeal || "Select Session"}</span>
@@ -1647,29 +1772,23 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
                 menuLoading={menuLoading}
                 munshiName={munshiName}
                 munshiHostel={munshiHostel}
-                onEditMeal={handleEditMeal}
-                onDeleteMeal={handleDeleteMeal}
+                // Handlers removed
                 extraItemsList={extraItemsList}
                 categories={categories}
                 selectedCategory={selectedCategory}
                 setSelectedCategory={setSelectedCategory}
+                onAddExtraClick={() => setIsAddExtraModalOpen(true)}
                 onNavigate={() => setIsAddMealModalOpen(true)} // Reuse this flow or create dedicated
                 onEditExtra={(item) => {
                     setEditingExtraItem(item);
                     setIsEditExtraModalOpen(true);
                 }}
                 onDeleteExtra={handleDeleteExtra}
+                sessionStats={sessionStats}
               />
               
               {/* Modals */}
-              {isAddMealModalOpen && (
-                <SimpleAddMealModal
-                  isOpen={isAddMealModalOpen}
-                  onClose={() => setIsAddMealModalOpen(false)}
-                  onAdd={handleAddMeal}
-                  sessionMeal={sessionMeal}
-                />
-              )}
+
 
               {isEditExtraModalOpen && (
                 <EditExtraItemModal
@@ -1682,6 +1801,14 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
                     item={editingExtraItem}
                 />
               )}
+
+              {isAddExtraModalOpen && (
+                <AddExtraItemModal
+                  isOpen={isAddExtraModalOpen}
+                  onClose={() => setIsAddExtraModalOpen(false)}
+                  onAdd={handleAddExtraSubmit}
+                />
+              )}
             </>
           )}
           {activeTab === "messoffrequest" && (
@@ -1691,7 +1818,122 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
             />
           )}
           {activeTab === "reports" && <ReportsPage orders={orders} />}
-          {activeTab === "addmeal" && <AddMealPage onAddMeal={handleAddMeal} />}
+          {activeTab === "adddiet" && (
+            <div className="space-y-6">
+                <Card className="p-6">
+                <h3 className="text-xl font-bold text-slate-800 mb-2">Instructions</h3>
+                <p className="text-slate-600 text-sm">
+                    To add a diet, go to the <b>Dashboard</b> tab, scan a student, and click <b>Process Order</b> (Diet Only) or select extra items.
+                </p>
+                </Card>
+
+                 {/* Session Stats Section */}
+                <Card className="p-6">
+                    <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <TrendingUp className="text-indigo-600" />
+                        Session Status: <span className="text-indigo-600 capitalize">{sessionMeal}</span>
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Taken Diet */}
+                        <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
+                            <div className="flex justify-between items-center mb-4">
+                                <h4 className="font-bold text-emerald-800 flex items-center gap-2">
+                                    <CheckCircle size={18} />
+                                    Diet Taken
+                                </h4>
+                                <span className="bg-white px-2 py-1 rounded-lg text-xs font-bold text-emerald-600 shadow-sm">
+                                    {sessionStats?.taken?.length || 0}
+                                </span>
+                            </div>
+                            <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                                {sessionStats?.taken?.map(student => (
+                                    <div key={student._id} className="bg-white p-3 rounded-xl border border-emerald-100/50 flex justify-between items-center shadow-sm">
+                                        <div>
+                                            <p className="font-bold text-slate-700 text-sm">{student.name}</p>
+                                            <p className="text-xs text-slate-400">Roll: {student.rollNo}</p>
+                                        </div>
+                                        <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
+                                            {student.roomNo}
+                                        </span>
+                                    </div>
+                                ))}
+                                {(!sessionStats?.taken || sessionStats.taken.length === 0) && (
+                                    <p className="text-center text-slate-400 text-xs py-4">No students yet</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Not Taken Diet */}
+                        <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                            <div className="flex justify-between items-center mb-4">
+                                <h4 className="font-bold text-slate-700 flex items-center gap-2">
+                                    <User size={18} />
+                                    Not Taken
+                                </h4>
+                                <span className="bg-white px-2 py-1 rounded-lg text-xs font-bold text-slate-600 shadow-sm">
+                                    {sessionStats?.notTaken?.length || 0}
+                                </span>
+                            </div>
+                            <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                                {sessionStats?.notTaken?.map(student => (
+                                    <div key={student._id} className="bg-white p-3 rounded-xl border border-slate-200/50 flex justify-between items-center shadow-sm">
+                                        <div>
+                                            <p className="font-bold text-slate-700 text-sm">{student.name}</p>
+                                            <p className="text-xs text-slate-400">Roll: {student.rollNo}</p>
+                                        </div>
+                                        <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
+                                            {student.roomNo}
+                                        </span>
+                                    </div>
+                                ))}
+                                {(!sessionStats?.notTaken || sessionStats.notTaken.length === 0) && (
+                                    <p className="text-center text-slate-400 text-xs py-4">All students have taken diet</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Mess Off */}
+                        <div className="bg-rose-50 rounded-2xl p-4 border border-rose-100">
+                            <div className="flex justify-between items-center mb-4">
+                                <h4 className="font-bold text-rose-800 flex items-center gap-2">
+                                    <LogOut size={18} />
+                                    Mess Closed
+                                </h4>
+                                <span className="bg-white px-2 py-1 rounded-lg text-xs font-bold text-rose-600 shadow-sm">
+                                    {sessionStats?.messOff?.length || 0}
+                                </span>
+                            </div>
+                            <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                                {sessionStats?.messOff?.map(student => (
+                                    <div key={student._id} className="bg-white p-3 rounded-xl border border-rose-100/50 flex justify-between items-center shadow-sm group">
+                                        <div>
+                                            <p className="font-bold text-slate-700 text-sm">{student.name}</p>
+                                            <p className="text-xs text-slate-400">Roll: {student.rollNo}</p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-lg">
+                                                {student.roomNo}
+                                            </span>
+                                            <button 
+                                                onClick={() => handleMessOn(student._id)}
+                                                className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg text-xs font-bold transition-opacity hover:bg-indigo-100 border border-indigo-200 whitespace-nowrap"
+                                                title="Enable Mess (Mess On)"
+                                            >
+                                                Mess On
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {(!sessionStats?.messOff || sessionStats.messOff.length === 0) && (
+                                    <p className="text-center text-slate-400 text-xs py-4">No mess off requests</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            </div>
+          )}
           {activeTab === "addbill" && <AddBillPage />}
         </div>
       </main>
