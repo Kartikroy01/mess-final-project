@@ -355,5 +355,16 @@ export const munshiApi = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to add fine");
     return data;
+  },
+
+  async bulkRecordDiet(mealType, studentIds) {
+    const res = await fetch(`${API_BASE}/munshi/bulk-diet-record`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ mealType, studentIds }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to bulk record diet");
+    return data;
   }
 };

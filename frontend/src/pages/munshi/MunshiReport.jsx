@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Download, DollarSign, ShoppingBag, TrendingUp, Search, Calendar, Filter, UtensilsCrossed } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 // Reusing UI Components locally to avoid import issues if they aren't exported
 const Card = ({ children, className = '' }) => (
@@ -128,7 +128,7 @@ const ReportsPage = ({ orders = [] }) => {
       tableRows.push(tableRow);
     });
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 60,
@@ -148,63 +148,62 @@ const ReportsPage = ({ orders = [] }) => {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="p-6 relative overflow-hidden group">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <Card className="p-4 md:p-6 relative overflow-hidden group">
           <div className="absolute right-0 top-0 w-24 h-24 bg-indigo-500/10 rounded-bl-[4rem] transition-transform group-hover:scale-110"></div>
           <div className="relative z-10">
-            <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Total Sales</p>
-            <div className="flex items-center gap-3">
-               <span className="text-3xl lg:text-4xl font-bold text-slate-800">₹{totalSales}</span>
-               <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
-                  <DollarSign size={24} />
+            <p className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Total Sales</p>
+            <div className="flex items-center gap-2 md:gap-3">
+               <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800">₹{totalSales}</span>
+               <div className="p-1.5 md:p-2 bg-indigo-50 rounded-xl text-indigo-600">
+                  <DollarSign size={20} className="md:w-6 md:h-6" />
                </div>
             </div>
           </div>
         </Card>
 
-        <Card className="p-6 relative overflow-hidden group">
+        <Card className="p-4 md:p-6 relative overflow-hidden group">
           <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 rounded-bl-[4rem] transition-transform group-hover:scale-110"></div>
           <div className="relative z-10">
-            <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Total Orders</p>
-             <div className="flex items-center gap-3">
-               <span className="text-3xl lg:text-4xl font-bold text-slate-800">{totalOrders}</span>
-               <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
-                  <ShoppingBag size={24} />
+            <p className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Total Orders</p>
+             <div className="flex items-center gap-2 md:gap-3">
+               <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800">{totalOrders}</span>
+               <div className="p-1.5 md:p-2 bg-blue-50 rounded-xl text-blue-600">
+                  <ShoppingBag size={20} className="md:w-6 md:h-6" />
                </div>
             </div>
           </div>
         </Card>
         
-        <Card className="p-6 relative overflow-hidden group">
+        <Card className="p-4 md:p-6 relative overflow-hidden group">
           <div className="absolute right-0 top-0 w-24 h-24 bg-orange-500/10 rounded-bl-[4rem] transition-transform group-hover:scale-110"></div>
            <div className="relative z-10">
-            <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Total Diets</p>
-             <div className="flex items-center gap-3">
-               <span className="text-3xl lg:text-4xl font-bold text-slate-800">{totalDiets}</span>
-               <div className="p-2 bg-orange-50 rounded-xl text-orange-600">
-                  <UtensilsCrossed size={24} />
+            <p className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Total Diets</p>
+             <div className="flex items-center gap-2 md:gap-3">
+               <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800">{totalDiets}</span>
+               <div className="p-1.5 md:p-2 bg-orange-50 rounded-xl text-orange-600">
+                  <UtensilsCrossed size={20} className="md:w-6 md:h-6" />
                </div>
             </div>
           </div>
         </Card>
 
-        <Card className="p-6 relative overflow-hidden group">
+        <Card className="p-4 md:p-6 relative overflow-hidden group">
           <div className="absolute right-0 top-0 w-24 h-24 bg-emerald-500/10 rounded-bl-[4rem] transition-transform group-hover:scale-110"></div>
-           <div className="relative z-10">
-            <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Avg Order Value</p>
-             <div className="flex items-center gap-3">
-               <span className="text-3xl lg:text-4xl font-bold text-slate-800">₹{avgOrderValue}</span>
-               <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
-                  <TrendingUp size={24} />
+          <div className="relative z-10">
+            <p className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Avg Order Value</p>
+             <div className="flex items-center gap-2 md:gap-3">
+               <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800">₹{avgOrderValue}</span>
+               <div className="p-1.5 md:p-2 bg-emerald-50 rounded-xl text-emerald-600">
+                  <TrendingUp size={20} className="md:w-6 md:h-6" />
                </div>
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Reports Table */}
-      <Card className="p-6 md:p-8">
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8">
+      <Card className="p-6 md:p-8 overflow-visible min-h-[500px]">
+        <div className="bg-white/95 backdrop-blur-xl -mx-4 -mt-4 p-4 md:-mx-6 md:-mt-6 md:p-6 mb-0 rounded-t-3xl shadow-sm border-b border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-6 transition-all duration-300">
           <div>
             <h2 className="text-xl font-bold text-slate-800">Sales Report</h2>
             <p className="text-slate-500 text-sm">View and analyze transaction history</p>
@@ -267,15 +266,15 @@ const ReportsPage = ({ orders = [] }) => {
 
         <div className="overflow-x-auto rounded-xl border border-slate-100">
           <table className="w-full">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Date</th>
-                <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Student</th>
-                <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Room</th>
-                <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Meal</th>
-                <th className="text-center py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Diet</th>
-                <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider w-1/3">Items</th>
-                <th className="text-right py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider">Total</th>
+            <thead className="bg-slate-50 shadow-sm transition-[top] duration-300">
+              <tr className="border-b border-slate-200">
+                <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider bg-slate-50">Date</th>
+                <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider bg-slate-50">Student</th>
+                <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider bg-slate-50">Room</th>
+                <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider bg-slate-50">Meal</th>
+                <th className="text-center py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider bg-slate-50">Diet</th>
+                <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider w-1/3 bg-slate-50">Items</th>
+                <th className="text-right py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider bg-slate-50">Total</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -324,10 +323,18 @@ const ReportsPage = ({ orders = [] }) => {
                       </td>
                       <td className="py-4 px-6">
                         <div className="text-sm text-slate-600 font-medium">
-                          {order.items.length > 0 
-                             ? order.items.map(i => `${i.name}${i.qty > 1 ? ` (x${i.qty})` : ''}`).join(', ')
-                             : (diet > 0 ? <span className="text-slate-400 italic text-xs">Diet Only</span> : '-')
-                          }
+                        <div className="text-sm text-slate-600 font-medium">
+                          {(() => {
+                            const itemStrings = order.items.map(i => `${i.name}${i.qty > 1 ? ` (x${i.qty})` : ''}`);
+                            const hasExplicitDietItem = order.items.some(i => i.name.toLowerCase().includes('diet'));
+                            
+                            if (diet > 0 && !hasExplicitDietItem) {
+                                // Add Standard Diet only if no explicit diet item exists
+                                itemStrings.unshift(`Standard Diet (x${diet})`);
+                            }
+                            return itemStrings.length > 0 ? itemStrings.join(', ') : '-';
+                          })()}
+                        </div>
                         </div>
                       </td>
                       <td className="py-4 px-6 text-right">

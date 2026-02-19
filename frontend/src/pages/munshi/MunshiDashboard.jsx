@@ -1598,7 +1598,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
       )}
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-slate-100 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-100 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="p-8 h-full flex flex-col">
           <div className="flex items-center gap-3 mb-10 px-2">
@@ -1690,7 +1690,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
       {mobileMenuOpen && (
         <div
           onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-30 lg:hidden"
+          className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 lg:hidden"
         ></div>
       )}
 
@@ -1699,7 +1699,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
 
         
         {/* Header */}
-        <header className="sticky top-0 z-20 bg-[#F8FAFC]/80 backdrop-blur-md px-8 py-5 flex items-center justify-between">
+        <header className="relative z-30 bg-[#F8FAFC]/80 backdrop-blur-md px-8 py-5 flex items-center justify-between border-b border-slate-200/50 shadow-sm overflow-visible">
           <div className="lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(true)}
@@ -1732,23 +1732,36 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
 
               {isSessionMenuOpen && (
                 <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-                  {["breakfast", "lunch", "snacks", "dinner"].map((meal) => (
-                    <button
-                      key={meal}
-                      onClick={() => {
-                        setSessionMeal(meal);
-                        setIsSessionMenuOpen(false);
-                      }}
-                      className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors flex items-center justify-between ${
-                        sessionMeal === meal
-                          ? "bg-indigo-50 text-indigo-600"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                      }`}
-                    >
-                      <span className="capitalize">{meal}</span>
-                      {sessionMeal === meal && <CheckCircle size={14} />}
-                    </button>
-                  ))}
+                  {["breakfast", "lunch", "snacks", "dinner"].map((meal) => {
+                    const isSelected = sessionMeal === meal;
+                    const isCompleted = isSelected && sessionStats?.notTaken?.length === 0 && sessionStats?.taken?.length > 0;
+                    
+                    return (
+                      <button
+                        key={meal}
+                        onClick={() => {
+                          setSessionMeal(meal);
+                          setIsSessionMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors flex items-center justify-between ${
+                          isSelected
+                            ? "bg-indigo-50 text-indigo-600"
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                        }`}
+                      >
+                        <span className="capitalize">{meal}</span>
+                        {isSelected && (
+                             isCompleted ? (
+                                <span className="flex items-center gap-1 text-emerald-600 font-bold text-xs bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-100">
+                                    Done <CheckCircle size={12} className="text-emerald-600" />
+                                </span>
+                             ) : (
+                                <CheckCircle size={14} />
+                             )
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1758,6 +1771,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
           </div>
         </header>
 
+        {/* Content Wrapper */}
         <div className="p-6 md:p-8 md:pt-4 pb-24 max-w-7xl mx-auto">
           {activeTab === "dashboard" && (
             <>
@@ -1867,13 +1881,34 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
                         {/* Not Taken Diet */}
                         <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
                             <div className="flex justify-between items-center mb-4">
-                                <h4 className="font-bold text-slate-700 flex items-center gap-2">
-                                    <User size={18} />
-                                    Not Taken
-                                </h4>
-                                <span className="bg-white px-2 py-1 rounded-lg text-xs font-bold text-slate-600 shadow-sm">
-                                    {sessionStats?.notTaken?.length || 0}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <h4 className="font-bold text-slate-700 flex items-center gap-2">
+                                        <User size={18} />
+                                        Not Taken
+                                    </h4>
+                                    <span className="bg-white px-2 py-1 rounded-lg text-xs font-bold text-slate-600 shadow-sm">
+                                        {sessionStats?.notTaken?.length || 0}
+                                    </span>
+                                </div>
+                                {sessionStats?.notTaken?.length > 0 && (
+                                        <button
+                                            onClick={async () => {
+                                                if (window.confirm(`Are you sure you want to mark diet for all ${sessionStats.notTaken.length} students?`)) {
+                                                    try {
+                                                        const studentIds = sessionStats.notTaken.map(s => s._id);
+                                                        await munshiApi.bulkRecordDiet(sessionMeal, studentIds);
+                                                        setNotification({ type: "success", message: "Marked all as taken successfully" });
+                                                        refreshSessionStats();
+                                                    } catch (err) {
+                                                        setNotification({ type: "error", message: err.message });
+                                                    }
+                                                }
+                                            }}
+                                            className="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg shadow-md transition-all hover:shadow-lg active:scale-95 flex items-center gap-2"
+                                        >
+                                            Mark All
+                                        </button>
+                                )}
                             </div>
                             <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
                                 {sessionStats?.notTaken?.map(student => (
