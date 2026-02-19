@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, DollarSign, ShoppingBag, TrendingUp, Search, Calendar, Filter, UtensilsCrossed } from 'lucide-react';
+import { Download, DollarSign, ShoppingBag, TrendingUp, Search, Calendar, Filter, UtensilsCrossed, Trash2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -35,7 +35,7 @@ const getDietCount = (order) => {
   return order.mealType === 'snacks' ? 0 : 1;
 };
 
-const ReportsPage = ({ orders = [] }) => {
+const ReportsPage = ({ orders = [], onOrderDeleted }) => {
   const [selectedMonth, setSelectedMonth] = useState('all');
   const [selectedDay, setSelectedDay] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -143,6 +143,19 @@ const ReportsPage = ({ orders = [] }) => {
     });
 
     doc.save(`mess_report_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+  const handleDelete = async (orderId) => {
+    if (window.confirm("Are you sure you want to delete this order? This action cannot be undone.")) {
+      try {
+        if (onOrderDeleted) {
+           await onOrderDeleted(orderId);
+        }
+      } catch (error) {
+        console.error("Failed to delete order:", error);
+        alert("Failed to delete order");
+      }
+    }
   };
 
   return (
@@ -275,6 +288,7 @@ const ReportsPage = ({ orders = [] }) => {
                 <th className="text-center py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider bg-slate-50">Diet</th>
                 <th className="text-left py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider w-1/3 bg-slate-50">Items</th>
                 <th className="text-right py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider bg-slate-50">Total</th>
+                <th className="text-center py-4 px-6 font-bold text-slate-500 text-xs uppercase tracking-wider bg-slate-50">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -339,6 +353,15 @@ const ReportsPage = ({ orders = [] }) => {
                       </td>
                       <td className="py-4 px-6 text-right">
                           <span className="font-bold text-slate-800">₹{order.totalAmount}</span>
+                      </td>
+                      <td className="py-4 px-6 text-center">
+                        <button 
+                          onClick={() => handleDelete(order.id || order._id)}
+                          className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                          title="Delete Order"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </td>
                     </tr>
                   );

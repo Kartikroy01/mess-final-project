@@ -1435,6 +1435,19 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
     setAuthChecked(true);
   }, []);
 
+  const handleDeleteOrder = async (orderId) => {
+      try {
+          await munshiApi.deleteOrder(orderId);
+          setNotification({ type: "success", message: "Order deleted successfully" });
+          refreshOrders(); // Refresh orders
+          refreshSessionStats(); // Refresh stats too as diet count might change
+          setTimeout(() => setNotification(null), 3000);
+      } catch (err) {
+          setNotification({ type: "error", message: err.message });
+          setTimeout(() => setNotification(null), 3000);
+      }
+  };
+
   useEffect(() => {
     if (!authChecked || !sessionMeal) return;
     setMenuLoading(true);
@@ -1831,7 +1844,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
               handleAction={handleRequestAction}
             />
           )}
-          {activeTab === "reports" && <ReportsPage orders={orders} />}
+          {activeTab === "reports" && <ReportsPage orders={orders} onOrderDeleted={handleDeleteOrder} />}
           {activeTab === "adddiet" && (
             <div className="space-y-6">
                 <Card className="p-6">

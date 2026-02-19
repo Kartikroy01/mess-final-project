@@ -366,5 +366,15 @@ export const munshiApi = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to bulk record diet");
     return data;
-  }
+  },
+
+  async deleteOrder(orderId) {
+    const res = await fetch(`${API_BASE}/munshi/orders/${orderId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to delete order");
+    return data;
+  },
 };
