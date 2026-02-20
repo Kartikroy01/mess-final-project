@@ -79,6 +79,13 @@ router.post("/generate-bill-daterange", clerkController.generateBillForDateRange
 router.get("/bill-history", clerkController.getBillHistory);
 
 /**
+ * @route   DELETE /api/munshi/bill-history/:id
+ * @desc    Delete a bill record by ID
+ * @access  Private (Munshi/Clerk)
+ */
+router.delete("/bill-history/:id", clerkController.deleteBillRecord);
+
+/**
  * @route   GET /api/munshi/all-students
  * @desc    Get all students (verified & pending)
  * @access  Private (munshi)

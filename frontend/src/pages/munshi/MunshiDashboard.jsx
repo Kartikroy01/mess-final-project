@@ -26,6 +26,7 @@ import {
   Zap,
   LayoutGrid
 } from "lucide-react";
+import { useNavigate, useLocation, Routes, Route, Navigate } from "react-router-dom";
 import MessOffRequestsPage from "./MessOffRequest";
 import ReportsPage from "./MunshiReport";
 import AddMealPage from "./MunshiAddMeal";
@@ -1325,8 +1326,14 @@ const EMPTY_MEALS = { breakfast: [], lunch: [], snacks: [], dinner: [] };
 
 // ==================== MAIN COMPONENT ====================
 const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get active tab from URL, default to 'dashboard'
+  const currentPath = location.pathname.split("/").pop();
+  const activeTab = ["dashboard", "messoff", "reports", "adddiet", "addbill"].includes(currentPath) ? currentPath : "dashboard";
+
   const [sessionMeal, setSessionMeal] = useState(null);
-  const [activeTab, setActiveTab] = useState("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAddMealModalOpen, setIsAddMealModalOpen] = useState(false);
   
@@ -1494,7 +1501,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
     if (activeTab === "reports") { 
         refreshOrders();
     }
-    if (activeTab === "messoffrequest") {
+    if (activeTab === "messoff") {
         refreshMessOffRequests();
     }
   }, [activeTab]);
@@ -1591,11 +1598,11 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   };
 
   const tabs = [
-    { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "messoffrequest", label: "Mess Off", icon: Calendar },
-    { id: "reports", label: "Reports", icon: TrendingUp },
-    { id: "adddiet", label: "Add Diet", icon: Plus },
-    { id: "addbill", label: "Add Bill", icon: DollarSign },
+    { id: "dashboard", label: "Dashboard", icon: Home, path: "/munshi/dashboard" },
+    { id: "messoff", label: "Mess Off", icon: Calendar, path: "/munshi/dashboard/messoff" },
+    { id: "reports", label: "Reports", icon: TrendingUp, path: "/munshi/dashboard/reports" },
+    { id: "adddiet", label: "Add Diet", icon: Plus, path: "/munshi/dashboard/adddiet" },
+    { id: "addbill", label: "Add Bill", icon: DollarSign, path: "/munshi/dashboard/addbill" },
   ];
 
   if (!authChecked)
@@ -1668,7 +1675,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
                 <button
                   key={tab.id}
                   onClick={() => {
-                    setActiveTab(tab.id);
+                    navigate(tab.path);
                     setMobileMenuOpen(false);
                   }}
                   className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 font-bold text-sm relative overflow-hidden group ${isActive ? "bg-indigo-600 text-white shadow-xl shadow-indigo-200" : "text-slate-500 hover:bg-slate-50 hover:text-indigo-600"}`}
@@ -1852,7 +1859,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
               )}
             </>
           )}
-          {activeTab === "messoffrequest" && (
+          {activeTab === "messoff" && (
             <MessOffRequestsPage
               requests={messOffRequests}
               handleAction={handleRequestAction}

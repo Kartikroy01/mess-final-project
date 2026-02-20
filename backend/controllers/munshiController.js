@@ -998,14 +998,16 @@ exports.deleteOrder = async (req, res) => {
     const type = order.mealType ? order.mealType.charAt(0).toUpperCase() + order.mealType.slice(1) : null;
     
     if (type) {
-       // Attempt to find and delete a matching meal history
-       // Since we don't store MealHistory ID in ExtraOrder, we rely on studentId, date, and type.
-       // This assumes one entry per meal type per day usually, or deletes the latest one.
+       // Using a 1-minute window because MealHistory and ExtraOrder 
+       // are created with new Date() independently and millisecond values differ.
+       const dateMin = new Date(order.date.getTime() - 60000);
+       const dateMax = new Date(order.date.getTime() + 60000);
+
        await MealHistory.findOneAndDelete({
          studentId: order.studentId,
-         date: order.date,
+         date: { $gte: dateMin, $lte: dateMax },
          type: type
-       }).session(session);
+       }).sort({ date: -1 }).session(session);
     }
 
     // 3. Delete the ExtraOrder

@@ -262,9 +262,21 @@ export const munshiApi = {
     const res = await fetch(`${API_BASE}/munshi/bill-history`, {
       headers: getAuthHeaders(),
     });
+    const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to fetch bill history");
     return data.data;
   },
+
+  async deleteBillRecord(id) {
+    const res = await fetch(`${API_BASE}/munshi/bill-history/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to delete bill record");
+    return data.data;
+  },
+  
   async getExtraItems() {
     const res = await fetch(`${API_BASE}/munshi/extra-items`, {
       headers: getAuthHeaders(),

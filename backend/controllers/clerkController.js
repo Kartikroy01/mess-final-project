@@ -4,13 +4,17 @@ const MealHistory = require("../models/MealHistory");
 const ExtraOrder = require("../models/ExtraOrder");
 const BillRecord = require("../models/BillRecord");
 
-// Helper: parse month string YYYY-MM to start and end Date
+// Helper: parse month string YYYY-MM to start and end Date matching studentController logic
 function parseMonth(monthStr) {
   // expect YYYY-MM
   const [y, m] = monthStr.split("-").map(Number);
   if (!y || !m) return null;
+  
+  // Logic from studentController to ensure exact consistency
+  // Month is 1-based (m).
   const start = new Date(y, m - 1, 1);
-  const end = new Date(y, m - 1 + 1, 1);
+  const end = new Date(y, m, 0, 23, 59, 59, 999);
+  
   return { start, end };
 }
 
@@ -47,14 +51,20 @@ exports.getStudentsForMonth = async (req, res) => {
     const studentIds = students.map((s) => s._id);
 
     // Aggregate meal counts per student
+    // Using $lte to match studentController logic exactly
     const meals = await MealHistory.aggregate([
       {
         $match: {
           studentId: { $in: studentIds },
-          date: { $gte: range.start, $lt: range.end },
+          date: { $gte: range.start, $lte: range.end },
         },
       },
-      { $group: { _id: "$studentId", dietCount: { $sum: "$dietCount" } } },
+      { 
+        $group: { 
+            _id: "$studentId", 
+            dietCount: { $sum: { $ifNull: ["$dietCount", 0] } } 
+        } 
+      },
     ]);
 
     const mealMap = new Map(meals.map((m) => [String(m._id), m.dietCount]));
@@ -136,10 +146,15 @@ exports.generateMonthlyBill = async (req, res) => {
       {
         $match: {
           studentId: { $in: studentIds },
-          date: { $gte: range.start, $lt: range.end },
+          date: { $gte: range.start, $lte: range.end },
         },
       },
-      { $group: { _id: "$studentId", dietCount: { $sum: "$dietCount" } } },
+      { 
+        $group: { 
+            _id: "$studentId", 
+            dietCount: { $sum: { $ifNull: ["$dietCount", 0] } } 
+        } 
+      },
     ]);
 
     const mealMap = new Map(meals.map((m) => [String(m._id), m.dietCount]));
@@ -371,14 +386,20 @@ exports.getStudentsForDateRange = async (req, res) => {
     const studentIds = students.map((s) => s._id);
 
     // Aggregate meal counts per student
+    // Aggregate meal counts per student
     const meals = await MealHistory.aggregate([
       {
         $match: {
           studentId: { $in: studentIds },
-          date: { $gte: range.start, $lt: range.end },
+          date: { $gte: range.start, $lte: range.end },
         },
       },
-      { $group: { _id: "$studentId", dietCount: { $sum: "$dietCount" } } },
+      { 
+        $group: { 
+            _id: "$studentId", 
+            dietCount: { $sum: { $ifNull: ["$dietCount", 0] } } 
+        } 
+      },
     ]);
 
     const mealMap = new Map(meals.map((m) => [String(m._id), m.dietCount]));
@@ -454,10 +475,15 @@ exports.generateBillForDateRange = async (req, res) => {
       {
         $match: {
           studentId: { $in: studentIds },
-          date: { $gte: range.start, $lt: range.end },
+          date: { $gte: range.start, $lte: range.end },
         },
       },
-      { $group: { _id: "$studentId", dietCount: { $sum: "$dietCount" } } },
+      { 
+        $group: { 
+            _id: "$studentId", 
+            dietCount: { $sum: { $ifNull: ["$dietCount", 0] } } 
+        } 
+      },
     ]);
 
     const mealMap = new Map(meals.map((m) => [String(m._id), m.dietCount]));
@@ -628,6 +654,29 @@ exports.getBillHistory = async (req, res) => {
     res.json({ success: true, data: formattedRecords });
   } catch (err) {
     console.error("Error in getBillHistory:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.deleteBillRecord = async (req, res) => {
+  try {
+    const hostel = req.hostel || req.munshi?.hostel;
+    if (!hostel)
+      return res
+        .status(401)
+        .json({ success: false, message: "Hostel not found on clerk account" });
+
+    const { id } = req.params;
+
+    const deletedRecord = await BillRecord.findOneAndDelete({ _id: id, hostel });
+
+    if (!deletedRecord) {
+      return res.status(404).json({ success: false, message: "Bill record not found or not authorized to delete" });
+    }
+
+    res.json({ success: true, message: "Bill record deleted successfully" });
+  } catch (err) {
+    console.error("Error in deleteBillRecord:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

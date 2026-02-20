@@ -21,6 +21,7 @@ import {
   Image as ImageIcon,
   Upload
 } from "lucide-react";
+import { useNavigate, useLocation, Routes, Route, Navigate } from "react-router-dom";
 
 // ==================== UI COMPONENTS ====================
 const Card = ({ children, className = "" }) => (
@@ -86,7 +87,13 @@ const Badge = ({ children, variant = "info" }) => {
 };
 
 export default function ClerkDashboard() {
-  const [activeTab, setActiveTab] = useState("bill");
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get active tab from URL, default to 'bill'
+  const currentPath = location.pathname.split("/").pop();
+  const activeTab = ["students", "menu", "extras", "reports", "bill"].includes(currentPath) ? currentPath : "bill";
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [month, setMonth] = useState(() => {
@@ -102,6 +109,10 @@ export default function ClerkDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  const [billHistory, setBillHistory] = useState([]);  // NEW: Bill generation history
+  const [studentVerificationSearch, setStudentVerificationSearch] = useState('');  // NEW: Search for student verification
+  const [downloadingBillId, setDownloadingBillId] = useState(null); // NEW: Track which bill is downloading
 
   // Fetch bill history when Reports tab is active
   useEffect(() => {
@@ -119,6 +130,53 @@ export default function ClerkDashboard() {
       setError(e.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteBill = async (billId) => {
+    if (!window.confirm("Are you sure you want to delete this bill record? This action cannot be undone.")) return;
+    
+    try {
+        await munshiApi.deleteBillRecord(billId);
+        setSuccessMessage("Bill record deleted successfully");
+        setTimeout(() => setSuccessMessage(""), 3000);
+        fetchBillHistory(); // Refresh the list
+    } catch (err) {
+        setError(err.message);
+    }
+  };
+
+  const handleDownloadHistoricalBill = async (bill) => {
+    setDownloadingBillId(bill._id);
+    setError(null);
+    try {
+        let blob, filename;
+        
+        if (bill.type === 'monthly') {
+            blob = await munshiApi.generateBill(bill.month, Number(bill.mealRate), bill.billItems);
+            filename = `${hostel}_${bill.month}_Bill.xlsx`;
+        } else {
+            const fd = bill.fromDate.split('T')[0];
+            const td = bill.toDate.split('T')[0];
+            blob = await munshiApi.generateBillForDateRange(fd, td, Number(bill.mealRate), bill.billItems);
+            filename = `${hostel}_${fd}_to_${td}_Bill.xlsx`;
+        }
+        
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        
+        setSuccessMessage("Bill downloaded successfully!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (err) {
+        setError("Failed to download bill: " + err.message);
+    } finally {
+        setDownloadingBillId(null);
     }
   };
 
@@ -240,8 +298,6 @@ export default function ClerkDashboard() {
   const [selectedStudentsForItem, setSelectedStudentsForItem] = useState([]);  // NEW: Track selected students for current item
   const [showStudentSelector, setShowStudentSelector] = useState(false);  // NEW: Toggle student selector
   const [studentSearchTerm, setStudentSearchTerm] = useState('');  // NEW: Toggle student selector
-  const [billHistory, setBillHistory] = useState([]);  // NEW: Bill generation history
-  const [studentVerificationSearch, setStudentVerificationSearch] = useState('');  // NEW: Search for student verification
   
   // Menu State
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -520,11 +576,11 @@ export default function ClerkDashboard() {
   const grandTotal = students.reduce((sum, s) => sum + calculateTotal(s.diet, s.extra, s.studentId), 0);
 
   const tabs = [
-    { key: "students", label: "Students", icon: Users },
-    { key: "menu", label: "Weekly Menu", icon: UtensilsCrossed },
-    { key: "extras", label: "Manage Extras", icon: Plus }, // New Tab
-    { key: "reports", label: "Reports", icon: BarChart3 },
-    { key: "bill", label: "Generate Bill", icon: FileText },
+    { key: "students", label: "Students", icon: Users, path: "/clerk-dashboard/students" },
+    { key: "menu", label: "Weekly Menu", icon: UtensilsCrossed, path: "/clerk-dashboard/menu" },
+    { key: "extras", label: "Manage Extras", icon: Plus, path: "/clerk-dashboard/extras" },
+    { key: "reports", label: "Reports", icon: BarChart3, path: "/clerk-dashboard/reports" },
+    { key: "bill", label: "Generate Bill", icon: FileText, path: "/clerk-dashboard/bill" },
   ];
 
   return (
@@ -584,7 +640,7 @@ export default function ClerkDashboard() {
                 <button
                   key={tab.key}
                   onClick={() => {
-                    setActiveTab(tab.key);
+                    navigate(tab.path);
                     setMobileMenuOpen(false);
                   }}
                   className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 font-bold text-sm relative overflow-hidden group ${isActive ? "bg-indigo-600 text-white shadow-xl shadow-indigo-200" : "text-slate-500 hover:bg-slate-50 hover:text-indigo-600"}`}
@@ -1121,25 +1177,25 @@ export default function ClerkDashboard() {
                                 <span className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded-lg">{s.diet}</span>
                               </td>
                               <td className="px-6 py-4 text-center text-slate-500">{mealRate}</td>
-                              <td className="px-6 py-4 text-right text-slate-500">{dt.toFixed(2)}</td>
-                              <td className="px-6 py-4 text-right text-slate-500">{Number(s.extra || 0).toFixed(2)}</td>
+                              <td className="px-6 py-4 text-right text-slate-500">{dt}</td>
+                              <td className="px-6 py-4 text-right text-slate-500">{Number(s.extra || 0)}</td>
                               {billItems.map(item => {
                                 // Check if this student is selected for this item
                                 const isSelected = !item.selectedStudents || item.selectedStudents.includes(s.studentId);
                                 const amount = isSelected ? Number(item.amount) : 0;
                                 return (
                                   <td key={item.id} className={`px-6 py-4 text-right font-bold ${isSelected ? 'text-orange-600 bg-orange-50/30' : 'text-slate-300 bg-slate-50/30'}`}>
-                                    {amount.toFixed(2)}
+                                    {amount}
                                   </td>
                                 );
                               })}
-                              <td className="px-6 py-4 text-right font-black text-slate-800 bg-slate-50/50">{t.toFixed(2)}</td>
+                              <td className="px-6 py-4 text-right font-black text-slate-800 bg-slate-50/50">{t}</td>
                             </tr>
                           );
                         })}
                         <tr className="bg-slate-900 text-white">
                           <td colSpan={8 + billItems.length} className="px-6 py-4 text-right font-bold uppercase tracking-wider text-xs">Grand Total</td>
-                          <td className="px-6 py-4 text-right font-black text-lg">₹{grandTotal.toFixed(2)}</td>
+                          <td className="px-6 py-4 text-right font-black text-lg">₹{grandTotal}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -1388,6 +1444,7 @@ export default function ClerkDashboard() {
                         <th className="text-left py-3 px-4 font-bold text-slate-600 text-sm">Students</th>
                         <th className="text-left py-3 px-4 font-bold text-slate-600 text-sm">Total Amount</th>
                         <th className="text-left py-3 px-4 font-bold text-slate-600 text-sm">Generated</th>
+                        <th className="text-right py-3 px-4 font-bold text-slate-600 text-sm">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -1422,7 +1479,7 @@ export default function ClerkDashboard() {
                             )}
                           </td>
                           <td className="py-4 px-4 text-slate-600">{bill.studentCount}</td>
-                          <td className="py-4 px-4 font-bold text-green-600">₹{bill.totalAmount.toFixed(2)}</td>
+                          <td className="py-4 px-4 font-bold text-green-600">₹{bill.totalAmount}</td>
                           <td className="py-4 px-4 text-slate-500 text-sm">
                             {new Date(bill.generatedAt).toLocaleDateString('en-IN', {
                               year: 'numeric',
@@ -1431,6 +1488,29 @@ export default function ClerkDashboard() {
                               hour: '2-digit',
                               minute: '2-digit'
                             })}
+                          </td>
+                          <td className="py-4 px-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                  <button 
+                                      onClick={() => handleDownloadHistoricalBill(bill)}
+                                      disabled={downloadingBillId === bill._id}
+                                      className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50"
+                                      title="Download Bill Excel"
+                                  >
+                                      {downloadingBillId === bill._id ? (
+                                         <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                                      ) : (
+                                          <Download size={18} />
+                                      )}
+                                  </button>
+                                  <button 
+                                      onClick={() => handleDeleteBill(bill._id)}
+                                      className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                      title="Delete Bill Record"
+                                  >
+                                      <Trash2 size={18} />
+                                  </button>
+                              </div>
                           </td>
                         </tr>
                       ))}

@@ -35,8 +35,8 @@ export default function App() {
 
         {/* 2. Dashboard Routes: These pages will NOT have the public Navbar and Footer */}
         <Route path="/student/dashboard" element={<StudentDashboard />} />
-        <Route path="/munshi/dashboard" element={<MunshiDashboard />} />
-        <Route path="/clerk-dashboard" element={<ClerkDashboard />} />
+        <Route path="/munshi/dashboard/*" element={<MunshiDashboard />} />
+        <Route path="/clerk-dashboard/*" element={<ClerkDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         
       </Routes>
