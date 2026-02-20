@@ -701,12 +701,12 @@ const DashboardView = ({
       );
 
       if (shouldCountDiet && isMessClosed) {
-        showNotification("error", "Mess is CLOSED for this student. Diet cannot be counted.");
+        showNotification("error", "Mess is CLOSED for this student. Process cannot be done.");
         return;
       }
 
       if (shouldCountDiet && isDietTaken && extraItems.length === 0) {
-        showNotification("error", "Diet already taken for this session.");
+        showNotification("error", "Process cannot be done without extra items.");
         return;
       }
 
@@ -715,7 +715,8 @@ const DashboardView = ({
         return;
       }
 
-      const dietCount = shouldCountDiet ? 1 : 0;
+      // If diet already taken or mess closed, we don't count another diet
+      const dietCount = (shouldCountDiet && !isDietTaken && !isMessClosed) ? 1 : 0;
 
       await onAddExtraItems(scannedStudent.id, extraItems, dietCount);
       showNotification("success", `Marked ${extraItems.length > 0 ? extraItems.length + " item(s)" : "Diet"} for ${scannedStudent.name}`);
@@ -868,6 +869,7 @@ const DashboardView = ({
                         onClick={handleSubmitExtras}
                         variant="success"
                         className="py-1.5 px-3 md:py-2 md:px-4 shadow-emerald-200 text-xs md:text-sm"
+                        disabled={scannedStudent?.isMessClosed || (scannedStudent?.takenMeals?.includes(sessionMeal) && extraItems.length === 0)}
                     >
                         Process
                     </Button>
@@ -961,6 +963,10 @@ const DashboardView = ({
                       key={item.id}
                       onClick={() => {
                         if (scannedStudent) {
+                          if (scannedStudent.isMessClosed) {
+                              showNotification("error", "Cannot add options when Mess is Closed.");
+                              return;
+                          }
                           toggleExtraItem(item);
                         } else {
                           setShowDeleteId(showDelete ? null : item.id);
@@ -1065,6 +1071,10 @@ const DashboardView = ({
                       key={item._id}
                       onClick={() => {
                         if (scannedStudent) {
+                           if (scannedStudent.isMessClosed) {
+                               showNotification("error", "Cannot add extra items when Mess is Closed.");
+                               return;
+                           }
                            const existingItem = extraItems.find(i => i.name === item.name);
                            if (existingItem) {
                                updateItemQty(existingItem.id, 1);
@@ -1279,11 +1289,15 @@ const DashboardView = ({
 
                 <Button
                   onClick={handleSubmitExtras}
-                  variant="success"
-                  className="w-full py-4 text-lg shadow-emerald-200"
-                  disabled={scannedStudent.isMessClosed || (extraItems.length === 0 && scannedStudent.takenMeals?.includes(sessionMeal))}
+                  variant={scannedStudent?.isMessClosed || (scannedStudent?.takenMeals?.includes(sessionMeal) && extraItems.length === 0) ? "secondary" : "success"}
+                  className={`w-full py-4 text-lg ${scannedStudent?.isMessClosed || (scannedStudent?.takenMeals?.includes(sessionMeal) && extraItems.length === 0) ? '' : 'shadow-emerald-200'}`}
+                  disabled={scannedStudent?.isMessClosed || (scannedStudent?.takenMeals?.includes(sessionMeal) && extraItems.length === 0)}
                 >
-                  {extraItems.length === 0 ? "Mark Diet Only" : "Process Order"}
+                  {scannedStudent?.isMessClosed 
+                     ? "Process cannot be done (Mess Closed)"
+                     : (scannedStudent?.takenMeals?.includes(sessionMeal) && extraItems.length === 0 
+                         ? "Process cannot be done without extra items" 
+                         : (extraItems.length === 0 ? "Mark Diet Only" : "Process Order"))}
                 </Button>
               </>
             ) : (
@@ -1491,6 +1505,18 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
     try {
       const student = await munshiApi.lookupStudent(q);
       setScannedStudent(student);
+
+      // Check for diet status immediately after scan
+      if (student) {
+          const currentSession = sessionMeal || getSessionByTime(); // Fallback if session not set
+          
+          if (student.isMessClosed) {
+              showNotification("error", "Mess is CLOSED for this student.");
+          } else if (student.takenMeals?.includes(currentSession)) {
+              showNotification("error", "Diet already taken for this session.");
+          }
+      }
+
       return student;
     } catch {
       setScannedStudent(null);
@@ -1498,7 +1524,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [sessionMeal]);
 
   const handleRequestAction = async (id, status, reason) => {
     await munshiApi.updateMessOffStatus(id, status, reason);

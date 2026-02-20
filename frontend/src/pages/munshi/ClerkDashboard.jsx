@@ -1211,7 +1211,7 @@ export default function ClerkDashboard() {
                                             <div className="text-xs text-slate-400">{s.email}</div>
                                         </td>
                                         <td className="px-6 py-4 text-left text-slate-600">{s.rollNo}</td>
-                                        <td className="px-6 py-4 text-left text-slate-600">{s.mobile || 'N/A'}</td>
+                                        <td className="px-6 py-4 text-left text-slate-600">{s.phoneNo || 'N/A'}</td>
                                         <td className="px-6 py-4 text-left font-bold text-slate-800">{s.roomNo}</td>
                                         <td className="px-6 py-4 text-center">
                                             {s.isVerified ? (
