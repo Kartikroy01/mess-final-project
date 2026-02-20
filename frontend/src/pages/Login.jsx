@@ -756,9 +756,13 @@ export default function Login() {
                   <input
                     type="text"
                     value={registerData.name}
-                    onChange={(e) =>
-                      setRegisterData({ ...registerData, name: e.target.value })
-                    }
+                    onChange={(e) => {
+                        const val = e.target.value
+                          .split(' ')
+                          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                          .join(' ');
+                        setRegisterData({ ...registerData, name: val });
+                      }}
                     className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:bg-white/15 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
                     placeholder="Your Name"
                     required

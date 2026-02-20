@@ -144,7 +144,7 @@ export const munshiApi = {
     const res = await fetch(url, { headers: getAuthHeaders() });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to fetch orders");
-    return data.data;
+    return data; // Returns { success, data: [], pagination: {} }
   },
 
   async getMessOffRequests() {

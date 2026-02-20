@@ -35,9 +35,10 @@ const getDietCount = (order) => {
   return order.mealType === 'snacks' ? 0 : 1;
 };
 
-const ReportsPage = ({ orders = [], onOrderDeleted }) => {
-  const [selectedMonth, setSelectedMonth] = useState('all');
-  const [selectedDay, setSelectedDay] = useState('all');
+const ReportsPage = ({ orders = [], onOrderDeleted, currentPage = 1, totalPages = 1, onPageChange }) => {
+  const today = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(today.getMonth().toString());
+  const [selectedDay, setSelectedDay] = useState(today.getDate().toString());
   const [searchQuery, setSearchQuery] = useState('');
 
   const getFilteredOrders = () => {
@@ -381,6 +382,33 @@ const ReportsPage = ({ orders = [], onOrderDeleted }) => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6 px-2 pt-4 border-t border-slate-100">
+            <div className="text-sm text-slate-500 font-medium">
+              Page <span className="font-bold text-slate-700">{currentPage}</span> of <span className="font-bold text-slate-700">{totalPages}</span>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="secondary" 
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`py-1.5 px-3 text-sm ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                Previous
+              </Button>
+              <Button 
+                variant="secondary" 
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`py-1.5 px-3 text-sm ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );

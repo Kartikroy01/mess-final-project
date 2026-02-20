@@ -54,7 +54,7 @@ exports.getStudentsForMonth = async (req, res) => {
           date: { $gte: range.start, $lt: range.end },
         },
       },
-      { $group: { _id: "$studentId", dietCount: { $sum: 1 } } },
+      { $group: { _id: "$studentId", dietCount: { $sum: "$dietCount" } } },
     ]);
 
     const mealMap = new Map(meals.map((m) => [String(m._id), m.dietCount]));
@@ -139,7 +139,7 @@ exports.generateMonthlyBill = async (req, res) => {
           date: { $gte: range.start, $lt: range.end },
         },
       },
-      { $group: { _id: "$studentId", dietCount: { $sum: 1 } } },
+      { $group: { _id: "$studentId", dietCount: { $sum: "$dietCount" } } },
     ]);
 
     const mealMap = new Map(meals.map((m) => [String(m._id), m.dietCount]));
@@ -378,7 +378,7 @@ exports.getStudentsForDateRange = async (req, res) => {
           date: { $gte: range.start, $lt: range.end },
         },
       },
-      { $group: { _id: "$studentId", dietCount: { $sum: 1 } } },
+      { $group: { _id: "$studentId", dietCount: { $sum: "$dietCount" } } },
     ]);
 
     const mealMap = new Map(meals.map((m) => [String(m._id), m.dietCount]));
@@ -457,7 +457,7 @@ exports.generateBillForDateRange = async (req, res) => {
           date: { $gte: range.start, $lt: range.end },
         },
       },
-      { $group: { _id: "$studentId", dietCount: { $sum: 1 } } },
+      { $group: { _id: "$studentId", dietCount: { $sum: "$dietCount" } } },
     ]);
 
     const mealMap = new Map(meals.map((m) => [String(m._id), m.dietCount]));

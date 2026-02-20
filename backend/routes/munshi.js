@@ -139,8 +139,17 @@ router.get(
 router.patch(
   "/mess-off/:id/status",
   validateMessOffStatus,
+  validateMessOffStatus,
   munshiController.updateMessOffStatus,
 );
+
+/**
+ * @route   POST /api/munshi/bulk-diet-record
+ * @desc    Bulk record diet for multiple students
+ * @body    studentIds, mealType
+ * @access  Private (munshi)
+ */
+router.post("/bulk-diet-record", munshiController.bulkRecordDiet);
 
 // ==================== EXPORT ====================
 
@@ -176,5 +185,12 @@ router.patch("/mess-on", munshiController.enableMessOn);
  * @access  Private (munshi)
  */
 router.post("/fine", munshiController.addFine);
+
+/**
+ * @route   DELETE /api/munshi/orders/:id
+ * @desc    Delete an order/diet
+ * @access  Private (munshi)
+ */
+router.delete("/orders/:id", munshiController.deleteOrder);
 
 module.exports = router;

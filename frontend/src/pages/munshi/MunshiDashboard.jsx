@@ -700,44 +700,30 @@ const DashboardView = ({
         (sessionMeal || "").toLowerCase(),
       );
 
-      if (shouldCountDiet) {
-          if (isMessClosed) {
-             throw new Error("Mess is CLOSED for this student. Diet cannot be counted.");
-          }
-          if (isDietTaken) {
-             // If diet taken, allow extras but warn?
-             // Or if user intends to just add extras, that's fine.
-             // But if extraItems is empty (Diet Only mark), we should block.
-             if (extraItems.length === 0) {
-                 throw new Error("Diet already taken for this session.");
-             }
-          }
+      if (shouldCountDiet && isMessClosed) {
+        showNotification("error", "Mess is CLOSED for this student. Diet cannot be counted.");
+        return;
+      }
+
+      if (shouldCountDiet && isDietTaken && extraItems.length === 0) {
+        showNotification("error", "Diet already taken for this session.");
+        return;
       }
 
       if (!shouldCountDiet && extraItems.length === 0) {
-        setNotification({
-          type: "error",
-          message: "Diet can only be marked for Breakfast, Lunch, or Dinner.",
-        });
+        showNotification("error", "Diet can only be marked for Breakfast, Lunch, or Dinner.");
         return;
       }
 
       const dietCount = shouldCountDiet ? 1 : 0;
 
       await onAddExtraItems(scannedStudent.id, extraItems, dietCount);
-      setNotification({
-        type: "success",
-        message: `Marked ${extraItems.length > 0 ? extraItems.length + " item(s)" : "Diet"} for ${scannedStudent.name}`,
-      });
-      handleClear();
-      setTimeout(() => {
-        setNotification(null);
-      }, 1500);
+      showNotification("success", `Marked ${extraItems.length > 0 ? extraItems.length + " item(s)" : "Diet"} for ${scannedStudent.name}`);
     } catch (err) {
-      setNotification({
-        type: "error",
-        message: err.message || "Failed to process order.",
-      });
+      showNotification("error", err.message || "Failed to process order.");
+    } finally {
+      // Always clear the student card after any Process attempt
+      handleClear();
     }
   };
 
@@ -1337,6 +1323,9 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   const [scannedStudent, setScannedStudent] = useState(null);
   const [messOffRequests, setMessOffRequests] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const LIMIT = 50;
   const [meals, setMeals] = useState(EMPTY_MEALS);
   const [loading, setLoading] = useState(false);
   const [menuLoading, setMenuLoading] = useState(false);
@@ -1345,7 +1334,19 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   const [munshiHostel, setMunshiHostel] = useState("");
   const [isSessionMenuOpen, setIsSessionMenuOpen] = useState(false);
   const [notification, setNotification] = useState(null);
+  const notificationTimeoutRef = React.useRef(null);
   const [extraItemsList, setExtraItemsList] = useState([]);
+
+  const showNotification = (type, message) => {
+    if (notificationTimeoutRef.current) {
+      clearTimeout(notificationTimeoutRef.current);
+    }
+    setNotification({ type, message });
+    notificationTimeoutRef.current = setTimeout(() => {
+      setNotification(null);
+      notificationTimeoutRef.current = null;
+    }, 2000);
+  };
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   const [categories, setCategories] = useState(["All"]);
@@ -1391,22 +1392,20 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   const handleEditExtra = async (id, formData) => {
       try {
           await munshiApi.updateExtraItem(id, formData);
-          setNotification({ type: "success", message: "Item updated successfully" });
+          showNotification("success", "Item updated successfully");
           fetchExtraItems();
-          setTimeout(() => setNotification(null), 2000);
       } catch (err) {
-          setNotification({ type: "error", message: err.message });
+          showNotification("error", err.message);
       }
   };
 
   const handleDeleteExtra = async (id) => {
       try {
           await munshiApi.deleteExtraItem(id);
-          setNotification({ type: "success", message: "Item deleted successfully" });
+          showNotification("success", "Item deleted successfully");
           fetchExtraItems(); // Refresh
-          setTimeout(() => setNotification(null), 2000);
       } catch (err) {
-          setNotification({ type: "error", message: err.message });
+          showNotification("error", err.message);
       }
   };
 
@@ -1438,13 +1437,11 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   const handleDeleteOrder = async (orderId) => {
       try {
           await munshiApi.deleteOrder(orderId);
-          setNotification({ type: "success", message: "Order deleted successfully" });
+          showNotification("success", "Order deleted successfully");
           refreshOrders(); // Refresh orders
           refreshSessionStats(); // Refresh stats too as diet count might change
-          setTimeout(() => setNotification(null), 3000);
       } catch (err) {
-          setNotification({ type: "error", message: err.message });
-          setTimeout(() => setNotification(null), 3000);
+          showNotification("error", err.message);
       }
   };
 
@@ -1464,10 +1461,14 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
 
 
 
-  const refreshOrders = () =>
+  const refreshOrders = (page = 1) =>
     munshiApi
-      .getOrders()
-      .then(setOrders)
+      .getOrders({ page, limit: LIMIT })
+      .then((res) => {
+          setOrders(res.data);
+          setTotalPages(res.pagination.pages);
+          setCurrentPage(res.pagination.page);
+      })
       .catch(() => setOrders([]));
   const refreshMessOffRequests = () =>
     munshiApi
@@ -1510,16 +1511,14 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
     if(!window.confirm("Are you sure you want to enable mess for this student?")) return;
     try {
         await munshiApi.enableMessOn(studentId);
-        setNotification({ type: "success", message: "Mess enabled successfully" });
+        showNotification("success", "Mess enabled successfully");
         refreshSessionStats(); 
         // Also clear scanned student if it matches
         if (scannedStudent && scannedStudent.id === studentId) {
             setScannedStudent(prev => ({ ...prev, isMessClosed: false }));
         }
-         setTimeout(() => setNotification(null), 3000);
     } catch (err) {
-        setNotification({ type: "error", message: err.message });
-        setTimeout(() => setNotification(null), 3000);
+        showNotification("error", err.message);
     }
   };
 
@@ -1539,28 +1538,17 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
         currentSession = getSessionByTime();
         setSessionMeal(currentSession);
         // Optional: Notify user that session was auto-selected
-        setNotification({
-            type: "success",
-            message: `Auto-selected session: ${currentSession.charAt(0).toUpperCase() + currentSession.slice(1)}`,
-        });
+        showNotification("success", `Auto-selected session: ${currentSession.charAt(0).toUpperCase() + currentSession.slice(1)}`);
     }
 
     // If buying items, default dietCount logic handled by backend (usually 1 unless snacks)
     // But if coming from buttons with explicit dietCount (like Guest Diet), we pass it.
     await munshiApi.createOrder(studentId, items, currentSession, dietCount);
     
-    setNotification({
-        type: "success",
-        message: items.length === 0 ? "Diet recorded successfully" : "Order processed successfully",
-    });
-    setTimeout(() => {
-        setNotification(null);
-    }, 1500);
+    showNotification("success", items.length === 0 ? "Diet recorded successfully" : "Order processed successfully");
 
-    // Clear selection after success
-    setScannedStudent(null);
-    
     refreshOrders();
+    refreshSessionStats();
   };
 
 
@@ -1568,10 +1556,10 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
   const handleAddExtraSubmit = async (formData) => {
       try {
           await munshiApi.addExtraItem(formData);
-          setNotification({ type: "success", message: "Item added successfully" });
+          showNotification("success", "Item added successfully");
           fetchExtraItems(); // Refresh list
       } catch (err) {
-          setNotification({ type: "error", message: err.message });
+          showNotification("error", err.message);
           throw err;
       }
   };
@@ -1844,7 +1832,15 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
               handleAction={handleRequestAction}
             />
           )}
-          {activeTab === "reports" && <ReportsPage orders={orders} onOrderDeleted={handleDeleteOrder} />}
+          {activeTab === "reports" && (
+              <ReportsPage 
+                orders={orders} 
+                onOrderDeleted={handleDeleteOrder} 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={refreshOrders}
+              />
+          )}
           {activeTab === "adddiet" && (
             <div className="space-y-6">
                 <Card className="p-6">
@@ -1910,10 +1906,10 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
                                                     try {
                                                         const studentIds = sessionStats.notTaken.map(s => s._id);
                                                         await munshiApi.bulkRecordDiet(sessionMeal, studentIds);
-                                                        setNotification({ type: "success", message: "Marked all as taken successfully" });
+                                                        showNotification("success", "Marked all as taken successfully");
                                                         refreshSessionStats();
                                                     } catch (err) {
-                                                        setNotification({ type: "error", message: err.message });
+                                                        showNotification("error", err.message);
                                                     }
                                                 }
                                             }}

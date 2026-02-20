@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const Bill = require('../models/Bill');
+const MealHistory = require('../models/MealHistory');
+const mongoose = require('mongoose');
 
 // @route   GET /api/bill/current
 // @desc    Get current month bill
@@ -31,6 +33,37 @@ router.get('/current', authMiddleware, async (req, res) => {
                 mealCount: 0
             });
             await bill.save();
+        }
+
+        // Recalculate meal count from MealHistory to ensure accuracy
+        const startOfMonth = new Date(currentYear, currentMonth - 1, 1);
+        const endOfMonth = new Date(currentYear, currentMonth, 1);
+
+        console.log(`Recalculating diet for Student: ${studentId}, Month: ${currentMonth}, Year: ${currentYear}`);
+
+        const dietStats = await MealHistory.aggregate([
+            {
+                $match: {
+                    studentId: new mongoose.Types.ObjectId(studentId),
+                    date: { $gte: startOfMonth, $lt: endOfMonth }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalDiet: { $sum: "$dietCount" }
+                }
+            }
+        ]);
+
+        const realMealCount = dietStats.length > 0 ? dietStats[0].totalDiet : 0;
+        console.log(`Real Meal Count (Recalculated): ${realMealCount}`);
+        
+        // Update bill if count mismatches (Self-healing)
+        if (bill.mealCount !== realMealCount) {
+             console.log(`Mismatch detected! Updating bill from ${bill.mealCount} to ${realMealCount}`);
+             bill.mealCount = realMealCount;
+             await bill.save();
         }
 
         res.json({

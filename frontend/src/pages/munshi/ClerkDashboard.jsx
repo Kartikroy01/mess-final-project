@@ -89,7 +89,12 @@ export default function ClerkDashboard() {
   const [activeTab, setActiveTab] = useState("bill");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [month, setMonth] = useState("");
+  const [month, setMonth] = useState(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    return `${year}-${m}`;
+  });
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [students, setStudents] = useState([]);
@@ -228,7 +233,7 @@ export default function ClerkDashboard() {
   };
   const [hostel, setHostel] = useState("");
   const [clerkName, setClerkName] = useState("");
-  const [mealRate, setMealRate] = useState(0);
+  const [mealRate, setMealRate] = useState("");
   const [billItems, setBillItems] = useState([]);
   const [currentBillName, setCurrentBillName] = useState("");
   const [currentBillAmount, setCurrentBillAmount] = useState("");
@@ -814,7 +819,7 @@ export default function ClerkDashboard() {
                                     type="number" 
                                     value={mealRate} 
                                     onChange={(e) => setMealRate(e.target.value)} 
-                                    placeholder="0" 
+                                    placeholder="" 
                                     className="flex-1 px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold outline-none text-slate-800"
                                 />
                                 <Button onClick={saveCharges} disabled={loading}>

@@ -23,6 +23,27 @@ const buildStudentResponse = async (student) => {
     });
   }
 
+  // Aggregate actual diet count from MealHistory for accurate real-time data
+  const startOfMonth = new Date(year, month - 1, 1);
+  const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+
+  const dietStats = await MealHistory.aggregate([
+    {
+      $match: {
+        studentId: student._id,
+        date: { $gte: startOfMonth, $lte: endOfMonth }
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalDiet: { $sum: "$dietCount" }
+      }
+    }
+  ]);
+  
+  const calculatedMealCount = dietStats.length > 0 ? dietStats[0].totalDiet : 0;
+
   const meals = await MealHistory.find({ studentId: student._id })
     .sort({ date: -1 })
     .limit(10)
@@ -55,7 +76,9 @@ const buildStudentResponse = async (student) => {
     photo: student.photo,
     qrCode: student.qrCode,
     bill: bill.totalBill,
-    mealCount: bill.mealCount,
+    bill: bill.totalBill,
+    mealCount: calculatedMealCount, // Use aggregated count
+    mealHistory,
     mealHistory,
   };
 };

@@ -214,7 +214,7 @@ exports.createOrder = async (req, res) => {
         finalDietCount = dietCount;
     } else {
         // Default Logic: Meal (not snacks) = 1 diet
-        finalDietCount = (mealType === 'snacks') ? 0 : 1;
+        finalDietCount = (mealType && mealType.toLowerCase().startsWith('snack')) ? 0 : 1;
     }
 
     // Create the order
@@ -805,4 +805,220 @@ exports.addFine = async (req, res) => {
   }
 };
 
+/**
+ * Bulk record diet for multiple students
+ * Used for "Mark All" in "Not Taken" list
+ * 
+ * @route POST /api/munshi/bulk-diet-record
+ * @access Private (munshi)
+ */
+exports.bulkRecordDiet = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { studentIds, mealType } = req.body;
+    const hostel = req.munshi.hostel; // Ensure scope to hostel
+
+    if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+        return res.status(400).json({ success: false, message: "No students provided." });
+    }
+
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    
+    // Fetch all students to verify hostel and existence
+    const students = await Student.find({
+        _id: { $in: studentIds },
+        hostelNo: hostel
+    }).session(session);
+
+    let successCount = 0;
+    const errors = [];
+
+    for (const student of students) {
+        try {
+            // 1. Check Mess Off Status
+            const messOff = await MessOff.findOne({
+                studentId: student._id,
+                status: 'Approved',
+                fromDate: { $lte: new Date() },
+                toDate: { $gte: todayStart }
+            }).session(session);
+
+            if (messOff) {
+                continue;
+            }
+
+            // 2. Check if already taken
+            const existingDiet = await ExtraOrder.findOne({
+                studentId: student._id,
+                mealType: mealType,
+                date: { $gte: todayStart },
+                dietCount: { $gt: 0 }
+            }).session(session);
+
+            if (existingDiet) {
+                continue;
+            }
+
+            // 3. Create Order
+            const isSnack = mealType.toLowerCase().startsWith('snack');
+            const itemName = isSnack ? "Standard Snack (Due To Mess On)" : "Standard Diet (Due To Mess On)";
+            const dietCount = isSnack ? 0 : 1;
+
+            const order = new ExtraOrder({
+                studentId: student._id,
+                items: [{
+                    name: itemName,
+                    qty: 1,
+                    price: 0
+                }], 
+                totalAmount: 0,
+                mealType: mealType,
+                dietCount: dietCount
+            });
+            await order.save({ session });
+
+            // 4. Create Meal History
+            const mealHistory = new MealHistory({
+                studentId: student._id,
+                date: new Date(),
+                type: (mealType || 'breakfast').charAt(0).toUpperCase() + (mealType || 'breakfast').slice(1),
+                items: [{
+                    name: itemName,
+                    qty: 1,
+                    price: 0
+                }],
+                totalCost: 0,
+                dietCount: dietCount
+            });
+            await mealHistory.save({ session });
+
+            // 5. Update Bill (Only increment mealCount if NOT snack)
+            if (!isSnack) {
+                const month = new Date().getMonth() + 1;
+                const year = new Date().getFullYear();
+
+                await Bill.findOneAndUpdate(
+                    { studentId: student._id, month, year },
+                    {
+                        $inc: {
+                            mealCount: 1
+                        },
+                    },
+                    { upsert: true, new: true, session }
+                );
+            }
+
+            successCount++;
+
+        } catch (innerErr) {
+            console.error(`Failed to process student ${student._id}:`, innerErr);
+            errors.push(student.rollNo);
+        }
+    }
+
+    await session.commitTransaction();
+
+    res.json({
+        success: true,
+        message: `Successfully marked diet for ${successCount} students.`,
+        data: {
+            successCount,
+            totalRequested: studentIds.length
+        }
+    });
+
+  } catch (error) {
+    await session.abortTransaction();
+    console.error('[Munshi Controller] Bulk diet record error:', error);
+    res.status(500).json({
+      success: false,
+      message: ERROR_MESSAGES.SERVER_ERROR
+    });
+  } finally {
+    session.endSession();
+  }
+};
+
 module.exports = exports;
+
+// ==================== DELETE ORDER ====================
+
+/**
+ * Delete an order/diet entry
+ * 
+ * @route DELETE /api/munshi/orders/:id
+ * @access Private (munshi)
+ */
+exports.deleteOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { id } = req.params;
+    const order = await ExtraOrder.findById(id).session(session);
+
+    if (!order) {
+      await session.abortTransaction();
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Verify student belongs to munshi's hostel (security check)
+    const student = await Student.findById(order.studentId).session(session);
+    if (!student || student.hostelNo !== req.munshi.hostel) {
+       await session.abortTransaction();
+       return res.status(403).json({ success: false, message: 'Unauthorized access to student data' });
+    }
+
+    // 1. Revert Bill changes
+    const orderDate = new Date(order.date);
+    const month = orderDate.getMonth() + 1;
+    const year = orderDate.getFullYear();
+
+    const bill = await Bill.findOne({ 
+      studentId: order.studentId, 
+      month, 
+      year 
+    }).session(session);
+
+    if (bill) {
+      if (order.dietCount > 0) {
+        bill.mealCount = Math.max(0, bill.mealCount - order.dietCount);
+      }
+      
+      bill.extras = Math.max(0, bill.extras - order.totalAmount);
+      bill.totalBill = Math.max(0, bill.totalBill - order.totalAmount);
+      
+      await bill.save({ session });
+    }
+
+    // 2. Remove from MealHistory (if applicable)
+    const type = order.mealType ? order.mealType.charAt(0).toUpperCase() + order.mealType.slice(1) : null;
+    
+    if (type) {
+       // Attempt to find and delete a matching meal history
+       // Since we don't store MealHistory ID in ExtraOrder, we rely on studentId, date, and type.
+       // This assumes one entry per meal type per day usually, or deletes the latest one.
+       await MealHistory.findOneAndDelete({
+         studentId: order.studentId,
+         date: order.date,
+         type: type
+       }).session(session);
+    }
+
+    // 3. Delete the ExtraOrder
+    await ExtraOrder.findByIdAndDelete(id).session(session);
+
+    await session.commitTransaction();
+    res.json({ success: true, message: 'Order deleted successfully' });
+
+  } catch (error) {
+    await session.abortTransaction();
+    console.error('Delete order error:', error);
+    res.status(500).json({ success: false, message: 'Server error during deletion' });
+  } finally {
+    session.endSession();
+  }
+};
