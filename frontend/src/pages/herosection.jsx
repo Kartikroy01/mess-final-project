@@ -37,20 +37,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div
-          className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"
-          style={{ animationDelay: "2s" }}
-        ></div>
-        <div
-          className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"
-          style={{ animationDelay: "4s" }}
-        ></div>
-      </div>
-
+    <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-nitj-dark to-nitj-primary">
       {/* Grid pattern overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
 
@@ -67,7 +54,7 @@ export default function HeroSection() {
           >
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight">
               Welcome to
-              <span className="block mt-2 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+              <span className="block mt-2 text-nitj-accent">
                 NITJ Mess Portal
               </span>
             </h1>
@@ -80,7 +67,7 @@ export default function HeroSection() {
             <div className="flex flex-wrap gap-4 pt-4">
               <Link
                 to="/login"
-                className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-blue-500/50"
+                className="group px-8 py-4 bg-nitj-accent text-white rounded-xl font-semibold text-lg hover:brightness-110 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-nitj-accent/30"
               >
                 <span className="flex items-center gap-2">
                   Get Started
@@ -98,21 +85,21 @@ export default function HeroSection() {
             <div className="grid grid-cols-3 gap-6 pt-8">
               <div className="text-center p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                 <div className="flex items-center justify-center mb-2">
-                  <Users className="w-6 h-6 text-cyan-400" />
+                  <Users className="w-6 h-6 text-nitj-accent" />
                 </div>
                 <div className="text-3xl font-bold text-white">5000+</div>
                 <div className="text-sm text-slate-400">Students</div>
               </div>
               <div className="text-center p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                 <div className="flex items-center justify-center mb-2">
-                  <Building2 className="w-6 h-6 text-blue-400" />
+                  <Building2 className="w-6 h-6 text-nitj-accent" />
                 </div>
                 <div className="text-3xl font-bold text-white">13+</div>
                 <div className="text-sm text-slate-400">Hostels</div>
               </div>
               <div className="text-center p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                 <div className="flex items-center justify-center mb-2">
-                  <TrendingUp className="w-6 h-6 text-purple-400" />
+                  <TrendingUp className="w-6 h-6 text-nitj-accent" />
                 </div>
                 <div className="text-3xl font-bold text-white">99%</div>
                 <div className="text-sm text-slate-400">Satisfaction</div>
@@ -130,7 +117,7 @@ export default function HeroSection() {
           >
             <div className="relative">
               {/* Glowing effect behind animation */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 rounded-full filter blur-3xl opacity-30 animate-pulse"></div>
+              <div className="absolute inset-0 bg-nitj-accent rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
 
               {/* Lottie container */}
               <div

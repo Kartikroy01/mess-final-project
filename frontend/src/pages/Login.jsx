@@ -455,15 +455,14 @@ export default function Login() {
   // Reset Password View
   if (showResetPassword) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 relative overflow-hidden">
-        {/* Animated background blobs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden">
+        {/* Clean Premium Grid Overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
+        <div className="absolute inset-0 bg-nitj-accent/10 rounded-full filter blur-[120px] opacity-40"></div>
         
-        <div className="bg-slate-900/50 backdrop-blur-2xl rounded-3xl w-full max-w-md p-10 relative z-10 border border-white/10 shadow-2xl">
+        <div className="bg-white/5 backdrop-blur-3xl rounded-3xl w-full max-w-md p-10 relative z-10 border border-white/10 shadow-2xl">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-3xl mb-6 shadow-2xl shadow-green-500/30">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-nitj-accent rounded-3xl mb-6 shadow-2xl shadow-nitj-accent/30 text-white">
               <KeyRound className="w-10 h-10 text-white" />
             </div>
             <h2 className="text-4xl font-bold text-white mb-3 tracking-tight">
@@ -582,15 +581,14 @@ export default function Login() {
   // Forgot Password View
   if (showForgotPassword) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 relative overflow-hidden">
-        {/* Animated background blobs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden">
+        {/* Clean Premium Grid Overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
+        <div className="absolute inset-0 bg-nitj-accent/10 rounded-full filter blur-[120px] opacity-40"></div>
         
-        <div className="bg-slate-900/50 backdrop-blur-2xl rounded-3xl w-full max-w-md p-10 relative z-10 border border-white/10 shadow-2xl">
+        <div className="bg-white/5 backdrop-blur-3xl rounded-3xl w-full max-w-md p-10 relative z-10 border border-white/10 shadow-2xl">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-3xl mb-6 shadow-2xl shadow-blue-500/30">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-nitj-accent rounded-3xl mb-6 shadow-2xl shadow-nitj-accent/30 text-white">
               <Lock className="w-10 h-10 text-white" />
             </div>
             <h2 className="text-4xl font-bold text-white mb-3 tracking-tight">
@@ -668,15 +666,14 @@ export default function Login() {
   // Register View
   if (showRegister) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 relative overflow-hidden">
-        {/* Animated background blobs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden">
+        {/* Clean Premium Grid Overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
+        <div className="absolute inset-0 bg-nitj-accent/10 rounded-full filter blur-[120px] opacity-40"></div>
         
-        <div className="bg-slate-900/50 backdrop-blur-2xl rounded-3xl w-full max-w-2xl p-10 relative z-10 border border-white/10 shadow-2xl">
+        <div className="bg-white/5 backdrop-blur-3xl rounded-3xl w-full max-w-2xl p-10 relative z-10 border border-white/10 shadow-2xl">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 rounded-3xl mb-6 shadow-2xl shadow-blue-500/30">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-nitj-accent rounded-3xl mb-6 shadow-2xl shadow-nitj-accent/30 text-white">
               <UserPlus className="w-10 h-10 text-white" />
             </div>
             <h2 className="text-4xl font-bold text-white mb-3 tracking-tight">
@@ -971,7 +968,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-xl font-semibold transition-all transform hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full mt-6 py-3 bg-nitj-accent text-white rounded-xl font-semibold transition-all transform hover:scale-[1.02] hover:brightness-110 shadow-lg hover:shadow-xl hover:shadow-nitj-accent/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -1004,70 +1001,69 @@ export default function Login() {
 
   // Login View
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-950 relative overflow-hidden">
-      {/* Animated background blobs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-      <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+    <div className="min-h-screen flex items-center justify-center px-4 py-4 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden">
+      {/* Clean Premium Grid Overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
+      <div className="absolute inset-0 bg-nitj-accent/10 rounded-full filter blur-[120px] opacity-40"></div>
       
-      <div className="bg-slate-900/50 backdrop-blur-2xl rounded-3xl w-full max-w-md p-10 relative z-10 border border-white/10 shadow-2xl">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 rounded-3xl mb-6 shadow-2xl shadow-blue-500/30">
-            <Lock className="w-10 h-10 text-white" />
+      <div className="bg-white/5 backdrop-blur-3xl rounded-2xl w-full max-w-md p-6 relative z-10 border border-white/10 shadow-2xl">
+        <div className="text-center mb-5">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-nitj-accent rounded-2xl mb-3 shadow-xl shadow-nitj-accent/30 text-white">
+            <Lock className="w-7 h-7 text-white" />
           </div>
-          <h2 className="text-4xl font-bold text-white mb-3 tracking-tight">
+          <h2 className="text-2xl font-bold text-white mb-1 tracking-tight">
             Welcome Back
           </h2>
-          <p className="text-slate-300 text-base">Sign in to access your dashboard</p>
+          <p className="text-slate-300 text-sm">Sign in to access your dashboard</p>
         </div>
 
         <form onSubmit={handleLogin}>
-          <div className="mb-6">
-            <label className="block mb-3 text-sm font-semibold text-white">
+          <div className="mb-4">
+            <label className="block mb-1.5 text-sm font-semibold text-white">
               College Email Address
             </label>
             <div className="relative group">
-              <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-cyan-400 transition-colors" />
+              <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-cyan-400 transition-colors" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:bg-white/10 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
+                className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:bg-white/10 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none text-sm"
                 placeholder="you@nitj.ac.in"
                 required
               />
             </div>
           </div>
 
-          <div className="mb-4">
-            <label className="block mb-3 text-sm font-semibold text-white">
+          <div className="mb-3">
+            <label className="block mb-1.5 text-sm font-semibold text-white">
               Password
             </label>
             <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-cyan-400 transition-colors" />
+              <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-cyan-400 transition-colors" />
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:bg-white/10 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none"
+                className="w-full pl-10 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:bg-white/10 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all outline-none text-sm"
                 placeholder="••••••••"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-cyan-400 transition-colors"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-cyan-400 transition-colors"
               >
                 {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
+                  <EyeOff className="w-4 h-4" />
                 ) : (
-                  <Eye className="w-5 h-5" />
+                  <Eye className="w-4 h-4" />
                 )}
               </button>
             </div>
           </div>
 
-          <div className="flex justify-end mb-8">
+          <div className="flex justify-end mb-4">
             <button
               type="button"
               onClick={() => setShowForgotPassword(true)}
@@ -1095,7 +1091,8 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 hover:from-cyan-400 hover:via-blue-400 hover:to-purple-500 text-white rounded-2xl font-bold text-lg transition-all transform hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+            className="w-full py-3 text-white rounded-xl font-bold text-base transition-all transform hover:scale-[1.02] hover:brightness-110 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+            style={{ backgroundColor: "#1464aa" }}
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -1107,16 +1104,8 @@ export default function Login() {
             )}
           </button>
 
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-slate-900/50 text-slate-400">
-                New to NITJ Mess?
-              </span>
-            </div>
-          </div>
+
+
 
           <button
             type="button"

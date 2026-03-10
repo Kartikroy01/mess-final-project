@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@theme {
+  --color-nitj-primary: #1464aa;
+  --color-nitj-accent: #E28122;
+  --color-nitj-light: #F8FAFC;
+  --color-nitj-dark: #0c2d56;
+}
+
 @layer utilities {
   /* Hide scrollbar for Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {

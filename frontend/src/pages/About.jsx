@@ -3,7 +3,7 @@ import React from "react";
 export default function About() {
   return (
     <div className="max-w-5xl mx-auto p-8">
-      <h1 className="text-3xl font-bold text-sky-700 text-center mb-6">
+      <h1 className="text-3xl font-bold text-nitj-primary text-center mb-6">
         About Smart Hostel Mess
       </h1>
       <p className="text-gray-700 leading-relaxed mb-4">

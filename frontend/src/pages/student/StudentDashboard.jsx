@@ -178,11 +178,12 @@ const NavItem = ({ icon, text, active, onClick, badge }) => (
             onClick={onClick} 
             className={`w-full flex items-center px-5 py-4 my-1.5 rounded-2xl transition-all duration-300 group relative overflow-hidden ${
                 active 
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'
+                    ? 'text-white shadow-lg' 
+                    : 'text-slate-500 hover:bg-slate-50'
             }`}
+            style={active ? { backgroundColor: '#1464aa', boxShadow: '0 4px 15px rgba(20,100,170,0.25)' } : {}}
         >
-            <span className={`relative z-10 transition-transform duration-300 group-hover:scale-110 ${active ? 'text-white' : 'text-slate-400 group-hover:text-blue-600'}`}>
+            <span className={`relative z-10 transition-transform duration-300 group-hover:scale-110 ${active ? 'text-white' : 'text-slate-400'}`}>
                 {React.cloneElement(icon, { size: 22, strokeWidth: active ? 2.5 : 2 })}
             </span>
             <span className={`ml-4 font-semibold text-[15px] tracking-wide relative z-10`}>{text}</span>
@@ -196,8 +197,7 @@ const NavItem = ({ icon, text, active, onClick, badge }) => (
                    <ChevronRight size={18} strokeWidth={3} />
                 </div>
             )}
-            {/* Subtle background glow for inactive hover */}
-            {!active && <div className="absolute inset-0 bg-blue-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />}
+            {!active && <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ backgroundColor: 'rgba(20,100,170,0.05)' }} />}
         </button>
     </li>
 );
@@ -206,8 +206,8 @@ const NavItem = ({ icon, text, active, onClick, badge }) => (
 const LoadingSpinner = ({ message = "Loading..." }) => (
     <div className="flex flex-col items-center justify-center h-full py-12">
         <div className="relative">
-            <div className="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-20"></div>
-            <div className="w-14 h-14 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin shadow-sm"></div>
+            <div className="absolute inset-0 rounded-full animate-ping opacity-20" style={{ backgroundColor: 'rgba(20,100,170,0.3)' }}></div>
+            <div className="w-14 h-14 border-4 border-slate-100 rounded-full animate-spin shadow-sm" style={{ borderTopColor: '#1464aa' }}></div>
         </div>
         <p className="mt-6 text-slate-500 font-medium text-sm tracking-wide animate-pulse">{message}</p>
     </div>
@@ -220,6 +220,7 @@ const StudentHome = ({ student, token }) => {
     const [billData, setBillData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isDownloading, setIsDownloading] = useState(false);
+    const [showQRModal, setShowQRModal] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -292,7 +293,7 @@ const StudentHome = ({ student, token }) => {
         <div className="space-y-10 transition-opacity duration-700 opacity-100">
             {/* Hero Section */}
             <div className="relative group rounded-[2.5rem] overflow-hidden shadow-2xl shadow-blue-200/40">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800"></div>
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, #0d3b6e, #1464aa, #1a5fa0)' }}></div>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -mr-16 -mt-16 transform transition-transform group-hover:scale-110 duration-700"></div>
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-300 opacity-10 rounded-full blur-2xl -ml-10 -mb-10 animate-pulse"></div>
                 
@@ -305,15 +306,23 @@ const StudentHome = ({ student, token }) => {
                         <h1 className="text-2xl md:text-5xl font-black text-white tracking-tighter mb-1 md:mb-2 drop-shadow-sm leading-tight">
                             Hello, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">{student.name.split(' ')[0]}</span>
                         </h1>
+                        {/* Mobile: Show QR button */}
+                        <button
+                            onClick={() => setShowQRModal(true)}
+                            className="mt-3 md:hidden inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white border border-white/30 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all"
+                        >
+                            <QrCode size={14} />
+                            Show My QR Card
+                        </button>
                     </div>
 
-                    {/* QR Code Section */}
-                    <div className="flex flex-col items-center justify-center shrink-0">
+                    {/* QR Code Section — desktop only */}
+                    <div className="hidden md:flex flex-col items-center justify-center shrink-0">
                         {/* 1. VISIBLE DASHBOARD CARD (Simple & Clean) */}
                         <div className="mb-2 relative bg-white rounded-xl shadow-lg p-1 overflow-hidden">
                             <QRCodeCanvas 
                                 value={student.qrCode || `${student.rollNo}-${student.hostelNo}-${student.roomNo}`} 
-                                size={window.innerWidth < 768 ? 90 : 100}
+                                size={100}
                                 level={"H"}
                                 includeMargin={false}
                                 bgColor={"#ffffff"}
@@ -329,7 +338,6 @@ const StudentHome = ({ student, token }) => {
                                         setIsDownloading(true);
                                         const element = document.getElementById("printable-qr-card");
                                         if (element) {
-                                            // 1. Clone the element
                                             const clone = element.cloneNode(true);
                                             clone.style.position = "fixed";
                                             clone.style.top = "0";
@@ -337,31 +345,22 @@ const StudentHome = ({ student, token }) => {
                                             clone.style.zIndex = "-9999";
                                             clone.style.transform = "none";
                                             clone.style.visibility = "visible";
-                                            
-                                            // 2. Fix: Copy Canvas Content (QRCode)
-                                            // cloneNode() does not copy canvas data
                                             const originalCanvas = element.querySelector('canvas');
                                             const cloneCanvas = clone.querySelector('canvas');
                                             if (originalCanvas && cloneCanvas) {
                                                 const ctx = cloneCanvas.getContext('2d');
                                                 ctx.drawImage(originalCanvas, 0, 0);
                                             }
-
                                             document.body.appendChild(clone);
-
-                                            // Wait for fonts/images
                                             await new Promise(resolve => setTimeout(resolve, 500));
-
                                             const canvas = await html2canvas(clone, {
                                                 backgroundColor: null,
                                                 scale: 4, 
                                                 logging: false,
-                                                useCORS: false, // No external assets, disable CORS checks
+                                                useCORS: false,
                                                 allowTaint: false,
                                             });
-
                                             document.body.removeChild(clone);
-
                                             const pngUrl = canvas.toDataURL("image/png");
                                             const downloadLink = document.createElement("a");
                                             downloadLink.href = pngUrl;
@@ -392,63 +391,145 @@ const StudentHome = ({ student, token }) => {
                                  )}
                              </button>
                         </div>
+                    </div>
 
-                        {/* 2. HIDDEN PREMIUM CARD (For Download Only) */}
-                        {/* Positioned off-screen but rendered in DOM for html2canvas */}
-                        <div style={{ position: "absolute", left: "-9999px", top: "0", zIndex: -10, visibility: 'hidden' }}>
-                            <div id="printable-qr-card" style={{ 
-                                position: 'relative', 
-                                width: '320px', 
-                                background: 'linear-gradient(135deg, #00BAF2, #0E1E5B)', 
-                                borderRadius: '2rem', 
-                                overflow: 'hidden', 
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                                userSelect: 'none',
-                                fontFamily: 'sans-serif' /* Ensure font consistency */
-                            }}>
-                                {/* Decorative Background Patterns */}
-                                <div style={{ position: 'absolute', top: 0, right: 0, width: '16rem', height: '16rem', background: 'rgba(255,255,255,0.05)', borderRadius: '9999px', filter: 'blur(64px)', marginRight: '-5rem', marginTop: '-5rem' }}></div>
-                                <div style={{ position: 'absolute', bottom: 0, left: 0, width: '12rem', height: '12rem', background: 'rgba(0,0,0,0.1)', borderRadius: '9999px', filter: 'blur(40px)', marginLeft: '-2.5rem', marginBottom: '-2.5rem' }}></div>
-                                
-                                <div style={{ position: 'relative', zIndex: 10, padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
-                                    {/* Header */}
-                                    <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-                                            <span style={{ fontWeight: 900, fontSize: '1.5rem', letterSpacing: '-0.05em', color: '#ffffff', lineHeight: 1 }}>NITJ</span>
-                                            <span style={{ fontSize: '10px', color: '#BFDBFE', textTransform: 'uppercase', letterSpacing: '0.2em', fontWeight: 'bold' }}>MESS PORTAL</span>
-                                        </div>
+                    {/* Hidden printable card (for download) */}
+                    <div style={{ position: "absolute", left: "-9999px", top: "0", zIndex: -10, visibility: 'hidden' }}>
+                        <div id="printable-qr-card" style={{ 
+                            position: 'relative', 
+                            width: '320px', 
+                            background: 'linear-gradient(135deg, #00BAF2, #0E1E5B)', 
+                            borderRadius: '2rem', 
+                            overflow: 'hidden', 
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                            userSelect: 'none',
+                            fontFamily: 'sans-serif'
+                        }}>
+                            <div style={{ position: 'absolute', top: 0, right: 0, width: '16rem', height: '16rem', background: 'rgba(255,255,255,0.05)', borderRadius: '9999px', filter: 'blur(64px)', marginRight: '-5rem', marginTop: '-5rem' }}></div>
+                            <div style={{ position: 'absolute', bottom: 0, left: 0, width: '12rem', height: '12rem', background: 'rgba(0,0,0,0.1)', borderRadius: '9999px', filter: 'blur(40px)', marginLeft: '-2.5rem', marginBottom: '-2.5rem' }}></div>
+                            <div style={{ position: 'relative', zIndex: 10, padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
+                                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                                        <span style={{ fontWeight: 900, fontSize: '1.5rem', letterSpacing: '-0.05em', color: '#ffffff', lineHeight: 1 }}>NITJ</span>
+                                        <span style={{ fontSize: '10px', color: '#BFDBFE', textTransform: 'uppercase', letterSpacing: '0.2em', fontWeight: 'bold' }}>MESS PORTAL</span>
                                     </div>
-
-                                    {/* Student Name & Roll - Prominent */}
-                                    <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                                        <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '0.5rem', lineHeight: '1.2' }}>{student.name}</h2>
-                                        <p style={{ color: '#BFDBFE', fontSize: '1rem', fontFamily: 'monospace', background: 'rgba(0,0,0,0.2)', padding: '0.25rem 1rem', borderRadius: '9999px', border: '1px solid rgba(255,255,255,0.05)', display: 'inline-block', margin: 0 }}>
-                                            {student.rollNo}
-                                        </p>
-                                    </div>
-
-                                    {/* QR Code Container - Centered and Large */}
-                                    <div style={{ background: '#ffffff', padding: '0.5rem', borderRadius: '1.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', marginBottom: '2rem' }}>
-                                        <QRCodeCanvas 
-                                            value={student.qrCode || `${student.rollNo}-${student.hostelNo}-${student.roomNo}`} 
-                                            size={200}
-                                            level={"H"}
-                                            includeMargin={false}
-                                        />
-                                    </div>
-
-                                    {/* Footer Info - Hostel Only */}
-                                    <div style={{ width: '100%', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem' }}>
-                                        <p style={{ fontSize: '12px', color: '#BFDBFE', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem' }}>Hostel</p>
-                                        <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>{student.hostelNo || 'N/A'}</p>
-                                    </div>
+                                </div>
+                                <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                                    <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '0.5rem', lineHeight: '1.2' }}>{student.name}</h2>
+                                    <p style={{ color: '#BFDBFE', fontSize: '1rem', fontFamily: 'monospace', background: 'rgba(0,0,0,0.2)', padding: '0.25rem 1rem', borderRadius: '9999px', border: '1px solid rgba(255,255,255,0.05)', display: 'inline-block', margin: 0 }}>
+                                        {student.rollNo}
+                                    </p>
+                                </div>
+                                <div style={{ background: '#ffffff', padding: '0.5rem', borderRadius: '1.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', marginBottom: '2rem' }}>
+                                    <QRCodeCanvas 
+                                        value={student.qrCode || `${student.rollNo}-${student.hostelNo}-${student.roomNo}`} 
+                                        size={200}
+                                        level={"H"}
+                                        includeMargin={false}
+                                    />
+                                </div>
+                                <div style={{ width: '100%', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem' }}>
+                                    <p style={{ fontSize: '12px', color: '#BFDBFE', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem' }}>Hostel</p>
+                                    <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>{student.hostelNo || 'N/A'}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* QR Modal — mobile only */}
+            {showQRModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-end justify-center md:hidden"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+                    onClick={() => setShowQRModal(false)}
+                >
+                    <div
+                        className="w-full rounded-t-3xl p-6 pb-10"
+                        style={{ backgroundColor: '#1464aa' }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Drag handle */}
+                        <div className="w-10 h-1 bg-white/30 rounded-full mx-auto mb-5"></div>
+
+                        {/* Title */}
+                        <div className="text-center mb-4">
+                            <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">NITJ Mess Portal</p>
+                            <h3 className="text-white text-xl font-bold">{student.name}</h3>
+                            <p className="text-white/60 text-sm font-mono mt-0.5">{student.rollNo} · {student.hostelNo}</p>
+                        </div>
+
+                        {/* QR Code */}
+                        <div className="flex justify-center mb-5">
+                            <div className="bg-white p-3 rounded-2xl shadow-2xl">
+                                <QRCodeCanvas 
+                                    value={student.qrCode || `${student.rollNo}-${student.hostelNo}-${student.roomNo}`} 
+                                    size={180}
+                                    level={"H"}
+                                    includeMargin={false}
+                                    bgColor={"#ffffff"}
+                                    fgColor={"#000000"}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Buttons */}
+                        <div className="flex gap-3">
+                            <button
+                                disabled={isDownloading}
+                                onClick={async () => {
+                                    try {
+                                        setIsDownloading(true);
+                                        const element = document.getElementById("printable-qr-card");
+                                        if (element) {
+                                            const clone = element.cloneNode(true);
+                                            clone.style.position = "fixed";
+                                            clone.style.top = "0";
+                                            clone.style.left = "0";
+                                            clone.style.zIndex = "-9999";
+                                            clone.style.transform = "none";
+                                            clone.style.visibility = "visible";
+                                            const originalCanvas = element.querySelector('canvas');
+                                            const cloneCanvas = clone.querySelector('canvas');
+                                            if (originalCanvas && cloneCanvas) {
+                                                const ctx = cloneCanvas.getContext('2d');
+                                                ctx.drawImage(originalCanvas, 0, 0);
+                                            }
+                                            document.body.appendChild(clone);
+                                            await new Promise(resolve => setTimeout(resolve, 500));
+                                            const canvas = await html2canvas(clone, { backgroundColor: null, scale: 4, logging: false, useCORS: false, allowTaint: false });
+                                            document.body.removeChild(clone);
+                                            const pngUrl = canvas.toDataURL("image/png");
+                                            const a = document.createElement("a");
+                                            a.href = pngUrl;
+                                            a.download = `NITJ_Mess_Card_${student.rollNo}.png`;
+                                            document.body.appendChild(a);
+                                            a.click();
+                                            document.body.removeChild(a);
+                                        }
+                                    } catch (err) {
+                                        alert("Failed to download. Please try again.");
+                                    } finally {
+                                        setIsDownloading(false);
+                                    }
+                                }}
+                                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm text-white border border-white/30 bg-white/10 hover:bg-white/20 transition-all disabled:opacity-60"
+                            >
+                                <Download size={16} />
+                                {isDownloading ? 'Saving...' : 'Download Card'}
+                            </button>
+                            <button
+                                onClick={() => setShowQRModal(false)}
+                                className="flex-1 py-3 rounded-xl font-bold text-sm bg-white text-slate-800 hover:bg-white/90 transition-all"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 px-1">
@@ -650,7 +731,8 @@ const StudentFeedback = ({ token }) => {
                             <button 
                                 onClick={handleSubmit} 
                                 disabled={loading} 
-                                className="w-full bg-slate-900 text-white font-bold py-5 rounded-2xl hover:bg-slate-800 hover:shadow-lg hover:shadow-slate-800/30 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg relative overflow-hidden group"
+                                className="w-full text-white font-bold py-5 rounded-2xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg relative overflow-hidden group hover:brightness-110"
+                                style={{ backgroundColor: '#1464aa', boxShadow: '0 4px 20px rgba(20,100,170,0.3)' }}
                             >
                                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                                 <span className="relative flex items-center gap-2">
@@ -814,84 +896,269 @@ const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) 
                 </div>
             )}
 
-            <div className="overflow-x-auto rounded-2xl border border-slate-100">
+            {/* Transaction-style list for summary (home), full table for Reports page */}
+            {isSummary ? (<>
+
+                {/* ── MOBILE only: PhonePe-style card list ── */}
+                <div className="md:hidden bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-lg">
+                    <div className="px-5 py-4 flex justify-between items-center border-b border-slate-100">
+                        <div>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                {new Date(0, new Date().getMonth()).toLocaleString('default', { month: 'long' })} {new Date().getFullYear()}
+                            </p>
+                            <h3 className="text-lg font-bold text-slate-800 mt-0.5">Recent Meals</h3>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-xs text-slate-400 font-medium">Total Spent</p>
+                            <p className="text-base font-extrabold" style={{ color: '#1464aa' }}>₹{grandTotal}</p>
+                        </div>
+                    </div>
+                    {loading ? (
+                        <div className="p-8"><LoadingSpinner message="Loading meals..." /></div>
+                    ) : filteredHistory.length > 0 ? (
+                        <ul className="divide-y divide-slate-50">
+                            {filteredHistory.map((meal, index) => {
+                                const style = getMealTypeStyle(meal.type);
+                                const mealEmoji = { 'Breakfast': '🌅', 'Lunch': '🍱', 'Snacks': '🍪', 'Dinner': '🌙', 'Fine': '⚠️' };
+                                const itemsStr = meal.items && meal.items.length > 0 ? meal.items.map(i => i.name).join(', ') : 'No items recorded';
+                                return (
+                                    <li key={index} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors">
+                                        <div className={`w-11 h-11 rounded-full flex items-center justify-center text-xl flex-shrink-0 ${style.bg}`}>
+                                            {mealEmoji[meal.type] || '🍽️'}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-sm font-bold text-slate-800 truncate">{meal.type || 'Meal'}</p>
+                                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${style.bg} ${style.text}`}>{meal.type}</span>
+                                            </div>
+                                            <p className="text-xs text-slate-400 mt-0.5 truncate">{meal.date} · {meal.time || ''}</p>
+                                            <p className="text-xs text-slate-500 mt-0.5 truncate">{itemsStr}</p>
+                                        </div>
+                                        <div className="text-right flex-shrink-0">
+                                            <p className="text-sm font-extrabold text-slate-800">- ₹{meal.totalCost || 0}</p>
+                                            {meal.dietCount !== undefined && (
+                                                <p className="text-[10px] text-slate-400 mt-0.5">Diet: {meal.dietCount}</p>
+                                            )}
+                                        </div>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    ) : (
+                        <div className="text-center py-12">
+                            <div className="inline-flex items-center justify-center p-4 bg-slate-50 rounded-full mb-3">
+                                <FileText size={28} className="text-slate-300"/>
+                            </div>
+                            <p className="text-slate-500 font-medium text-sm">No meals recorded yet</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* ── DESKTOP only: original table (unchanged) ── */}
+                <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-100">
+                    {loading ? (
+                        <div className="p-12"><LoadingSpinner message="Loading meals..." /></div>
+                    ) : (
+                        <table className="w-full">
+                            <thead>
+                                <tr className="bg-slate-50/80 border-b border-slate-100">
+                                    <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Date</th>
+                                    <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Meal Type</th>
+                                    <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Diet</th>
+                                    <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider w-1/2">Items</th>
+                                    <th className="text-right py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {filteredHistory.length > 0 ? (
+                                    <>
+                                        {filteredHistory.map((meal, index) => {
+                                            const style = getMealTypeStyle(meal.type);
+                                            return (
+                                                <tr key={index} className="hover:bg-blue-50/50 transition-colors group">
+                                                    <td className="py-4 px-6">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-semibold text-slate-700">{meal.date}</span>
+                                                            <span className="text-xs text-slate-400 mt-0.5">{meal.time || '12:00 PM'}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-4 px-6">
+                                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ring-1 ring-inset ${style.ring} ${style.bg} ${style.text}`}>
+                                                            <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${style.dot}`}></span>
+                                                            {meal.type}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-4 px-6">
+                                                        <span className="text-sm font-bold text-slate-700">{meal.dietCount !== undefined ? meal.dietCount : '-'}</span>
+                                                    </td>
+                                                    <td className="py-4 px-6">
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {meal.items && meal.items.length > 0 ? (
+                                                                meal.items.map((item, idx) => (
+                                                                    <span key={idx} className="inline-flex items-center text-sm font-medium text-slate-600 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                                                        {item.name}
+                                                                        <span className="ml-1.5 text-slate-400 text-xs">×{item.qty}</span>
+                                                                    </span>
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-slate-400 text-sm italic">No items recorded</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-4 px-6 text-right">
+                                                        <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">₹{meal.totalCost || 0}</span>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                        <tr className="bg-slate-50/50 font-bold border-t-2 border-slate-100">
+                                            <td colSpan="4" className="py-4 px-6 text-right text-slate-500 uppercase text-xs tracking-wider">Grand Total</td>
+                                            <td className="py-4 px-6 text-right text-lg" style={{ color: '#1464aa' }}>₹{grandTotal}</td>
+                                        </tr>
+                                    </>
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5" className="text-center py-16">
+                                            <div className="inline-flex items-center justify-center p-4 bg-slate-50 rounded-full mb-3">
+                                                <FileText size={32} className="text-slate-300"/>
+                                            </div>
+                                            <p className="text-slate-500 font-medium">No meals recorded yet</p>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+
+            </>) : (
+
+            <div>
                 {loading ? (
                     <div className="p-12"><LoadingSpinner message="Loading meals..." /></div>
-                ) : (
-                    <table className="w-full">
-                        <thead>
-                            <tr className="bg-slate-50/80 border-b border-slate-100">
-                                <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Date</th>
-                                <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Meal Type</th>
-                                <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Diet</th>
-                                <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider w-1/2">Items</th>
-                                <th className="text-right py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            {filteredHistory.length > 0 ? (
-                                <>
-                                    {filteredHistory.map((meal, index) => { 
-                                        const style = getMealTypeStyle(meal.type);
-                                        return (
-                                            <tr key={index} className="hover:bg-blue-50/50 transition-colors group">
-                                                <td className="py-4 px-6">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-semibold text-slate-700">{meal.date}</span>
-                                                        <span className="text-xs text-slate-400 mt-0.5">{meal.time || '12:00 PM'}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ring-1 ring-inset ${style.ring} ${style.bg} ${style.text}`}>
-                                                        <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${style.dot}`}></span>
-                                                        {meal.type}
-                                                    </span>
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    <span className="text-sm font-bold text-slate-700">{meal.dietCount !== undefined ? meal.dietCount : '-'}</span>
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {meal.items && meal.items.length > 0 ? (
-                                                            meal.items.map((item, idx) => (
-                                                                <span key={idx} className="inline-flex items-center text-sm font-medium text-slate-600 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                                                                    {item.name}
-                                                                    <span className="ml-1.5 text-slate-400 text-xs">×{item.qty}</span>
-                                                                </span>
-                                                            ))
-                                                        ) : (
-                                                            <span className="text-slate-400 text-sm italic">No items recorded</span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="py-4 px-6 text-right">
-                                                    <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">₹{meal.totalCost || 0}</span>
-                                                </td>
-                                            </tr>
-                                        ); 
-                                    })}
-                                    <tr className="bg-slate-50/50 font-bold border-t-2 border-slate-100">
-                                        <td colSpan="4" className="py-4 px-6 text-right text-slate-500 uppercase text-xs tracking-wider">Grand Total</td>
-                                        <td className="py-4 px-6 text-right text-lg text-blue-600">₹{grandTotal}</td>
-                                    </tr>
-                                </>
-                            ) : (
-                                <tr>
-                                    <td colSpan="5" className="text-center py-16">
-                                        <div className="inline-flex items-center justify-center p-4 bg-slate-50 rounded-full mb-3">
-                                            <FileText size={32} className="text-slate-300"/>
+                ) : filteredHistory.length > 0 ? (<>
+
+                    {/* ── MOBILE: card list ── */}
+                    <div className="md:hidden bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-lg">
+                        {/* month + total header */}
+                        <div className="px-5 py-4 flex justify-between items-center border-b border-slate-100">
+                            <h3 className="text-base font-bold text-slate-800">{monthNames[selectedMonth]} {new Date().getFullYear()}</h3>
+                            <div className="text-right">
+                                <p className="text-xs text-slate-400">Total Spent</p>
+                                <p className="text-sm font-extrabold" style={{ color: '#1464aa' }}>₹{grandTotal}</p>
+                            </div>
+                        </div>
+                        <ul className="divide-y divide-slate-50">
+                            {filteredHistory.map((meal, index) => {
+                                const style = getMealTypeStyle(meal.type);
+                                const mealEmoji = { 'Breakfast': '🌅', 'Lunch': '🍱', 'Snacks': '🍪', 'Dinner': '🌙', 'Fine': '⚠️' };
+                                const itemsStr = meal.items && meal.items.length > 0
+                                    ? meal.items.map(i => i.name).join(', ')
+                                    : 'No items recorded';
+                                return (
+                                    <li key={index} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors">
+                                        <div className={`w-11 h-11 rounded-full flex items-center justify-center text-xl flex-shrink-0 ${style.bg}`}>
+                                            {mealEmoji[meal.type] || '🍽️'}
                                         </div>
-                                        <p className="text-slate-500 font-medium">No meal records found for this period.</p>
-                                    </td>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-sm font-bold text-slate-800 truncate">{meal.type || 'Meal'}</p>
+                                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${style.bg} ${style.text}`}>{meal.type}</span>
+                                            </div>
+                                            <p className="text-xs text-slate-400 mt-0.5 truncate">{meal.date} · {meal.time || ''}</p>
+                                            <p className="text-xs text-slate-500 mt-0.5 truncate">{itemsStr}</p>
+                                        </div>
+                                        <div className="text-right flex-shrink-0">
+                                            <p className="text-sm font-extrabold text-slate-800">- ₹{meal.totalCost || 0}</p>
+                                            {meal.dietCount !== undefined && (
+                                                <p className="text-[10px] text-slate-400 mt-0.5">Diet: {meal.dietCount}</p>
+                                            )}
+                                        </div>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                        <div className="px-5 py-3 border-t border-slate-100 flex justify-between items-center bg-slate-50/60">
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Grand Total</span>
+                            <span className="text-base font-extrabold" style={{ color: '#1464aa' }}>₹{grandTotal}</span>
+                        </div>
+                    </div>
+
+                    {/* ── DESKTOP: full table ── */}
+                    <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-100">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="bg-slate-50/80 border-b border-slate-100">
+                                    <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Date</th>
+                                    <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Meal Type</th>
+                                    <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Diet</th>
+                                    <th className="text-left py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider w-1/2">Items</th>
+                                    <th className="text-right py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-wider">Total</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {filteredHistory.map((meal, index) => {
+                                    const style = getMealTypeStyle(meal.type);
+                                    return (
+                                        <tr key={index} className="hover:bg-blue-50/50 transition-colors group">
+                                            <td className="py-4 px-6">
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-semibold text-slate-700">{meal.date}</span>
+                                                    <span className="text-xs text-slate-400 mt-0.5">{meal.time || '12:00 PM'}</span>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ring-1 ring-inset ${style.ring} ${style.bg} ${style.text}`}>
+                                                    <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${style.dot}`}></span>
+                                                    {meal.type}
+                                                </span>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <span className="text-sm font-bold text-slate-700">{meal.dietCount !== undefined ? meal.dietCount : '-'}</span>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <div className="flex flex-wrap gap-2">
+                                                    {meal.items && meal.items.length > 0 ? (
+                                                        meal.items.map((item, idx) => (
+                                                            <span key={idx} className="inline-flex items-center text-sm font-medium text-slate-600 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                                                {item.name}
+                                                                <span className="ml-1.5 text-slate-400 text-xs">×{item.qty}</span>
+                                                            </span>
+                                                        ))
+                                                    ) : (
+                                                        <span className="text-slate-400 text-sm italic">No items recorded</span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-6 text-right">
+                                                <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">₹{meal.totalCost || 0}</span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                <tr className="bg-slate-50/50 font-bold border-t-2 border-slate-100">
+                                    <td colSpan="4" className="py-4 px-6 text-right text-slate-500 uppercase text-xs tracking-wider">Grand Total</td>
+                                    <td className="py-4 px-6 text-right text-lg" style={{ color: '#1464aa' }}>₹{grandTotal}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </>) : (
+                    <div className="bg-white rounded-3xl border border-slate-100 text-center py-16">
+                        <div className="inline-flex items-center justify-center p-4 bg-slate-50 rounded-full mb-3">
+                            <FileText size={32} className="text-slate-300"/>
+                        </div>
+                        <p className="text-slate-500 font-medium">No meal records found for this period.</p>
+                    </div>
                 )}
             </div>
+            )}
+
         </div>
     );
 };
+
 
 // --- MESS OFF COMPONENTS ---
 const MessOffPage = ({ studentName, token }) => {
@@ -1003,10 +1270,11 @@ const MessOffForm = ({ token, onSubmitSuccess }) => {
                     <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">Select Meals to Skip</label> 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3"> 
                         {['Breakfast', 'Lunch', 'Dinner'].map(meal => (
-                            <label key={meal} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl cursor-pointer transition-all duration-200 ${meals.includes(meal) ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-500'}`}>
+                            <label key={meal} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl cursor-pointer transition-all duration-200 ${meals.includes(meal) ? 'border-blue-600 text-white' : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-500'}`}
+                                style={meals.includes(meal) ? { backgroundColor: '#1464aa' } : {}}>
                                 <input type="checkbox" checked={meals.includes(meal)} onChange={() => handleMealToggle(meal)} className="hidden"/>
-                                <span className={`font-bold text-sm ${meals.includes(meal) ? 'text-indigo-700' : 'text-slate-600'}`}>{meal}</span>
-                                {meals.includes(meal) && <CheckCircle size={14} className="mt-1 text-indigo-500" />}
+                                <span className={`font-bold text-sm ${meals.includes(meal) ? 'text-white' : 'text-slate-600'}`}>{meal}</span>
+                                {meals.includes(meal) && <CheckCircle size={14} className="mt-1 text-white" />}
                             </label>
                         ))}
                     </div> 
@@ -1020,7 +1288,8 @@ const MessOffForm = ({ token, onSubmitSuccess }) => {
                 <button 
                     onClick={handleSubmit} 
                     disabled={submitting} 
-                    className="w-full mt-2 bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg shadow-slate-900/20 flex items-center justify-center transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group"
+                    className="w-full mt-2 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group hover:brightness-110"
+                    style={{ backgroundColor: '#1464aa', boxShadow: '0 4px 15px rgba(20,100,170,0.25)' }}
                 >
                     {submitting ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3"></div>Processing...</> : <>Submit Application <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} strokeWidth={3} /></>}
                 </button>
@@ -1177,7 +1446,7 @@ function StudentDashboard() {
                     </div>
                     <h3 className="text-xl font-bold text-slate-800 mb-2">Connection Issues</h3>
                     <p className="text-slate-500 text-sm mb-6">We're having trouble loading your data. Please check your connection.</p>
-                    <button onClick={() => window.location.reload()} className="px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold active:scale-95 transition-transform">Retry Connection</button>
+                    <button onClick={() => window.location.reload()} className="px-6 py-3 text-white rounded-xl text-sm font-bold active:scale-95 transition-transform" style={{ backgroundColor: '#1464aa' }}>Retry Connection</button>
                 </div>
             </div>
         );
@@ -1213,7 +1482,7 @@ function StudentDashboard() {
                 <div className="p-8 pb-4 h-full flex flex-col">
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-3">
-                            <div className="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-blue-500/30">
+                            <div className="text-white p-2.5 rounded-xl shadow-lg" style={{ backgroundColor: '#1464aa', boxShadow: '0 4px 15px rgba(20,100,170,0.3)' }}>
                                 <UtensilsCrossed size={24} strokeWidth={2.5} />
                             </div>
                             <div>
@@ -1233,7 +1502,7 @@ function StudentDashboard() {
 
                     {/* User Profile Card */}
                     <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6 flex items-center gap-4 relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'linear-gradient(to right, rgba(20,100,170,0.05), rgba(20,100,170,0.1))' }}></div>
                         <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md flex-shrink-0">
                              <img src={student.photo || "https://ui-avatars.com/api/?name=" + student.name} alt={student.name} className="w-full h-full object-cover"/>
                         </div>
@@ -1306,7 +1575,7 @@ function StudentDashboard() {
                          </button>
 
                          <div className="flex items-center gap-3 md:hidden">
-                             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white">
+                             <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ backgroundColor: '#1464aa' }}>
                                 <span className="font-bold text-sm">NM</span>
                              </div>
                              <h1 className="font-bold text-slate-800">NITJ MESS</h1>

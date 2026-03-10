@@ -62,7 +62,7 @@ export default function Menu() {
 
   const renderMealList = (title, items) => (
     <div className="mt-4 first:mt-0">
-      <h3 className="text-lg font-semibold text-sky-800 uppercase tracking-wide border-b border-gray-200 pb-1">
+      <h3 className="text-lg font-semibold text-nitj-primary uppercase tracking-wide border-b border-gray-200 pb-1">
         {title}
       </h3>
       <ul className="mt-2 text-gray-700 text-sm list-disc list-inside">
@@ -78,9 +78,9 @@ export default function Menu() {
   const renderItemCard = (meal) => (
     <div
       key={meal.name}
-      className="bg-white shadow-xl rounded-2xl overflow-hidden hover:shadow-2xl transition"
+      className="bg-white shadow-xl rounded-2xl overflow-hidden hover:shadow-2xl transition border border-gray-100"
     >
-      <h2 className="bg-teal-600 text-white text-xl font-bold p-4 text-center">
+      <h2 className="bg-nitj-primary text-white text-xl font-bold p-4 text-center">
         {meal.name}
       </h2>
       <ul className="p-5 text-gray-700 list-disc list-inside text-left">
@@ -95,10 +95,10 @@ export default function Menu() {
 
   if (loading) {
     return (
-      <div className="p-8 max-w-7xl mx-auto bg-sky-50 min-h-screen flex items-center justify-center">
+      <div className="p-8 max-w-7xl mx-auto bg-nitj-light min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block w-10 h-10 border-4 border-sky-600 border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-sky-800 font-semibold">Loading menu…</p>
+          <div className="inline-block w-10 h-10 border-4 border-nitj-primary border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-nitj-primary font-semibold">Loading menu…</p>
         </div>
       </div>
     );
@@ -106,14 +106,14 @@ export default function Menu() {
 
   if (error) {
     return (
-      <div className="p-8 max-w-7xl mx-auto bg-sky-50 min-h-screen flex items-center justify-center">
+      <div className="p-8 max-w-7xl mx-auto bg-nitj-light min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md">
           <p className="text-red-600 font-semibold mb-2">Could not load menu</p>
           <p className="text-gray-600 text-sm mb-4">{error}</p>
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700"
+            className="px-4 py-2 bg-nitj-primary text-white rounded-lg hover:bg-nitj-dark transition-colors"
           >
             Retry
           </button>
@@ -127,8 +127,8 @@ export default function Menu() {
   const extraItems = menuPage?.extraItems || [];
 
   return (
-    <div className="p-8 max-w-7xl mx-auto bg-sky-50 min-h-screen">
-      <h1 className="text-4xl font-bold text-center text-sky-800 mb-4">
+    <div className="p-8 max-w-7xl mx-auto bg-nitj-light min-h-screen">
+      <h1 className="text-4xl font-bold text-center text-nitj-primary mb-4">
         Weekly Mess Menu
       </h1>
 
@@ -139,8 +139,8 @@ export default function Menu() {
             onClick={() => handleHostelTypeChange("boys")}
             className={`px-12 py-4 text-xl font-bold rounded-xl transition-all ${
               hostelType === "boys"
-                ? "bg-blue-600 text-white shadow-xl scale-105"
-                : "bg-white text-blue-600 border-2 border-blue-300 hover:border-blue-600 hover:shadow-lg"
+                ? "bg-nitj-primary text-white shadow-xl scale-105"
+                : "bg-white text-nitj-primary border-2 border-gray-200 hover:border-nitj-primary hover:shadow-lg"
             }`}
           >
             Boys Hostel
@@ -149,8 +149,8 @@ export default function Menu() {
             onClick={() => handleHostelTypeChange("girls")}
             className={`px-12 py-4 text-xl font-bold rounded-xl transition-all ${
               hostelType === "girls"
-                ? "bg-pink-600 text-white shadow-xl scale-105"
-                : "bg-white text-pink-600 border-2 border-pink-300 hover:border-pink-600 hover:shadow-lg"
+                ? "bg-nitj-accent text-white shadow-xl scale-105"
+                : "bg-white text-nitj-accent border-2 border-gray-200 hover:border-nitj-accent hover:shadow-lg"
             }`}
           >
             Girls Hostel
@@ -160,7 +160,7 @@ export default function Menu() {
 
       {/* Hostel Selector */}
       <div className="mb-8">
-        <label className="block text-lg font-semibold text-sky-800 mb-4 text-center">
+        <label className="block text-lg font-semibold text-nitj-primary mb-4 text-center">
           Select Your Hostel
         </label>
         <div className="flex flex-wrap justify-center gap-4">
@@ -170,8 +170,8 @@ export default function Menu() {
               onClick={() => setSelectedHostel(hostel)}
               className={`px-8 py-3 text-lg font-semibold rounded-lg transition-all ${
                 selectedHostel === hostel
-                  ? "bg-sky-700 text-white shadow-lg scale-105"
-                  : "bg-white text-sky-700 border-2 border-sky-300 hover:border-sky-600 hover:shadow-md"
+                  ? "bg-nitj-primary text-white shadow-lg scale-105"
+                  : "bg-white text-nitj-primary border-2 border-gray-200 hover:border-nitj-primary hover:shadow-md"
               }`}
             >
               {hostel}
@@ -182,7 +182,7 @@ export default function Menu() {
 
       {/* Selected Hostel Display */}
       <div className="text-center mb-8">
-        <span className="inline-block bg-sky-700 text-white px-6 py-2 rounded-full text-xl font-bold">
+        <span className="inline-block bg-nitj-primary text-white px-6 py-2 rounded-full text-xl font-bold">
           {selectedHostel || "Menu"} Menu
         </span>
       </div>
@@ -192,9 +192,9 @@ export default function Menu() {
         {weeklyMenu.map((day) => (
           <div
             key={day.day}
-            className="bg-white shadow-xl rounded-2xl overflow-hidden hover:shadow-2xl transition"
+            className="bg-white shadow-xl rounded-2xl overflow-hidden hover:shadow-2xl transition border border-gray-100"
           >
-            <h2 className="text-2xl font-bold text-center text-white bg-sky-700 p-4">
+            <h2 className="text-2xl font-bold text-center text-white bg-nitj-primary p-4">
               {day.day}
             </h2>
             <div className="p-6">
@@ -208,7 +208,7 @@ export default function Menu() {
       </div>
 
       {/* Daily Items Section */}
-      <h2 className="text-3xl font-bold text-center text-sky-800 mt-16 mb-8">
+      <h2 className="text-3xl font-bold text-center text-nitj-primary mt-16 mb-8">
         Daily Available Items
       </h2>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -216,7 +216,7 @@ export default function Menu() {
       </div>
 
       {/* Extra Items Section */}
-      <h2 className="text-3xl font-bold text-center text-sky-800 mt-16 mb-8">
+      <h2 className="text-3xl font-bold text-center text-nitj-primary mt-16 mb-8">
         Extra Items (Paid)
       </h2>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">

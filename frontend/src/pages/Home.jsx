@@ -25,20 +25,20 @@ export default function Home() {
       : menuItems.filter((item) => item.type === filter);
 
   return (
-    <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen">
+    <div className="bg-nitj-light min-h-screen">
       <HeroSection />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex justify-center items-center gap-3 flex-wrap">
-          <span className="text-gray-400 text-sm font-medium mr-2">Filter by:</span>
+          <span className="text-gray-600 text-sm font-medium mr-2">Filter by:</span>
           {["All", "Breakfast", "Lunch", "Snacks", "Dinner"].map((type) => (
             <button
               key={type}
               onClick={() => setFilter(type)}
               className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
                 filter === type
-                  ? "bg-sky-500 text-white"
-                  : "bg-slate-700 text-gray-300 hover:bg-slate-600"
+                  ? "bg-nitj-primary text-white shadow-md"
+                  : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
               }`}
             >
               {type}
@@ -52,10 +52,10 @@ export default function Home() {
           {filteredItems.map((item, i) => (
             <div
               key={i}
-              className="bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-700"
+              className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-shadow overflow-hidden border border-gray-100"
             >
               <div className={`h-44 ${item.color} relative`}>
-                <div className="absolute top-4 right-4 bg-black/40 px-3 py-1 rounded-full">
+                <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full">
                   <span className="text-white text-xs font-semibold">
                     {item.type}
                   </span>
@@ -63,13 +63,13 @@ export default function Home() {
               </div>
 
               <div className="p-6">
-                <h3 className="text-2xl font-bold text-white mb-3">
+                <h3 className="text-xl font-bold text-nitj-dark mb-2">
                   {item.name}
                 </h3>
-                <p className="text-gray-400 text-sm mb-4">{item.desc}</p>
+                <p className="text-gray-600 text-sm mb-4">{item.desc}</p>
 
-                <div className="pt-4 border-t border-slate-700">
-                  <span className="text-3xl font-bold text-sky-400">
+                <div className="pt-4 border-t border-gray-100">
+                  <span className="text-2xl font-bold text-nitj-accent">
                     ₹{item.price}.00
                   </span>
                 </div>

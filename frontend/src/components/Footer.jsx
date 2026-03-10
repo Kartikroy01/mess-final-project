@@ -1,115 +1,154 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Instagram } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Instagram, Youtube } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white mt-12">
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="grid md:grid-cols-4 gap-10">
-          
-          {/* Institute Section */}
+    <footer style={{ backgroundColor: "#0d1b2e", color: "#d1d5db" }}>
+      {/* Main footer grid */}
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        <div className="grid md:grid-cols-4 gap-8">
+
+          {/* Institute Section — with logo */}
           <div className="md:col-span-1">
-            <h2 className="text-2xl font-bold mb-4 text-sky-400">NIT Jalandhar</h2>
-            <p className="text-gray-300 text-sm leading-relaxed mb-4">
-              Dr. B R Ambedkar National Institute of Technology, Jalandhar
-            </p>
-            <p className="text-gray-400 text-xs leading-relaxed">
-              An Institute of National Importance under Ministry of Education, Government of India
-            </p>
+            <div className="flex items-center gap-3 mb-4">
+              <img
+                src="/logo_250.png"
+                alt="NITJ Logo"
+                style={{ width: "56px", height: "56px", objectFit: "contain", flexShrink: 0 }}
+              />
+              <div>
+                <h2 className="text-sm font-bold text-white leading-tight">
+                  Dr B R Ambedkar National Institute of Technology
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">Jalandhar</p>
+              </div>
+            </div>
+
+            <ul className="space-y-2 text-sm text-gray-400 mt-4">
+              <li className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#E28122" }} />
+                <span>G.T Road, Amritsar Bypass, Jalandhar, Punjab, India-144008</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#E28122" }} />
+                <span>+91-0181-2690301</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Mail className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#E28122" }} />
+                <span>mess@nitj.ac.in</span>
+              </li>
+            </ul>
+
+            {/* Social icons */}
+            <div className="flex gap-3 mt-5">
+              {[
+                { icon: <Facebook className="w-4 h-4" />, href: "#" },
+                { icon: <Instagram className="w-4 h-4" />, href: "#" },
+                { icon: <Twitter className="w-4 h-4" />, href: "#" },
+                { icon: <Linkedin className="w-4 h-4" />, href: "#" },
+                { icon: <Youtube className="w-4 h-4" />, href: "#" },
+              ].map((s, i) => (
+                <a
+                  key={i}
+                  href={s.href}
+                  className="flex items-center justify-center rounded-full text-gray-300 transition-colors"
+                  style={{ width: "32px", height: "32px", backgroundColor: "#1a2d42" }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = "#1464aa"}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = "#1a2d42"}
+                >
+                  {s.icon}
+                </a>
+              ))}
+            </div>
           </div>
 
-          {/* Smart Hostel Mess Section */}
+          {/* NITJ Hostel Mess */}
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-sky-300">NITJ Hostel Mess</h3>
-            <p className="text-gray-300 text-sm leading-relaxed">
-              Digital mess management system for efficient meal tracking, attendance monitoring, and comprehensive reporting.
+            <h3 className="text-base font-semibold mb-4 text-white border-b pb-2" style={{ borderColor: "#1464aa" }}>
+              NITJ Hostel Mess
+            </h3>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Digital mess management system for efficient meal tracking, attendance monitoring, and comprehensive reporting for NITJ students.
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-sky-300">Quick Links</h3>
-            <ul className="space-y-2.5 text-gray-300 text-sm">
-              <li>
-                <Link to="/" className="hover:text-sky-400 transition-colors flex items-center">
-                  <span className="mr-2">›</span> Home
-                </Link>
-              </li>
-              <li>
-                <Link to="/menu" className="hover:text-sky-400 transition-colors flex items-center">
-                  <span className="mr-2">›</span> Weekly Menu
-                </Link>
-              </li>
-              <li>
-                <Link to="/about" className="hover:text-sky-400 transition-colors flex items-center">
-                  <span className="mr-2">›</span> About Us
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="hover:text-sky-400 transition-colors flex items-center">
-                  <span className="mr-2">›</span> Contact
-                </Link>
-              </li>
-              <li>
-                <a href="https://nitj.ac.in" target="_blank" rel="noopener noreferrer" className="hover:text-sky-400 transition-colors flex items-center">
-                  <span className="mr-2">›</span> NIT Jalandhar Website
-                </a>
-              </li>
+            <h3 className="text-base font-semibold mb-4 text-white border-b pb-2" style={{ borderColor: "#1464aa" }}>
+              Quick Links
+            </h3>
+            <ul className="space-y-2 text-sm">
+              {[
+                { label: "Home", to: "/" },
+                { label: "Weekly Menu", to: "/menu" },
+                { label: "About Us", to: "/about" },
+                { label: "Contact", to: "/contact" },
+                { label: "NIT Jalandhar Website", href: "https://nitj.ac.in" },
+              ].map((link, i) =>
+                link.href ? (
+                  <li key={i}>
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors"
+                      style={{ "--hover-color": "#E28122" }}
+                    >
+                      <span style={{ color: "#E28122" }}>›</span> {link.label}
+                    </a>
+                  </li>
+                ) : (
+                  <li key={i}>
+                    <Link
+                      to={link.to}
+                      className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors"
+                    >
+                      <span style={{ color: "#E28122" }}>›</span> {link.label}
+                    </Link>
+                  </li>
+                )
+              )}
             </ul>
           </div>
 
-          {/* Contact Info */}
+          {/* Contact / Portal Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-sky-300">Contact Information</h3>
-            <ul className="space-y-3 text-gray-300 text-sm">
-              <li className="flex items-start">
-                <MapPin className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0 text-sky-400" />
-                <span>NIT Jalandhar, G.T. Road, Jalandhar, Punjab - 144011</span>
-              </li>
-              <li className="flex items-center">
-                <Phone className="w-4 h-4 mr-2 flex-shrink-0 text-sky-400" />
-                <span>+91-181-2690301</span>
-              </li>
-              <li className="flex items-center">
-                <Mail className="w-4 h-4 mr-2 flex-shrink-0 text-sky-400" />
-                <span>mess@nitj.ac.in</span>
-              </li>
+            <h3 className="text-base font-semibold mb-4 text-white border-b pb-2" style={{ borderColor: "#1464aa" }}>
+              Portal Links
+            </h3>
+            <ul className="space-y-2 text-sm">
+              {[
+                { label: "Login", to: "/login" },
+                { label: "Privacy Policy", to: "/privacy" },
+                { label: "Terms of Service", to: "/terms" },
+                { label: "Feedback", to: "/feedback" },
+                { label: "Mess Schedule", to: "/menu" },
+              ].map((link, i) => (
+                <li key={i}>
+                  <Link
+                    to={link.to}
+                    className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors"
+                  >
+                    <span style={{ color: "#E28122" }}>›</span> {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
-
-            {/* Social Links */}
-            <div className="mt-6">
-              <h4 className="text-sm font-semibold mb-3 text-sky-300">Follow Us</h4>
-              <div className="flex space-x-3">
-                <a href="#" className="bg-slate-700 p-2 rounded-full hover:bg-sky-600 transition-colors">
-                  <Facebook className="w-4 h-4" />
-                </a>
-                <a href="#" className="bg-slate-700 p-2 rounded-full hover:bg-sky-600 transition-colors">
-                  <Twitter className="w-4 h-4" />
-                </a>
-                <a href="#" className="bg-slate-700 p-2 rounded-full hover:bg-sky-600 transition-colors">
-                  <Linkedin className="w-4 h-4" />
-                </a>
-                <a href="#" className="bg-slate-700 p-2 rounded-full hover:bg-sky-600 transition-colors">
-                  <Instagram className="w-4 h-4" />
-                </a>
-              </div>
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Bar */}
-      <div className="border-t border-slate-700">
-        <div className="max-w-7xl mx-auto px-6 py-5">
-          <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
-            <p>© {new Date().getFullYear()} NIT Jalandhar. All Rights Reserved.</p>
-            <div className="flex space-x-6 mt-3 md:mt-0">
-              <Link to="/privacy" className="hover:text-sky-400 transition-colors">Privacy Policy</Link>
-              <Link to="/terms" className="hover:text-sky-400 transition-colors">Terms of Service</Link>
-              <Link to="/feedback" className="hover:text-sky-400 transition-colors">Feedback</Link>
-            </div>
-          </div>
+      {/* Bottom copyright bar */}
+      <div style={{ backgroundColor: "#091525", borderTop: "1px solid #1a2d42" }}>
+        <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col md:flex-row justify-between items-center text-xs text-gray-400 gap-2">
+          <p>© Copyright {new Date().getFullYear()}, All Rights Reserved NIT Jalandhar</p>
+          <p>
+            Developed in-house by{" "}
+            <span className="font-semibold" style={{ color: "#E28122" }}>
+              Mess Portal Dev Team
+            </span>
+          </p>
         </div>
       </div>
     </footer>
