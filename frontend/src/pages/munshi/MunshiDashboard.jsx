@@ -830,8 +830,18 @@ const DashboardView = ({
 
                 <div className="flex flex-row items-center justify-between gap-2 relative z-10">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 md:w-16 md:h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm text-indigo-600 text-lg md:text-xl font-bold shrink-0">
-                      {scannedStudent.name.charAt(0)}
+                    <div className="w-10 h-10 md:w-16 md:h-16 bg-white rounded-2xl overflow-hidden flex items-center justify-center shadow-sm text-indigo-600 text-lg md:text-xl font-bold shrink-0">
+                      {scannedStudent.photo ? (
+                          <img 
+                              src={scannedStudent.photo.startsWith('http') ? scannedStudent.photo : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${scannedStudent.photo}`} 
+                              alt={scannedStudent.name} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                          />
+                      ) : null}
+                      <span className="w-full h-full flex items-center justify-center" style={{ display: scannedStudent.photo ? 'none' : 'flex' }}>
+                          {scannedStudent.name.charAt(0)}
+                      </span>
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-lg md:text-2xl font-bold text-slate-800 truncate">

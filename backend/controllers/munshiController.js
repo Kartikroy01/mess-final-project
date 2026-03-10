@@ -92,6 +92,7 @@ exports.lookupStudent = async (req, res) => {
         rollNumber: student.rollNo,
         roomNumber: student.roomNo,
         hostelName: student.hostelNo,
+        photo: student.photo,
         balance,
         // Check mess status
         isMessClosed: !!(await MessOff.findOne({

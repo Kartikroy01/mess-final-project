@@ -275,3 +275,29 @@ exports.downloadMealReport = async (req, res) => {
   }
 };
 
+// POST /api/student/upload-photo
+exports.uploadProfilePhoto = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No photo file uploaded' });
+    }
+
+    const student = await Student.findById(req.student._id);
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student not found' });
+    }
+
+    student.photo = `/uploads/${req.file.filename}`;
+    await student.save();
+
+    return res.json({
+      success: true,
+      message: 'Profile photo updated successfully',
+      photo: student.photo,
+    });
+  } catch (error) {
+    console.error('Upload profile photo error:', error);
+    return res.status(500).json({ success: false, message: 'Server error uploading photo' });
+  }
+};
+

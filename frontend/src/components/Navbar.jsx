@@ -54,7 +54,6 @@ export default function Navbar() {
         {/* Logo overlaps down 44px into the nav bar via negative bottom margin on its wrapper */}
         <div
           className="bg-white relative"
-          style={{ borderBottom: "1px solid #e5e7eb" }}
         >
           <div
             className="max-w-screen-xl mx-auto flex items-center px-6 relative"
@@ -189,7 +188,7 @@ export default function Navbar() {
         }}
       >
         {/* --- WHITE IDENTITY STRIP (sticky) --- */}
-        <div className="bg-white" style={{ borderBottom: "1px solid #e5e7eb" }}>
+        <div className="bg-white">
           <div
             className="max-w-screen-xl mx-auto flex items-center px-6 relative"
             style={{ height: "70px" }}

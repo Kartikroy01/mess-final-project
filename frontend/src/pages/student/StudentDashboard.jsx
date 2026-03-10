@@ -6,6 +6,8 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { QRCodeCanvas } from 'qrcode.react';
 import html2canvas from 'html2canvas';
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css'; // Add crop styles
 
 // --- API SERVICE LAYER ---
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -85,6 +87,27 @@ const apiService = {
       return await response.json();
     } catch (error) {
       console.error('Error submitting mess off:', error);
+      throw error;
+    }
+  },
+  uploadProfilePhoto: async (token, file) => {
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+      const response = await fetch(`${API_BASE_URL}/student/upload-photo`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to upload photo');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error uploading photo:', error);
       throw error;
     }
   },
@@ -215,12 +238,20 @@ const LoadingSpinner = ({ message = "Loading..." }) => (
 
 // --- DASHBOARD HOME ---
 // --- DASHBOARD HOME ---
-const StudentHome = ({ student, token }) => {
+const StudentHome = ({ student, token, onProfileUpdate }) => {
     const [mealHistory, setMealHistory] = useState([]);
     const [billData, setBillData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isDownloading, setIsDownloading] = useState(false);
     const [showQRModal, setShowQRModal] = useState(false);
+    const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+    
+    // Crop state
+    const [upImg, setUpImg] = useState();
+    const [crop, setCrop] = useState({ unit: '%', width: 50, aspect: 1 });
+    const [completedCrop, setCompletedCrop] = useState(null);
+    const [showCropModal, setShowCropModal] = useState(false);
+    const imgRef = React.useRef(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -240,10 +271,95 @@ const StudentHome = ({ student, token }) => {
         fetchData();
     }, [token]);
 
+    const handlePhotoSelect = (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const file = e.target.files[0];
+            
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.addEventListener('load', () => {
+                setUpImg(reader.result);
+                setShowCropModal(true);
+            });
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const getCroppedImg = (image, crop) => {
+        const canvas = document.createElement('canvas');
+        const scaleX = image.naturalWidth / image.width;
+        const scaleY = image.naturalHeight / image.height;
+        canvas.width = crop.width;
+        canvas.height = crop.height;
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(
+            image,
+            crop.x * scaleX,
+            crop.y * scaleY,
+            crop.width * scaleX,
+            crop.height * scaleY,
+            0,
+            0,
+            crop.width,
+            crop.height
+        );
+
+        return new Promise((resolve) => {
+            canvas.toBlob((blob) => {
+                if (!blob) {
+                    console.error('Canvas is empty');
+                    return;
+                }
+                blob.name = 'cropped.jpeg';
+                resolve(blob);
+            }, 'image/jpeg', 1);
+        });
+    };
+
+    const handleCropUpload = async () => {
+        if (!completedCrop || !imgRef.current) return;
+        
+        try {
+            setIsUploadingPhoto(true);
+            setShowCropModal(false);
+            const croppedBlob = await getCroppedImg(imgRef.current, completedCrop);
+            const file = new File([croppedBlob], "profile.jpg", { type: "image/jpeg" });
+
+            const data = await apiService.uploadProfilePhoto(token, file);
+            if (data.success && onProfileUpdate) {
+                onProfileUpdate(data.photo);
+                alert('Profile photo updated successfully!');
+            }
+        } catch (error) {
+            alert(error.message || 'Failed to upload photo');
+        } finally {
+            setIsUploadingPhoto(false);
+            setUpImg(null); // Reset crop state
+        }
+    };
+
     const totalBill = billData?.totalBill || student.bill || 0;
     const mealCount = billData?.mealCount || student.mealCount || 0;
     const avgMealCost = mealCount > 0 ? (totalBill / mealCount).toFixed(0) : 0;
     
+    // Calculate full photo URL
+    const getPhotoUrl = (photoPath) => {
+        if (!photoPath) return 'https://placehold.co/100x100/3B82F6/FFF?text=ST';
+        if (photoPath.startsWith('http')) return photoPath;
+        const baseUrl = API_BASE_URL.replace('/api', '');
+        return `${baseUrl}${photoPath}`;
+    };
+
     // Professional color palette & icons
     const stats = [
         { 
@@ -297,13 +413,44 @@ const StudentHome = ({ student, token }) => {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -mr-16 -mt-16 transform transition-transform group-hover:scale-110 duration-700"></div>
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-300 opacity-10 rounded-full blur-2xl -ml-10 -mb-10 animate-pulse"></div>
                 
-                <div className="relative z-10 px-4 py-6 md:px-6 md:py-8 flex flex-row justify-between items-center gap-2 md:gap-6">
-                    <div className="text-left max-w-[60%] md:max-w-2xl">
-                        <div className="hidden md:inline-flex items-center px-4 py-1.5 bg-blue-500/20 rounded-full text-blue-50 text-xs font-bold mb-6 backdrop-blur-md border border-blue-400/30">
+                <div className="relative z-10 px-4 py-6 md:px-6 md:py-8 flex flex-row items-center gap-4 md:gap-6">
+                    {/* Profile Photo Avatar */}
+                    <div className="relative shrink-0 group/avatar">
+                        <div className="w-16 h-16 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white/20 shadow-xl bg-blue-100 flex items-center justify-center relative">
+                            {isUploadingPhoto ? (
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+                                    <div className="w-6 h-6 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
+                                </div>
+                            ) : null}
+                            <img 
+                                src={getPhotoUrl(student.photo)} 
+                                alt={student.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.target.src = `https://placehold.co/100x100/3B82F6/FFF?text=${student.name.charAt(0)}` }}
+                            />
+                            {/* Hover overlay for upload edit */}
+                            <label className="absolute inset-0 bg-black/50 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center cursor-pointer transition-opacity z-20">
+                                <span className="text-white text-[10px] md:text-xs font-bold flex flex-col items-center">
+                                    <User size={16} className="mb-1" />
+                                    Change
+                                </span>
+                                <input 
+                                    type="file" 
+                                    className="hidden" 
+                                    accept="image/*" 
+                                    onChange={handlePhotoSelect}
+                                    disabled={isUploadingPhoto}
+                                />
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="text-left max-w-[60%] md:max-w-2xl flex-1">
+                        <div className="hidden md:inline-flex items-center px-4 py-1.5 bg-blue-500/20 rounded-full text-blue-50 text-xs font-bold mb-4 backdrop-blur-md border border-blue-400/30">
                             <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span>
                             Live Mess Dashboard
                         </div>
-                        <h1 className="text-2xl md:text-5xl font-black text-white tracking-tighter mb-1 md:mb-2 drop-shadow-sm leading-tight">
+                        <h1 className="text-xl md:text-4xl lg:text-5xl font-black text-white tracking-tighter mb-1 md:mb-2 drop-shadow-sm leading-tight">
                             Hello, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">{student.name.split(' ')[0]}</span>
                         </h1>
                         {/* Mobile: Show QR button */}
@@ -525,6 +672,63 @@ const StudentHome = ({ student, token }) => {
                                 className="flex-1 py-3 rounded-xl font-bold text-sm bg-white text-slate-800 hover:bg-white/90 transition-all"
                             >
                                 Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {/* Crop Photo Modal */}
+            {showCropModal && upImg && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 transform">
+                        <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                            <h3 className="font-bold text-slate-800 text-sm tracking-wide">Adjust Profile Photo</h3>
+                            <button onClick={() => setShowCropModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-4 bg-slate-900 flex justify-center items-center h-64 overflow-hidden relative">
+                            <ReactCrop 
+                                crop={crop} 
+                                onChange={(c) => setCrop(c)} 
+                                onComplete={(c) => setCompletedCrop(c)}
+                                aspect={1} // Force square crop
+                                circularCrop // Visually circular
+                            >
+                                <img
+                                    src={upImg}
+                                    ref={imgRef}
+                                    alt="Upload preview"
+                                    className="max-h-64 object-contain"
+                                    onLoad={(e) => {
+                                        // Auto-center default crop on load
+                                        const { naturalWidth, naturalHeight } = e.currentTarget;
+                                        const side = Math.min(naturalWidth, naturalHeight) * 0.5;
+                                        setCrop({
+                                            unit: 'px',
+                                            width: side,
+                                            height: side,
+                                            x: (naturalWidth - side) / 2,
+                                            y: (naturalHeight - side) / 2,
+                                            aspect: 1
+                                        });
+                                    }}
+                                />
+                            </ReactCrop>
+                        </div>
+                        <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3">
+                            <button
+                                onClick={() => setShowCropModal(false)}
+                                className="flex-1 py-2.5 rounded-xl font-bold border-2 border-slate-200 text-slate-600 hover:bg-slate-100 transition-all text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleCropUpload}
+                                className="flex-1 py-2.5 rounded-xl font-bold bg-[#1464aa] text-white hover:opacity-90 transition-all text-sm shadow-md"
+                            >
+                                Save Photo
                             </button>
                         </div>
                     </div>
@@ -1503,8 +1707,18 @@ function StudentDashboard() {
                     {/* User Profile Card */}
                     <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6 flex items-center gap-4 relative overflow-hidden group">
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'linear-gradient(to right, rgba(20,100,170,0.05), rgba(20,100,170,0.1))' }}></div>
-                        <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md flex-shrink-0">
-                             <img src={student.photo || "https://ui-avatars.com/api/?name=" + student.name} alt={student.name} className="w-full h-full object-cover"/>
+                        <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md flex-shrink-0 bg-[#1464aa] text-white flex items-center justify-center font-bold text-xl">
+                             {student.photo ? (
+                                 <img 
+                                     src={student.photo.startsWith('http') ? student.photo : `${API_BASE_URL.replace('/api', '')}${student.photo}`} 
+                                     alt={student.name} 
+                                     className="w-full h-full object-cover"
+                                     onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                                 />
+                             ) : null}
+                             <span className="w-full h-full flex items-center justify-center" style={{ display: student.photo ? 'none' : 'flex' }}>
+                                 {student.name.charAt(0)}
+                             </span>
                         </div>
                         <div className="relative min-w-0">
                             <h3 className="font-bold text-slate-800 truncate text-sm">{student.name}</h3>
@@ -1596,8 +1810,18 @@ function StudentDashboard() {
                         <div className="h-8 w-px bg-slate-200 mx-1 hidden md:block"></div>
                         <div className="hidden md:flex items-center gap-2">
                             <span className="text-sm font-bold text-slate-700">{student.rollNo}</span>
-                            <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 overflow-hidden">
-                                <img src={student.photo || "https://ui-avatars.com/api/?name=" + student.name} alt="Profile" className="w-full h-full object-cover"/>
+                            <div className="w-8 h-8 rounded-full bg-[#1464aa] text-white border border-slate-200 overflow-hidden flex items-center justify-center font-bold text-sm">
+                                {student.photo ? (
+                                    <img 
+                                        src={student.photo.startsWith('http') ? student.photo : `${API_BASE_URL.replace('/api', '')}${student.photo}`} 
+                                        alt="Profile" 
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                                    />
+                                ) : null}
+                                <span className="w-full h-full flex items-center justify-center" style={{ display: student.photo ? 'none' : 'flex' }}>
+                                    {student.name.charAt(0)}
+                                </span>
                             </div>
                         </div>
                     </div>
