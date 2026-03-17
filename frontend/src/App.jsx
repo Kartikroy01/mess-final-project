@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Menu from "./pages/Menu";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Hostels from "./pages/Hostels";
 
 // Dashboards
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -27,6 +28,7 @@ export default function App() {
         {/* 1. Public Routes: These pages WILL have the Navbar and Footer */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/hostels" element={<Hostels />} />
           <Route path="/login" element={<Login />} />
           <Route path="/menu" element={<Menu />} />
           <Route path="/about" element={<About />} />

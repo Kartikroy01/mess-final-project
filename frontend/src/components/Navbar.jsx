@@ -40,7 +40,7 @@ export default function Navbar() {
             <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300">📞 HELPDESK</span>
           </div>
           <div className="hidden md:flex items-center gap-3 font-semibold tracking-wide ml-auto">
-            <span className="cursor-pointer hover:text-yellow-300">ERP</span>
+            <a href="https://v1.nitj.ac.in/erp/login" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-yellow-300">ERP</a>
             <span>|</span>
             <span className="cursor-pointer hover:text-yellow-300">NITJ PORTAL</span>
             <span>|</span>
@@ -51,28 +51,46 @@ export default function Navbar() {
         </div>
 
         {/* --- WHITE IDENTITY STRIP --- */}
-        {/* Logo overlaps down 44px into the nav bar via negative bottom margin on its wrapper */}
-        <div
-          className="bg-white relative"
-        >
+        <div className="bg-white relative">
           <div
-            className="max-w-screen-xl mx-auto flex items-center px-6 relative"
-            style={{ height: "96px" }}
+            className="max-w-screen-xl mx-auto flex flex-col md:flex-row items-center px-4 md:px-6 relative"
+            style={{ minHeight: "96px" }}
           >
-            {/* LEFT: Punjabi / Hindi name (same as NITJ — Punjabi left) */}
-            <div className="flex-1 leading-snug">
+            {/* MOBILE LAYOUT: Logo (left) + Names (right) */}
+            <div className="flex w-full items-center justify-between md:hidden py-4">
+              <div className="flex-shrink-0 w-20 h-20">
+                <Link to="/">
+                  <img
+                    src="/logo_250.png"
+                    alt="NITJ Logo"
+                    className="w-full h-full object-contain"
+                  />
+                </Link>
+              </div>
+              <div className="flex-1 text-right pl-4">
+                <p className="text-[14px] font-extrabold text-gray-900 uppercase leading-tight tracking-tight">
+                  Dr BR Ambedkar National Institute of Technology
+                </p>
+                <p className="text-[12px] font-bold text-gray-700 uppercase leading-tight mt-1">
+                  Jalandhar, Punjab (India)
+                </p>
+              </div>
+            </div>
+
+            {/* DESKTOP LAYOUT (remains exactly as it was) */}
+            {/* LEFT: Punjabi / Hindi name */}
+            <div className="hidden md:block flex-1 leading-snug">
               <p className="text-[13px] font-bold text-gray-800">
                 ਡਾ ਬੀ ਆਰ ਅੰਬੇਡਕਰ ਨੈਸ਼ਨਲ ਇੰਸਟੀਚਿਊਟ ਆਫ਼ ਟੈਕਨਾਲੋਜੀ
               </p>
               <p className="text-[13px] font-bold text-gray-800">
                 ਜਲੰਧਰ, ਪੰਜਾਬ (ਭਾਰਤ)
               </p>
-              
             </div>
 
-            {/* CENTER: Logo — 132x132px, no border, overlapping into nav below */}
+            {/* CENTER: Logo (Desktop Only) */}
             <div
-              className="absolute left-1/2"
+              className="hidden md:block absolute left-1/2"
               style={{
                 transform: "translateX(-50%)",
                 bottom: "-50px",
@@ -95,8 +113,8 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* RIGHT: English name */}
-            <div className="flex-1 text-right leading-snug">
+            {/* RIGHT: English name (Desktop Only) */}
+            <div className="hidden md:block flex-1 text-right leading-snug">
               <p className="text-[13px] font-bold text-gray-800 uppercase">
                 DR B R Ambedkar National Institute of Technology
               </p>
@@ -114,7 +132,7 @@ export default function Navbar() {
               Downloaded from: https://www.nitj.ac.in/public/assets/images/Rectangle%2047%20(1).png
               Saved to: /public/arch.png */}
           <div
-            className="absolute left-1/2 top-0 pointer-events-none"
+            className="hidden md:block absolute left-1/2 top-0 pointer-events-none"
             style={{ transform: "translateX(-50%)", width: "230px", zIndex: 5 }}
           >
             <img
@@ -130,8 +148,8 @@ export default function Navbar() {
           >
             {/* LEFT nav links */}
             <div className="hidden md:flex items-center gap-0">
-              <NavLink to="/" end className={({ isActive }) => isActive ? activeNavLinkClass : navLinkClass}>🏠</NavLink>
               <NavLink to="/" end className={({ isActive }) => isActive ? activeNavLinkClass : navLinkClass}>HOME</NavLink>
+              <NavLink to="/hostels" className={({ isActive }) => isActive ? activeNavLinkClass : navLinkClass}>HOSTELS</NavLink>
               <NavLink to="/menu" className={({ isActive }) => isActive ? activeNavLinkClass : navLinkClass}>MENU</NavLink>
               <NavLink to="/about" className={({ isActive }) => isActive ? activeNavLinkClass : navLinkClass}>ABOUT</NavLink>
             </div>
@@ -146,9 +164,9 @@ export default function Navbar() {
               <NavLink to="/login" className={({ isActive }) => isActive ? activeNavLinkClass : navLinkClass}>LOGIN</NavLink>
             </div>
 
-            {/* Mobile toggle */}
+            {/* Mobile toggle - Moved to left */}
             <button
-              className="md:hidden text-white ml-auto z-30"
+              className="md:hidden text-white mr-auto z-30"
               onClick={() => setIsOpen(!isOpen)}
               aria-label="Toggle menu"
             >
@@ -166,6 +184,7 @@ export default function Navbar() {
         >
           <div className="flex flex-col p-4 gap-2">
             <Link to="/" className="block px-3 py-2 rounded text-white font-bold text-sm uppercase hover:bg-white/20" onClick={() => setIsOpen(false)}>Home</Link>
+            <Link to="/hostels" className="block px-3 py-2 rounded text-white font-bold text-sm uppercase hover:bg-white/20" onClick={() => setIsOpen(false)}>Hostels</Link>
             <Link to="/menu" className="block px-3 py-2 rounded text-white font-bold text-sm uppercase hover:bg-white/20" onClick={() => setIsOpen(false)}>Menu</Link>
             <Link to="/about" className="block px-3 py-2 rounded text-white font-bold text-sm uppercase hover:bg-white/20" onClick={() => setIsOpen(false)}>About</Link>
             <Link to="/contact" className="block px-3 py-2 rounded text-white font-bold text-sm uppercase hover:bg-white/20" onClick={() => setIsOpen(false)}>Contact</Link>
@@ -190,11 +209,33 @@ export default function Navbar() {
         {/* --- WHITE IDENTITY STRIP (sticky) --- */}
         <div className="bg-white">
           <div
-            className="max-w-screen-xl mx-auto flex items-center px-6 relative"
+            className="max-w-screen-xl mx-auto flex items-center px-4 md:px-6 relative"
             style={{ height: "70px" }}
           >
+            {/* MOBILE LAYOUT (Sticky) */}
+            <div className="flex w-full items-center justify-between md:hidden py-2">
+              <div className="flex-shrink-0 w-12 h-12">
+                <Link to="/">
+                  <img
+                    src="/logo_250.png"
+                    alt="NITJ Logo"
+                    className="w-full h-full object-contain"
+                  />
+                </Link>
+              </div>
+              <div className="flex-1 text-right pl-3">
+                <p className="text-[12px] font-extrabold text-gray-900 uppercase leading-none">
+                  Dr BR Ambedkar National Institute of Technology
+                </p>
+                <p className="text-[10px] font-bold text-gray-700 uppercase leading-none mt-1">
+                  Jalandhar, Punjab (India)
+                </p>
+              </div>
+            </div>
+
+            {/* DESKTOP LAYOUT (Sticky) */}
             {/* LEFT: English name */}
-            <div className="flex-1 leading-snug">
+            <div className="hidden md:block flex-1 leading-snug">
               <p className="text-[11px] font-bold text-gray-800 uppercase leading-tight">
                 DR B R Ambedkar National Institute of Technology
               </p>
@@ -203,9 +244,9 @@ export default function Navbar() {
               </p>
             </div>
 
-            {/* CENTER: Logo — overlaps down into nav bar below */}
+            {/* CENTER: Logo (Desktop Only) */}
             <div
-              className="absolute left-1/2"
+              className="hidden md:block absolute left-1/2"
               style={{
                 transform: "translateX(-50%)",
                 bottom: "-36px",
@@ -224,7 +265,7 @@ export default function Navbar() {
             </div>
 
             {/* RIGHT: Hindi name */}
-            <div className="flex-1 text-right leading-snug">
+            <div className="hidden md:block flex-1 text-right leading-snug">
               <p className="text-[11px] font-bold text-gray-800 leading-tight">
                 डॉ बी आर अम्बेडकर राष्ट्रीय प्रौद्योगिकी संस्थान
               </p>
@@ -239,7 +280,7 @@ export default function Navbar() {
         <div className="relative" style={{ backgroundColor: NITJ_BLUE }}>
           {/* Arch PNG — same as full header but scaled down */}
           <div
-            className="absolute left-1/2 top-0 pointer-events-none"
+            className="hidden md:block absolute left-1/2 top-0 pointer-events-none"
             style={{ transform: "translateX(-50%)", width: "180px", zIndex: 5 }}
           >
             <img src="/arch.png" alt="" style={{ width: "180px", display: "block" }} />
@@ -251,8 +292,8 @@ export default function Navbar() {
           >
             {/* LEFT nav links */}
             <div className="hidden md:flex items-center gap-0">
-              <NavLink to="/" end className={({ isActive }) => isActive ? activeNavLinkClass : navLinkClass}>🏠</NavLink>
               <NavLink to="/" end className={({ isActive }) => isActive ? activeNavLinkClass : navLinkClass}>HOME</NavLink>
+              <NavLink to="/hostels" className={({ isActive }) => isActive ? activeNavLinkClass : navLinkClass}>HOSTELS</NavLink>
               <NavLink to="/menu" className={({ isActive }) => isActive ? activeNavLinkClass : navLinkClass}>MENU</NavLink>
               <NavLink to="/about" className={({ isActive }) => isActive ? activeNavLinkClass : navLinkClass}>ABOUT</NavLink>
             </div>
@@ -273,8 +314,8 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* Mobile toggle */}
-            <button className="md:hidden text-white ml-auto" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle mobile menu">
+            {/* Mobile toggle - Moved to left */}
+            <button className="md:hidden text-white mr-auto" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle mobile menu">
               {isOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </nav>

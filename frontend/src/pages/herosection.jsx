@@ -1,187 +1,120 @@
-import React, { useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ChevronDown, Users, Building2, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function HeroSection() {
-  const lottieContainer = useRef(null);
-  const [isVisible, setIsVisible] = React.useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+
+  const slides = [
+    {
+      image: "/hero/hero1.jpg",
+      heading: "Quality Nutrition, Healthy Campus Life",
+      subheading: "Fueling your education with balanced and delicious meals every day.",
+    },
+    {
+      image: "/hero/hero2.jpg",
+      heading: "Home-Style Food served with Care",
+      subheading: "Experience the warmth of home-cooked flavors in every bite.",
+    },
+    {
+      image: "/hero/hero3.jpg",
+      heading: "Nourishing Your Mind and Body",
+      subheading: "Providing fresh, hygienic, and sustainable dining solutions for NITJ.",
+    },
+  ];
 
   useEffect(() => {
     setIsVisible(true);
-
-    // Load Lottie animation
-    const script = document.createElement("script");
-    script.src =
-      "https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js";
-    script.async = true;
-
-    script.onload = () => {
-      if (window.lottie && lottieContainer.current) {
-        window.lottie.loadAnimation({
-          container: lottieContainer.current,
-          renderer: "svg",
-          loop: true,
-          autoplay: true,
-          path: "https://lottie.host/4f0c5e3c-5e6e-4d8e-9c3e-8f3b8c7e5d4e/rKJqXzRzYE.json",
-        });
-      }
-    };
-
-    document.body.appendChild(script);
-
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
-  }, []);
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [slides.length]);
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-nitj-dark to-nitj-primary">
-      {/* Grid pattern overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
+    <div className="relative h-screen w-full overflow-hidden bg-gray-900">
+      {/* Background Image Slider */}
+      {slides.map((slide, index) => (
+        <div
+          key={index}
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+            index === currentSlide ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <img
+            src={slide.image}
+            alt={`Hero Background ${index + 1}`}
+            className="w-full h-full object-cover scale-105 animate-slow-zoom"
+          />
+        </div>
+      ))}
 
-      {/* Main content */}
-      <div className="relative h-full flex items-center justify-center px-6">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center w-full">
-          {/* Left side - Text content */}
-          <div
-            className={`text-left space-y-8 transition-all duration-1000 transform ${
-              isVisible
-                ? "translate-x-0 opacity-100"
-                : "-translate-x-12 opacity-0"
-            }`}
-          >
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight">
-              Welcome to
-              <span className="block mt-2 text-nitj-accent">
-                NITJ Mess Portal
-              </span>
-            </h1>
+      {/* Dark Overlay for Readability */}
+      <div className="absolute inset-0 bg-black/55 backdrop-blur-[1px]"></div>
 
-            <p className="text-lg md:text-xl text-slate-300 leading-relaxed max-w-xl">
-              Experience seamless mess management with real-time meal tracking, 
-              transparent billing, and instant feedback. Your campus dining made simple.
-            </p>
+      {/* Main Content (Centered) */}
+      <div className="relative h-full flex flex-col items-center justify-center text-center px-6 z-10">
+        <div
+          className={`max-w-4xl space-y-8 transition-all duration-1000 transform ${
+            isVisible ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"
+          }`}
+        >
+          {/* Static Welcome Text */}
+          <h2 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight drop-shadow-2xl mb-8">
+            Welcome to <span className="text-[#FF5722] whitespace-nowrap">NITJ MESS</span>
+          </h2>
 
-            <div className="flex flex-wrap gap-4 pt-4">
-              <Link
-                to="/login"
-                className="group px-8 py-4 bg-nitj-accent text-white rounded-xl font-semibold text-lg hover:brightness-110 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-nitj-accent/30"
+          <div className="relative w-full min-h-[120px] md:min-h-[140px] flex items-center justify-center">
+            {/* Dynamic Content Cycling with Slider */}
+            {slides.map((slide, index) => (
+              <div
+                key={index}
+                className={`transition-all duration-700 absolute transition-all ease-in-out ${
+                  index === currentSlide ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none"
+                }`}
               >
-                <span className="flex items-center gap-2">
-                  Get Started
-                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </span>
-              </Link>
-              <button className="px-8 py-4 bg-white/10 backdrop-blur-md border-2 border-white/30 text-white rounded-xl font-semibold text-lg hover:bg-white/20 transform hover:scale-105 transition-all duration-300">
-                Learn More
-              </button>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-6 pt-8">
-              <div className="text-center p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                <div className="flex items-center justify-center mb-2">
-                  <Users className="w-6 h-6 text-nitj-accent" />
-                </div>
-                <div className="text-3xl font-bold text-white">5000+</div>
-                <div className="text-sm text-slate-400">Students</div>
+                <p className="text-xl md:text-2xl text-white font-medium italic drop-shadow-md px-4">
+                  "{slide.heading}"
+                </p>
+                <p className="text-lg md:text-xl text-slate-200 mt-3 font-normal max-w-2xl mx-auto drop-shadow-sm px-4">
+                  "{slide.subheading}"
+                </p>
               </div>
-              <div className="text-center p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                <div className="flex items-center justify-center mb-2">
-                  <Building2 className="w-6 h-6 text-nitj-accent" />
-                </div>
-                <div className="text-3xl font-bold text-white">13+</div>
-                <div className="text-sm text-slate-400">Hostels</div>
-              </div>
-              <div className="text-center p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                <div className="flex items-center justify-center mb-2">
-                  <TrendingUp className="w-6 h-6 text-nitj-accent" />
-                </div>
-                <div className="text-3xl font-bold text-white">99%</div>
-                <div className="text-sm text-slate-400">Satisfaction</div>
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* Right side - Lottie Animation */}
-          <div
-            className={`relative transition-all duration-1000 delay-300 transform ${
-              isVisible
-                ? "translate-x-0 opacity-100"
-                : "translate-x-12 opacity-0"
-            }`}
-          >
-            <div className="relative">
-              {/* Glowing effect behind animation */}
-              <div className="absolute inset-0 bg-nitj-accent rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
-
-              {/* Lottie container */}
-              <div
-                ref={lottieContainer}
-                className="relative w-full h-96 md:h-[500px]"
-              ></div>
-
-              {/* Fallback content if Lottie doesn't load */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-white/20 text-9xl">🍽️</div>
-              </div>
-            </div>
+          <div className="flex flex-col items-center gap-6 pt-12">
+            <Link
+              to="/login"
+              className="px-10 py-3.5 bg-transparent text-white border-[1.5px] border-[#FF5722] rounded-md font-bold text-lg hover:bg-[#FF5722]/10 hover:border-[#FF7043] transition-all duration-300 transform active:scale-95 shadow-lg shadow-[#FF5722]/20"
+            >
+              Get In
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-        <ChevronDown className="w-8 h-8 text-white/60" />
+      {/* Slide Indicators */}
+      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex gap-3 z-20">
+        {slides.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentSlide(index)}
+            className={`h-2 transition-all duration-300 rounded-full ${
+              index === currentSlide ? "w-8 bg-[#FF5722]" : "w-2 bg-white/40"
+            }`}
+          />
+        ))}
       </div>
 
       <style jsx>{`
-        @keyframes blob {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-          }
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
-          }
+        @keyframes slow-zoom {
+          0% { transform: scale(1); }
+          100% { transform: scale(1.1); }
         }
-
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-slideUp {
-          animation: slideUp 0.4s ease-out;
+        .animate-slow-zoom {
+          animation: slow-zoom 20s linear infinite alternate;
         }
       `}</style>
     </div>

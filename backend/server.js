@@ -73,6 +73,10 @@ const addBillRoutes = require('./routes/addBill');
 app.use('/api/munshi/bill', addBillRoutes);
 console.log('[Server] Registered /api/munshi/bill (PROTECTED)');
 
+const complaintRoutes = require('./routes/complaint');
+app.use('/api/complaint', complaintRoutes);
+console.log('[Server] Registered /api/complaint');
+
 app.use('/api/munshi', munshiRoutes);
 console.log('[Server] Registered /api/munshi');
 

@@ -1,13 +1,14 @@
 
 // --- IMPORTS ---
 import React, { useState, useEffect } from 'react';
-import { Home, BarChart2, CalendarOff, LogOut, Menu, X, QrCode, Download, FileText, ThumbsUp, Meh, ThumbsDown, Angry, MessageSquare, UtensilsCrossed, Bell, User, ChevronRight, Activity, DollarSign, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Home, BarChart2, CalendarOff, LogOut, Menu, X, QrCode, Download, FileText, ThumbsUp, Meh, ThumbsDown, Angry, MessageSquare, UtensilsCrossed, Bell, User, ChevronRight, Activity, DollarSign, Calendar, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { QRCodeCanvas } from 'qrcode.react';
 import html2canvas from 'html2canvas';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css'; // Add crop styles
+import ComplaintForm from './ComplaintForm';
 
 // --- API SERVICE LAYER ---
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -191,6 +192,12 @@ const apiService = {
       console.error('Error fetching bill:', error);
       throw error;
     }
+  },
+  getPhotoUrl: (photoPath) => {
+    if (!photoPath) return 'https://placehold.co/100x100/3B82F6/FFF?text=ST';
+    if (photoPath.startsWith('http')) return photoPath;
+    const baseUrl = API_BASE_URL.replace('/api', '');
+    return `${baseUrl}${photoPath}`;
   }
 };
 
@@ -225,6 +232,18 @@ const NavItem = ({ icon, text, active, onClick, badge }) => (
     </li>
 );
 
+const BottomNavItem = ({ icon, label, active, onClick }) => (
+    <button 
+        onClick={onClick} 
+        className={`flex flex-col items-center gap-1 transition-all duration-300 ${active ? 'text-[#1464aa] scale-110' : 'text-slate-400'}`}
+    >
+        <div className={`p-1.5 rounded-xl transition-all ${active ? 'bg-blue-50' : ''}`}>
+            {React.cloneElement(icon, { size: 22, strokeWidth: active ? 2.5 : 2 })}
+        </div>
+        <span className={`text-[10px] font-black uppercase tracking-widest ${active ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1 h-0'}`}>{label}</span>
+    </button>
+);
+
 // --- LOADING COMPONENT ---
 const LoadingSpinner = ({ message = "Loading..." }) => (
     <div className="flex flex-col items-center justify-center h-full py-12">
@@ -238,20 +257,17 @@ const LoadingSpinner = ({ message = "Loading..." }) => (
 
 // --- DASHBOARD HOME ---
 // --- DASHBOARD HOME ---
-const StudentHome = ({ student, token, onProfileUpdate }) => {
+const StudentHome = ({ student, token, onProfileUpdate, setActivePage, setShowComplaintModal, setShowQRModal }) => {
     const [mealHistory, setMealHistory] = useState([]);
     const [billData, setBillData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [isDownloading, setIsDownloading] = useState(false);
-    const [showQRModal, setShowQRModal] = useState(false);
-    const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-    
-    // Crop state
-    const [upImg, setUpImg] = useState();
-    const [crop, setCrop] = useState({ unit: '%', width: 50, aspect: 1 });
-    const [completedCrop, setCompletedCrop] = useState(null);
-    const [showCropModal, setShowCropModal] = useState(false);
-    const imgRef = React.useRef(null);
+    const [activeBanner, setActiveBanner] = useState(0);
+
+    const banners = [
+        { id: 1, image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600&h=200', title: 'Healthy Meals, Happy Life', desc: 'Up to 20% off on special items' },
+        { id: 2, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=600&h=200', title: 'New Menu Unlocked', desc: 'Check out the latest recipes' },
+        { id: 3, image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=600&h=200', title: 'Daily Nutrition Tips', desc: 'Fuel your education properly' }
+    ];
 
     useEffect(() => {
         const fetchData = async () => {
@@ -269,508 +285,185 @@ const StudentHome = ({ student, token, onProfileUpdate }) => {
             }
         };
         fetchData();
-    }, [token]);
-
-    const handlePhotoSelect = (e) => {
-        if (e.target.files && e.target.files.length > 0) {
-            const file = e.target.files[0];
-            
-            if (!file.type.startsWith('image/')) {
-                alert('Please select an image file');
-                return;
-            }
-
-            if (file.size > 5 * 1024 * 1024) {
-                alert('File size must be less than 5MB');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.addEventListener('load', () => {
-                setUpImg(reader.result);
-                setShowCropModal(true);
-            });
-            reader.readAsDataURL(file);
-        }
-    };
-
-    const getCroppedImg = (image, crop) => {
-        const canvas = document.createElement('canvas');
-        const scaleX = image.naturalWidth / image.width;
-        const scaleY = image.naturalHeight / image.height;
-        canvas.width = crop.width;
-        canvas.height = crop.height;
-        const ctx = canvas.getContext('2d');
-
-        ctx.drawImage(
-            image,
-            crop.x * scaleX,
-            crop.y * scaleY,
-            crop.width * scaleX,
-            crop.height * scaleY,
-            0,
-            0,
-            crop.width,
-            crop.height
-        );
-
-        return new Promise((resolve) => {
-            canvas.toBlob((blob) => {
-                if (!blob) {
-                    console.error('Canvas is empty');
-                    return;
-                }
-                blob.name = 'cropped.jpeg';
-                resolve(blob);
-            }, 'image/jpeg', 1);
-        });
-    };
-
-    const handleCropUpload = async () => {
-        if (!completedCrop || !imgRef.current) return;
         
-        try {
-            setIsUploadingPhoto(true);
-            setShowCropModal(false);
-            const croppedBlob = await getCroppedImg(imgRef.current, completedCrop);
-            const file = new File([croppedBlob], "profile.jpg", { type: "image/jpeg" });
+        const interval = setInterval(() => {
+            setActiveBanner((prev) => (prev + 1) % banners.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [token, banners.length]);
 
-            const data = await apiService.uploadProfilePhoto(token, file);
-            if (data.success && onProfileUpdate) {
-                onProfileUpdate(data.photo);
-                alert('Profile photo updated successfully!');
-            }
-        } catch (error) {
-            alert(error.message || 'Failed to upload photo');
-        } finally {
-            setIsUploadingPhoto(false);
-            setUpImg(null); // Reset crop state
-        }
-    };
-
-    const totalBill = billData?.totalBill || student.bill || 0;
-    const mealCount = billData?.mealCount || student.mealCount || 0;
-    const avgMealCost = mealCount > 0 ? (totalBill / mealCount).toFixed(0) : 0;
-    
-    // Calculate full photo URL
-    const getPhotoUrl = (photoPath) => {
-        if (!photoPath) return 'https://placehold.co/100x100/3B82F6/FFF?text=ST';
-        if (photoPath.startsWith('http')) return photoPath;
-        const baseUrl = API_BASE_URL.replace('/api', '');
-        return `${baseUrl}${photoPath}`;
-    };
-
-    // Professional color palette & icons
-    const stats = [
-        { 
-            label: 'Total Bill', 
-            value: `₹${totalBill}`, 
-            icon: <DollarSign size={24} />, 
-            color: 'blue',
-            desc: `${billData ? new Date(0, billData.month - 1).toLocaleString('default', { month: 'long' }) : 'Current'} ${billData?.year || new Date().getFullYear()}`
-        },
-        { 
-            label: 'Meals Taken', 
-            value: mealCount, 
-            icon: <UtensilsCrossed size={24} />, 
-            color: 'emerald',
-            change: '+5',
-            desc: 'this month'
-        },
-        { 
-            label: 'Avg. Cost', 
-            value: `₹${avgMealCost}`, 
-            icon: <Activity size={24} />, 
-            color: 'violet',
-            change: '-2%',
-            desc: 'per meal'
-        },
-        { 
-            label: 'Mess Off', 
-            value: '0', 
-            icon: <CalendarOff size={24} />, 
-            color: 'rose',
-            change: '0',
-            desc: 'active days'
-        }
+    const quickActions = [
+        { id: 'scan', label: 'Scan to Eat', icon: <QrCode size={24} />, color: 'bg-blue-600', textColor: 'text-white', action: () => setShowQRModal(true) },
+        { id: 'messOff', label: 'Mess Off', icon: <CalendarOff size={24} />, color: 'bg-white', textColor: 'text-blue-600', action: () => setActivePage('messOff') },
+        { id: 'feedback', label: 'Feedback', icon: <MessageSquare size={24} />, color: 'bg-white', textColor: 'text-blue-600', action: () => setActivePage('feedback') },
+        { id: 'complaint', label: 'Complain', icon: <AlertCircle size={24} />, color: 'bg-white', textColor: 'text-blue-600', action: () => setShowComplaintModal(true) },
+        { id: 'history', label: 'Meal History', icon: <Clock size={24} />, color: 'bg-white', textColor: 'text-blue-600', action: () => setActivePage('reports') },
+        { id: 'bill', label: 'Bill Payment', icon: <DollarSign size={24} />, color: 'bg-white', textColor: 'text-blue-600', action: () => setActivePage('reports') },
+        { id: 'menu', label: 'Today Menu', icon: <UtensilsCrossed size={24} />, color: 'bg-white', textColor: 'text-blue-600', action: () => {} },
+        { id: 'profile', label: 'My Profile', icon: <User size={24} />, color: 'bg-white', textColor: 'text-blue-600', action: () => {} },
     ];
 
-    const getLightBg = (color) => {
-         const bgs = {
-            blue: 'bg-blue-50 text-blue-600',
-            emerald: 'bg-emerald-50 text-emerald-600',
-            violet: 'bg-violet-50 text-violet-600',
-            rose: 'bg-rose-50 text-rose-600',
-        };
-        return bgs[color] || bgs.blue;
-    };
+    const totalBill = billData?.totalBill || student.bill || 0;
+    const stats = [
+        { label: 'Total Bill', value: `₹${totalBill}`, icon: <DollarSign />, grad: 'from-blue-500 to-blue-600' },
+        { label: 'Total Meals', value: student.mealCount || 0, icon: <UtensilsCrossed />, grad: 'from-green-500 to-emerald-600' },
+        { label: 'Avg/Meal', value: `₹${(totalBill / (student.mealCount || 1)).toFixed(2)}`, icon: <Activity />, grad: 'from-purple-500 to-purple-600' },
+        { label: 'Fines', value: `₹${student.fines || 0}`, icon: <AlertCircle />, grad: 'from-red-500 to-red-600' }
+    ];
 
     return (
-        <div className="space-y-10 transition-opacity duration-700 opacity-100">
-            {/* Hero Section */}
-            <div className="relative group rounded-[2.5rem] overflow-hidden shadow-2xl shadow-blue-200/40">
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, #0d3b6e, #1464aa, #1a5fa0)' }}></div>
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -mr-16 -mt-16 transform transition-transform group-hover:scale-110 duration-700"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-300 opacity-10 rounded-full blur-2xl -ml-10 -mb-10 animate-pulse"></div>
-                
-                <div className="relative z-10 px-4 py-6 md:px-6 md:py-8 flex flex-row items-center gap-4 md:gap-6">
-                    {/* Profile Photo Avatar */}
-                    <div className="relative shrink-0 group/avatar">
-                        <div className="w-16 h-16 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white/20 shadow-xl bg-blue-100 flex items-center justify-center relative">
-                            {isUploadingPhoto ? (
-                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
-                                    <div className="w-6 h-6 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
-                                </div>
-                            ) : null}
-                            <img 
-                                src={getPhotoUrl(student.photo)} 
-                                alt={student.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => { e.target.src = `https://placehold.co/100x100/3B82F6/FFF?text=${student.name.charAt(0)}` }}
-                            />
-                            {/* Hover overlay for upload edit */}
-                            <label className="absolute inset-0 bg-black/50 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center cursor-pointer transition-opacity z-20">
-                                <span className="text-white text-[10px] md:text-xs font-bold flex flex-col items-center">
-                                    <User size={16} className="mb-1" />
-                                    Change
-                                </span>
-                                <input 
-                                    type="file" 
-                                    className="hidden" 
-                                    accept="image/*" 
-                                    onChange={handlePhotoSelect}
-                                    disabled={isUploadingPhoto}
-                                />
-                            </label>
+        <div className="min-h-screen bg-[#f5f9ff] md:bg-transparent -m-4 md:-m-0 pb-24 md:pb-0">
+            {/* --- MOBILE ONLY VIEW --- */}
+            <div className="md:hidden space-y-6">
+                {/* Mobile Header */}
+                <div className="bg-white px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-30">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-xs border-2 border-white shadow-sm overflow-hidden">
+                            {student.photo ? <img src={apiService.getPhotoUrl(student.photo)} alt="" className="w-full h-full object-cover" /> : student.name.charAt(0)}
+                        </div>
+                        <div className="flex items-center gap-1 bg-[#1464aa] text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
+                            <span>NITJ MESS</span>
                         </div>
                     </div>
-
-                    <div className="text-left max-w-[60%] md:max-w-2xl flex-1">
-                        <div className="hidden md:inline-flex items-center px-4 py-1.5 bg-blue-500/20 rounded-full text-blue-50 text-xs font-bold mb-4 backdrop-blur-md border border-blue-400/30">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span>
-                            Live Mess Dashboard
-                        </div>
-                        <h1 className="text-xl md:text-4xl lg:text-5xl font-black text-white tracking-tighter mb-1 md:mb-2 drop-shadow-sm leading-tight">
-                            Hello, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">{student.name.split(' ')[0]}</span>
-                        </h1>
-                        {/* Mobile: Show QR button */}
-                        <button
-                            onClick={() => setShowQRModal(true)}
-                            className="mt-3 md:hidden inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white border border-white/30 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all"
-                        >
-                            <QrCode size={14} />
-                            Show My QR Card
+                    <div className="flex items-center gap-4 text-slate-600">
+                        <button onClick={() => setActivePage('reports')} className="hover:text-blue-600 transition-colors"><BarChart2 size={24} /></button>
+                        <button className="relative hover:text-blue-600 transition-colors">
+                            <Bell size={24} />
+                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full"></span>
                         </button>
                     </div>
+                </div>
 
-                    {/* QR Code Section — desktop only */}
-                    <div className="hidden md:flex flex-col items-center justify-center shrink-0">
-                        {/* 1. VISIBLE DASHBOARD CARD (Simple & Clean) */}
-                        <div className="mb-2 relative bg-white rounded-xl shadow-lg p-1 overflow-hidden">
-                            <QRCodeCanvas 
-                                value={student.qrCode || `${student.rollNo}-${student.hostelNo}-${student.roomNo}`} 
-                                size={100}
-                                level={"H"}
-                                includeMargin={false}
-                                bgColor={"#ffffff"}
-                                fgColor={"#000000"}
-                            />
-                        </div>
+                <div className="p-4 space-y-6">
+                    {/* Banner Carousel */}
+                    <div className="relative rounded-3xl overflow-hidden shadow-xl shadow-blue-200/40 aspect-[3/1] bg-slate-200">
+                        {banners.map((banner, idx) => (
+                            <div key={banner.id} className={`absolute inset-0 transition-opacity duration-1000 ${idx === activeBanner ? 'opacity-100' : 'opacity-0'}`}>
+                                <img src={banner.image} alt={banner.title} className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-center px-6 text-white">
+                                    <h3 className="text-lg font-black mb-1">{banner.title}</h3>
+                                    <p className="text-[10px] opacity-90">{banner.desc}</p>
+                                    <button className="mt-3 bg-white text-slate-900 px-4 py-1.5 rounded-full text-[10px] font-bold w-fit active:scale-95">View Details →</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
 
-                        <div className="mt-2 w-auto">
-                             <button 
-                                disabled={isDownloading}
-                                onClick={async () => {
-                                    try {
-                                        setIsDownloading(true);
-                                        const element = document.getElementById("printable-qr-card");
-                                        if (element) {
-                                            const clone = element.cloneNode(true);
-                                            clone.style.position = "fixed";
-                                            clone.style.top = "0";
-                                            clone.style.left = "0";
-                                            clone.style.zIndex = "-9999";
-                                            clone.style.transform = "none";
-                                            clone.style.visibility = "visible";
-                                            const originalCanvas = element.querySelector('canvas');
-                                            const cloneCanvas = clone.querySelector('canvas');
-                                            if (originalCanvas && cloneCanvas) {
-                                                const ctx = cloneCanvas.getContext('2d');
-                                                ctx.drawImage(originalCanvas, 0, 0);
-                                            }
-                                            document.body.appendChild(clone);
-                                            await new Promise(resolve => setTimeout(resolve, 500));
-                                            const canvas = await html2canvas(clone, {
-                                                backgroundColor: null,
-                                                scale: 4, 
-                                                logging: false,
-                                                useCORS: false,
-                                                allowTaint: false,
-                                            });
-                                            document.body.removeChild(clone);
-                                            const pngUrl = canvas.toDataURL("image/png");
-                                            const downloadLink = document.createElement("a");
-                                            downloadLink.href = pngUrl;
-                                            downloadLink.download = `NITJ_Mess_Card_${student.rollNo}.png`;
-                                            document.body.appendChild(downloadLink);
-                                            downloadLink.click();
-                                            document.body.removeChild(downloadLink);
-                                        }
-                                    } catch (err) {
-                                        console.error("Failed to capture QR card:", err);
-                                        alert("Failed to download QR card. Please try again.");
-                                    } finally {
-                                        setIsDownloading(false);
-                                    }
-                                }}
-                                className={`w-auto bg-white/10 hover:bg-white/20 text-white py-2 px-4 rounded-lg font-medium text-xs backdrop-blur-sm border border-white/10 transition-all flex items-center justify-center gap-2 ${isDownloading ? 'opacity-70 cursor-wait' : ''}`}
-                             >
-                                 {isDownloading ? (
-                                    <>
-                                        <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        <span>Saving...</span>
-                                    </>
-                                 ) : (
-                                    <>
-                                        <Download size={14} />
-                                        <span>Download ID</span>
-                                    </>
-                                 )}
-                             </button>
+                    {/* Quick Actions Grid */}
+                    <div className="bg-white rounded-[2rem] p-5 shadow-xl shadow-blue-100/50 border border-white">
+                        <h2 className="text-xl font-bold text-slate-800 mb-6 px-1 flex items-center justify-between">
+                            Quick Actions
+                            <ChevronRight size={20} className="text-slate-400" />
+                        </h2>
+                        <div className="grid grid-cols-4 gap-x-2 gap-y-8">
+                            {quickActions.map((action) => (
+                                <button 
+                                    key={action.id} 
+                                    onClick={action.action}
+                                    className="flex flex-col items-center gap-3 active:scale-95 transition-all"
+                                >
+                                    <div className={`w-14 h-14 rounded-[1.5rem] flex items-center justify-center shadow-lg ${action.color} ${action.textColor} ${action.id === 'scan' ? 'shadow-blue-200' : 'shadow-slate-100 border border-slate-50'}`}>
+                                        {action.icon}
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-600 text-center leading-tight max-w-[70px]">
+                                        {action.label}
+                                    </span>
+                                </button>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Hidden printable card (for download) */}
-                    <div style={{ position: "absolute", left: "-9999px", top: "0", zIndex: -10, visibility: 'hidden' }}>
-                        <div id="printable-qr-card" style={{ 
-                            position: 'relative', 
-                            width: '320px', 
-                            background: 'linear-gradient(135deg, #00BAF2, #0E1E5B)', 
-                            borderRadius: '2rem', 
-                            overflow: 'hidden', 
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                            userSelect: 'none',
-                            fontFamily: 'sans-serif'
-                        }}>
-                            <div style={{ position: 'absolute', top: 0, right: 0, width: '16rem', height: '16rem', background: 'rgba(255,255,255,0.05)', borderRadius: '9999px', filter: 'blur(64px)', marginRight: '-5rem', marginTop: '-5rem' }}></div>
-                            <div style={{ position: 'absolute', bottom: 0, left: 0, width: '12rem', height: '12rem', background: 'rgba(0,0,0,0.1)', borderRadius: '9999px', filter: 'blur(40px)', marginLeft: '-2.5rem', marginBottom: '-2.5rem' }}></div>
-                            <div style={{ position: 'relative', zIndex: 10, padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
-                                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-                                        <span style={{ fontWeight: 900, fontSize: '1.5rem', letterSpacing: '-0.05em', color: '#ffffff', lineHeight: 1 }}>NITJ</span>
-                                        <span style={{ fontSize: '10px', color: '#BFDBFE', textTransform: 'uppercase', letterSpacing: '0.2em', fontWeight: 'bold' }}>MESS PORTAL</span>
-                                    </div>
+                    {/* Stats Scroller */}
+                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
+                        {stats.map((s, i) => (
+                            <div key={i} className="flex-shrink-0 bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+                                <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${s.grad} text-white flex items-center justify-center`}>
+                                    {React.cloneElement(s.icon, { size: 16 })}
                                 </div>
-                                <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                                    <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '0.5rem', lineHeight: '1.2' }}>{student.name}</h2>
-                                    <p style={{ color: '#BFDBFE', fontSize: '1rem', fontFamily: 'monospace', background: 'rgba(0,0,0,0.2)', padding: '0.25rem 1rem', borderRadius: '9999px', border: '1px solid rgba(255,255,255,0.05)', display: 'inline-block', margin: 0 }}>
-                                        {student.rollNo}
-                                    </p>
-                                </div>
-                                <div style={{ background: '#ffffff', padding: '0.5rem', borderRadius: '1.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', marginBottom: '2rem' }}>
-                                    <QRCodeCanvas 
-                                        value={student.qrCode || `${student.rollNo}-${student.hostelNo}-${student.roomNo}`} 
-                                        size={200}
-                                        level={"H"}
-                                        includeMargin={false}
-                                    />
-                                </div>
-                                <div style={{ width: '100%', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem' }}>
-                                    <p style={{ fontSize: '12px', color: '#BFDBFE', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem' }}>Hostel</p>
-                                    <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>{student.hostelNo || 'N/A'}</p>
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase leading-none">{s.label}</p>
+                                    <p className="text-sm font-black text-slate-800">{s.value}</p>
                                 </div>
                             </div>
-                        </div>
+                        ))}
+                    </div>
+
+                    {/* Recent Activity */}
+                    <div className="w-full">
+                        <h2 className="text-xl font-bold text-slate-800 mb-4 px-1 flex items-center justify-between">
+                            Recent Activity
+                            <button onClick={() => setActivePage('reports')} className="text-blue-600 text-xs font-bold bg-blue-50 px-3 py-1 rounded-full">View All</button>
+                        </h2>
+                        <StudentReports mealHistory={mealHistory} studentName={student.name} isSummary={true} token={token} />
                     </div>
                 </div>
             </div>
 
-            {/* QR Modal — mobile only */}
-            {showQRModal && (
-                <div
-                    className="fixed inset-0 z-50 flex items-end justify-center md:hidden"
-                    style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-                    onClick={() => setShowQRModal(false)}
-                >
-                    <div
-                        className="w-full rounded-t-3xl p-6 pb-10"
-                        style={{ backgroundColor: '#1464aa' }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        {/* Drag handle */}
-                        <div className="w-10 h-1 bg-white/30 rounded-full mx-auto mb-5"></div>
-
-                        {/* Title */}
-                        <div className="text-center mb-4">
-                            <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">NITJ Mess Portal</p>
-                            <h3 className="text-white text-xl font-bold">{student.name}</h3>
-                            <p className="text-white/60 text-sm font-mono mt-0.5">{student.rollNo} · {student.hostelNo}</p>
+            {/* --- DESKTOP ONLY VIEW (Original Design) --- */}
+            <div className="hidden md:block space-y-8 animate-in fade-in duration-500">
+                <div className="relative bg-gradient-to-br from-[#1464aa] to-[#0d3b6e] text-white rounded-[2.5rem] p-10 shadow-2xl overflow-hidden group">
+                    <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-white/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
+                    <div className="relative z-10 flex flex-col lg:flex-row justify-between items-center">
+                        <div className="text-center lg:text-left">
+                            <h1 className="text-4xl lg:text-5xl font-black tracking-tight mb-2">Welcome back, {student.name.split(' ')[0]}! 👋</h1>
+                            <p className="text-blue-100 text-lg font-medium opacity-80">Registration No: {student.rollNo} • {student.hostelNo} Portal</p>
                         </div>
+                        <div className="mt-8 lg:mt-0 flex gap-6">
+                            <div className="bg-white/15 backdrop-blur-xl p-6 rounded-3xl border border-white/20 text-center min-w-[120px] hover:bg-white/20 transition-colors">
+                                <p className="text-xs uppercase tracking-[0.2em] font-bold text-blue-200 mb-1">Room No</p>
+                                <p className="text-3xl font-black">{student.roomNo}</p>
+                            </div>
+                            <div className="bg-white/15 backdrop-blur-xl p-6 rounded-3xl border border-white/20 text-center min-w-[120px] hover:bg-white/20 transition-colors">
+                                <p className="text-xs uppercase tracking-[0.2em] font-bold text-blue-200 mb-1">Batch</p>
+                                <p className="text-3xl font-black">{student.rollNo.substring(0,2)}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                        {/* QR Code */}
-                        <div className="flex justify-center mb-5">
-                            <div className="bg-white p-3 rounded-2xl shadow-2xl">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    {stats.map((s, i) => (
+                        <div key={i} className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-50 group hover:-translate-y-2 transition-all duration-300">
+                            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${s.grad} text-white flex items-center justify-center mb-6 shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform`}>
+                                {React.cloneElement(s.icon, { size: 24, strokeWidth: 2.5 })}
+                            </div>
+                            <p className="text-slate-400 text-sm font-bold uppercase tracking-wider mb-1">{s.label}</p>
+                            <p className="text-3xl font-black text-slate-800 tracking-tight">{s.value}</p>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                    <div className="lg:col-span-2">
+                        <div className="flex items-center justify-between mb-6 px-2">
+                             <h2 className="text-2xl font-black text-slate-800 tracking-tight">Recent Activity</h2>
+                             <button onClick={() => setActivePage('reports')} className="text-[#1464aa] font-bold flex items-center gap-1 hover:gap-2 transition-all">View Full History <ChevronRight size={20} /></button>
+                        </div>
+                        <StudentReports mealHistory={mealHistory} studentName={student.name} isSummary={true} token={token} />
+                    </div>
+                    <div>
+                         <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-6 px-2">My ID Card</h2>
+                         <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl shadow-slate-200/60 border border-slate-50 text-center group">
+                            <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-3xl border-4 border-white shadow-xl mx-auto mb-6 overflow-hidden">
+                                {student.photo ? <img src={apiService.getPhotoUrl(student.photo)} alt="" className="w-full h-full object-cover" /> : student.name.charAt(0)}
+                            </div>
+                            <div className="bg-slate-50 p-6 rounded-[2rem] inline-block border-2 border-dashed border-slate-200 group-hover:bg-white transition-colors duration-500">
                                 <QRCodeCanvas 
                                     value={student.qrCode || `${student.rollNo}-${student.hostelNo}-${student.roomNo}`} 
-                                    size={180}
+                                    size={160}
                                     level={"H"}
-                                    includeMargin={false}
-                                    bgColor={"#ffffff"}
-                                    fgColor={"#000000"}
                                 />
                             </div>
-                        </div>
-
-                        {/* Buttons */}
-                        <div className="flex gap-3">
-                            <button
-                                disabled={isDownloading}
-                                onClick={async () => {
-                                    try {
-                                        setIsDownloading(true);
-                                        const element = document.getElementById("printable-qr-card");
-                                        if (element) {
-                                            const clone = element.cloneNode(true);
-                                            clone.style.position = "fixed";
-                                            clone.style.top = "0";
-                                            clone.style.left = "0";
-                                            clone.style.zIndex = "-9999";
-                                            clone.style.transform = "none";
-                                            clone.style.visibility = "visible";
-                                            const originalCanvas = element.querySelector('canvas');
-                                            const cloneCanvas = clone.querySelector('canvas');
-                                            if (originalCanvas && cloneCanvas) {
-                                                const ctx = cloneCanvas.getContext('2d');
-                                                ctx.drawImage(originalCanvas, 0, 0);
-                                            }
-                                            document.body.appendChild(clone);
-                                            await new Promise(resolve => setTimeout(resolve, 500));
-                                            const canvas = await html2canvas(clone, { backgroundColor: null, scale: 4, logging: false, useCORS: false, allowTaint: false });
-                                            document.body.removeChild(clone);
-                                            const pngUrl = canvas.toDataURL("image/png");
-                                            const a = document.createElement("a");
-                                            a.href = pngUrl;
-                                            a.download = `NITJ_Mess_Card_${student.rollNo}.png`;
-                                            document.body.appendChild(a);
-                                            a.click();
-                                            document.body.removeChild(a);
-                                        }
-                                    } catch (err) {
-                                        alert("Failed to download. Please try again.");
-                                    } finally {
-                                        setIsDownloading(false);
-                                    }
-                                }}
-                                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm text-white border border-white/30 bg-white/10 hover:bg-white/20 transition-all disabled:opacity-60"
+                            <p className="mt-6 text-sm font-black text-slate-400 uppercase tracking-[0.2em]">{student.qrCode}</p>
+                            <button 
+                                onClick={() => setShowQRModal(true)}
+                                className="mt-8 w-full py-4 bg-[#1464aa] text-white rounded-2xl font-bold shadow-lg shadow-blue-200 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2"
                             >
-                                <Download size={16} />
-                                {isDownloading ? 'Saving...' : 'Download Card'}
+                                <QrCode size={20} /> Preview & Print
                             </button>
-                            <button
-                                onClick={() => setShowQRModal(false)}
-                                className="flex-1 py-3 rounded-xl font-bold text-sm bg-white text-slate-800 hover:bg-white/90 transition-all"
-                            >
-                                Close
-                            </button>
-                        </div>
+                         </div>
                     </div>
                 </div>
-            )}
-            
-            {/* Crop Photo Modal */}
-            {showCropModal && upImg && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                    <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 transform">
-                        <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-                            <h3 className="font-bold text-slate-800 text-sm tracking-wide">Adjust Profile Photo</h3>
-                            <button onClick={() => setShowCropModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                                <X size={20} />
-                            </button>
-                        </div>
-                        <div className="p-4 bg-slate-900 flex justify-center items-center h-64 overflow-hidden relative">
-                            <ReactCrop 
-                                crop={crop} 
-                                onChange={(c) => setCrop(c)} 
-                                onComplete={(c) => setCompletedCrop(c)}
-                                aspect={1} // Force square crop
-                                circularCrop // Visually circular
-                            >
-                                <img
-                                    src={upImg}
-                                    ref={imgRef}
-                                    alt="Upload preview"
-                                    className="max-h-64 object-contain"
-                                    onLoad={(e) => {
-                                        // Auto-center default crop on load
-                                        const { naturalWidth, naturalHeight } = e.currentTarget;
-                                        const side = Math.min(naturalWidth, naturalHeight) * 0.5;
-                                        setCrop({
-                                            unit: 'px',
-                                            width: side,
-                                            height: side,
-                                            x: (naturalWidth - side) / 2,
-                                            y: (naturalHeight - side) / 2,
-                                            aspect: 1
-                                        });
-                                    }}
-                                />
-                            </ReactCrop>
-                        </div>
-                        <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3">
-                            <button
-                                onClick={() => setShowCropModal(false)}
-                                className="flex-1 py-2.5 rounded-xl font-bold border-2 border-slate-200 text-slate-600 hover:bg-slate-100 transition-all text-sm"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleCropUpload}
-                                className="flex-1 py-2.5 rounded-xl font-bold bg-[#1464aa] text-white hover:opacity-90 transition-all text-sm shadow-md"
-                            >
-                                Save Photo
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 px-1">
-                {stats.map((stat, index) => (
-                    <div key={index} className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                        <div className="flex justify-between items-start mb-3 md:mb-4">
-                            <div className={`p-2.5 md:p-3.5 rounded-xl md:rounded-2xl ${getLightBg(stat.color)} group-hover:scale-110 transition-transform duration-300`}>
-                                {React.cloneElement(stat.icon, { size: window.innerWidth < 768 ? 18 : 24 })}
-                            </div>
-                            {stat.change && (
-                                <span className={`text-[10px] md:text-xs font-bold px-2 py-0.5 md:px-2.5 md:py-1 rounded-full ${stat.change.startsWith('+') ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                                    {stat.change}
-                                </span>
-                            )}
-                        </div>
-                        <h3 className="text-slate-500 text-xs md:text-sm font-bold uppercase tracking-wider mb-1">{stat.label}</h3>
-                        <div className="flex items-end gap-1 md:gap-2 mb-1 md:mb-3">
-                            <span className="text-xl md:text-3xl font-extrabold text-slate-800">{stat.value}</span>
-                            <span className="text-[10px] md:text-xs text-slate-400 font-medium mb-1 md:mb-1.5">{stat.desc}</span>
-                        </div>
-                        {stat.breakdown && (
-                            <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5">
-                                {stat.breakdown.map((item, i) => (
-                                    <div key={i} className="flex justify-between text-xs">
-                                        <span className="text-slate-500 font-medium">{item.label}:</span>
-                                        <span className="text-slate-700 font-bold">{item.value}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
-
-            {/* Recent Activity Section */}
-            <div className="w-full">
-                <StudentReports mealHistory={mealHistory} studentName={student.name} isSummary={true} token={token} />
             </div>
         </div>
     );
@@ -953,10 +646,10 @@ const StudentFeedback = ({ token }) => {
 
 // --- REPORTS COMPONENT ---
 const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) => {
+    const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-    const [filteredHistory, setFilteredHistory] = useState(mealHistory);
-    const [loading, setLoading] = useState(false);
-    const [downloading, setDownloading] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [filteredHistory, setFilteredHistory] = useState([]);
 
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const availableMonths = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
@@ -1395,8 +1088,8 @@ const MessOffPage = ({ studentName, token }) => {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
             <div className="flex items-center mb-2">
-                <div className="p-3 bg-indigo-50 rounded-2xl mr-4 border border-indigo-100">
-                    <CalendarOff className="text-indigo-600" size={28} strokeWidth={2.5} />
+                <div className="p-3 bg-blue-50 rounded-2xl mr-4 border border-blue-100">
+                    <CalendarOff className="text-blue-600" size={28} strokeWidth={2.5} />
                 </div>
                 <div>
                     <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Mess Leave</h1>
@@ -1450,8 +1143,8 @@ const MessOffForm = ({ token, onSubmitSuccess }) => {
     };
 
     return (
-        <div className="bg-white rounded-[2rem] shadow-xl shadow-indigo-200/40 p-8 border border-slate-100 relative overflow-hidden"> 
-            <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-50 rounded-full blur-3xl opacity-60 -mr-10 -mt-10 pointer-events-none"></div>
+        <div className="bg-white rounded-[2rem] shadow-xl shadow-blue-200/40 p-8 border border-slate-100 relative overflow-hidden"> 
+            <div className="absolute top-0 right-0 w-40 h-40 bg-blue-50 rounded-full blur-3xl opacity-60 -mr-10 -mt-10 pointer-events-none"></div>
             
             <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center relative z-10">
                 <span className="w-1 h-6 bg-indigo-500 rounded-full mr-3"></span>
@@ -1592,6 +1285,9 @@ function StudentDashboard() {
     const [activePage, setActivePage] = useState('home');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile sidebar
     const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true); // Desktop sidebar
+    const [showComplaintModal, setShowComplaintModal] = useState(false);
+    const [showQRModal, setShowQRModal] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     // Check if user is logged in as student (redirect munshi to munshi dashboard)
     useEffect(() => {
@@ -1659,7 +1355,15 @@ function StudentDashboard() {
     const renderContent = () => {
         switch (activePage) {
             case 'home': 
-                return <StudentHome student={student} token={token} />;
+                return (
+                    <StudentHome 
+                        student={student} 
+                        token={token} 
+                        setActivePage={setActivePage} 
+                        setShowComplaintModal={setShowComplaintModal}
+                        setShowQRModal={setShowQRModal}
+                    />
+                );
             case 'reports': 
                 return <StudentReports mealHistory={student.mealHistory || []} studentName={student.name} token={token} />;
             case 'messOff': 
@@ -1667,7 +1371,15 @@ function StudentDashboard() {
             case 'feedback': 
                 return <StudentFeedback token={token} />;
             default: 
-                return <StudentHome student={student} token={token} />;
+                return (
+                    <StudentHome 
+                        student={student} 
+                        token={token} 
+                        setActivePage={setActivePage} 
+                        setShowComplaintModal={setShowComplaintModal}
+                        setShowQRModal={setShowQRModal}
+                    />
+                );
         }
     };
 
@@ -1758,6 +1470,12 @@ function StudentDashboard() {
                                 active={activePage === 'feedback'} 
                                 onClick={() => { setActivePage('feedback'); setIsSidebarOpen(false); }} 
                             />
+                            <NavItem 
+                                icon={<AlertCircle />} 
+                                text="Complain" 
+                                active={false} 
+                                onClick={() => { setShowComplaintModal(true); setIsSidebarOpen(false); }} 
+                            />
                         </ul>
                     </nav>
 
@@ -1777,7 +1495,7 @@ function StudentDashboard() {
             {/* Main Content */}
             <main className={`flex-1 overflow-auto bg-slate-50 relative w-full transition-all duration-300 ease-in-out ${desktopSidebarOpen ? 'md:ml-80' : 'md:ml-0'}`}>
                 {/* Header */}
-                <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                <header className={`sticky top-0 z-30 bg-white/80 backdrop-blur-md px-6 py-4 border-b border-slate-100 flex justify-between items-center ${activePage === 'home' ? 'md:flex hidden' : 'flex'}`}>
                     <div className="flex items-center gap-4">
                          {/* Desktop Menu Toggle */}
                          <button onClick={() => setDesktopSidebarOpen(!desktopSidebarOpen)} className="hidden md:block p-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
@@ -1827,12 +1545,187 @@ function StudentDashboard() {
                     </div>
                 </header>
 
-                <div className="p-6 md:p-10 max-w-7xl mx-auto pb-20">
+                <div className="p-4 md:p-10 max-w-7xl mx-auto pb-32 md:pb-20">
                     {renderContent()}
+                </div>
+
+                {/* Bottom Navigation (Mobile Only) - Paytm Style */}
+                <div className="md:hidden fixed bottom-6 left-6 right-6 z-[100]">
+                    <div className="bg-white/95 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.12)] px-6 py-2 flex justify-between items-center relative">
+                        <BottomNavItem 
+                            icon={<Home size={20} />} 
+                            label="Home" 
+                            active={activePage === 'home'} 
+                            onClick={() => setActivePage('home')} 
+                        />
+                        <BottomNavItem 
+                            icon={<BarChart2 size={20} />} 
+                            label="Bills" 
+                            active={activePage === 'reports'} 
+                            onClick={() => setActivePage('reports')} 
+                        />
+                        
+                        {/* Central Scanner - The "Star" of the show */}
+                        <div className="relative -top-10 scale-110">
+                            <div className="absolute inset-0 bg-blue-400 rounded-3xl blur-2xl opacity-30 animate-pulse"></div>
+                            <button 
+                                onClick={() => setShowQRModal(true)} 
+                                className="relative w-16 h-16 bg-[#1464aa] text-white rounded-[1.75rem] shadow-2xl shadow-blue-600/40 flex flex-col items-center justify-center active:scale-90 transition-all border-4 border-white group"
+                            >
+                                <QrCode size={28} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
+                                <span className="text-[8px] font-black mt-0.5 tracking-tighter">SCAN</span>
+                            </button>
+                        </div>
+
+                        <BottomNavItem 
+                            icon={<CalendarOff size={20} />} 
+                            label="Leave" 
+                            active={activePage === 'messOff'} 
+                            onClick={() => setActivePage('messOff')} 
+                        />
+                        <BottomNavItem 
+                            icon={<MessageSquare size={20} />} 
+                            label="More" 
+                            active={activePage === 'feedback'} 
+                            onClick={() => setActivePage('feedback')} 
+                        />
+                    </div>
+                </div>
+
+                {/* Complaint Modal */}
+                {showComplaintModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                        <div className="scale-95 animate-in zoom-in duration-300 w-full max-w-lg">
+                            <ComplaintForm 
+                                token={token} 
+                                onClose={() => setShowComplaintModal(false)}
+                                onSuccess={() => {
+                                    alert('Complaint submitted successfully!');
+                                    // Optionally refresh complaints if there was a list
+                                }}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* QR Card Modal (Paytm Style) */}
+                {showQRModal && (
+                    <div
+                        className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-6"
+                        style={{ backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
+                        onClick={() => setShowQRModal(false)}
+                    >
+                        <div 
+                            className="w-full max-w-sm bg-white rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in slide-in-from-bottom-10 duration-500"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="relative p-8 flex flex-col items-center">
+                                {/* Close Button */}
+                                <button onClick={() => setShowQRModal(false)} className="absolute top-6 right-6 p-2 bg-slate-100 text-slate-400 hover:text-slate-600 rounded-full transition-colors">
+                                    <X size={20} />
+                                </button>
+
+                                <div className="text-center mb-8">
+                                    <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-2xl border-4 border-white shadow-xl mx-auto mb-4 overflow-hidden">
+                                        {student.photo ? <img src={apiService.getPhotoUrl(student.photo)} alt="" className="w-full h-full object-cover" /> : student.name.charAt(0)}
+                                    </div>
+                                    <h3 className="text-2xl font-black text-slate-800 tracking-tight">{student.name}</h3>
+                                    <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">{student.rollNo} • {student.hostelNo}</p>
+                                </div>
+
+                                <div className="bg-white p-4 rounded-3xl shadow-xl border border-slate-50 mb-8 select-none">
+                                    <QRCodeCanvas 
+                                        value={student.qrCode || `${student.rollNo}-${student.hostelNo}-${student.roomNo}`} 
+                                        size={200}
+                                        level={"H"}
+                                        includeMargin={false}
+                                    />
+                                </div>
+
+                                <div className="w-full space-y-3">
+                                    <button
+                                        disabled={isDownloading}
+                                        onClick={async () => {
+                                            try {
+                                                setIsDownloading(true);
+                                                const element = document.getElementById("printable-qr-card");
+                                                if (element) {
+                                                    const clone = element.cloneNode(true);
+                                                    clone.style.position = "fixed";
+                                                    clone.style.top = "0";
+                                                    clone.style.left = "0";
+                                                    clone.style.zIndex = "-9999";
+                                                    clone.style.transform = "none";
+                                                    clone.style.visibility = "visible";
+                                                    const originalCanvas = element.querySelector('canvas');
+                                                    const cloneCanvas = clone.querySelector('canvas');
+                                                    if (originalCanvas && cloneCanvas) {
+                                                        const ctx = cloneCanvas.getContext('2d');
+                                                        ctx.drawImage(originalCanvas, 0, 0);
+                                                    }
+                                                    document.body.appendChild(clone);
+                                                    await new Promise(resolve => setTimeout(resolve, 500));
+                                                    const canvas = await html2canvas(clone, { backgroundColor: null, scale: 4, logging: false, useCORS: false, allowTaint: false });
+                                                    document.body.removeChild(clone);
+                                                    const pngUrl = canvas.toDataURL("image/png");
+                                                    const a = document.createElement("a");
+                                                    a.href = pngUrl;
+                                                    a.download = `NITJ_Mess_Card_${student.rollNo}.png`;
+                                                    document.body.appendChild(a);
+                                                    a.click();
+                                                    document.body.removeChild(a);
+                                                }
+                                            } catch (err) {
+                                                alert("Failed to download. Please try again.");
+                                            } finally {
+                                                setIsDownloading(false);
+                                            }
+                                        }}
+                                        className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold bg-[#1464aa] text-white shadow-lg shadow-blue-200 hover:brightness-110 active:scale-95 transition-all disabled:opacity-60"
+                                    >
+                                        <Download size={20} strokeWidth={2.5} />
+                                        {isDownloading ? 'Saving...' : 'Download Card'}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="bg-slate-50 p-4 text-center">
+                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">NITJ MESS PORTAL MEMBER</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Hidden printable card (for download) */}
+                <div style={{ position: "absolute", left: "-9999px", top: "0", zIndex: -10, visibility: 'hidden' }}>
+                    <div id="printable-qr-card" style={{ 
+                        position: 'relative', 
+                        width: '320px', 
+                        background: 'linear-gradient(135deg, #1464aa, #0d3b6e)', 
+                        borderRadius: '2.5rem', 
+                        overflow: 'hidden', 
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        userSelect: 'none',
+                        fontFamily: 'sans-serif'
+                    }}>
+                        <div style={{ position: 'relative', zIndex: 10, padding: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                                <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '0.5rem' }}>{student.name}</h2>
+                                <p style={{ color: '#BFDBFE', fontSize: '1rem', fontWeight: 'bold' }}>{student.rollNo}</p>
+                            </div>
+                            <div style={{ background: '#ffffff', padding: '1rem', borderRadius: '2rem', marginBottom: '2rem' }}>
+                                <QRCodeCanvas 
+                                    value={student.qrCode || `${student.rollNo}-${student.hostelNo}-${student.roomNo}`} 
+                                    size={200}
+                                    level={"H"}
+                                />
+                            </div>
+                            <p style={{ color: '#ffffff', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.2em' }}>NITJ MESS PORTAL</p>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>
     );
-};
+}
 
 export default StudentDashboard;
