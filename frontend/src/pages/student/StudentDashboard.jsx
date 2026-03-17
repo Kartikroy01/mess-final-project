@@ -257,40 +257,33 @@ const LoadingSpinner = ({ message = "Loading..." }) => (
 
 // --- DASHBOARD HOME ---
 // --- DASHBOARD HOME ---
-const StudentHome = ({ student, token, onProfileUpdate, setActivePage, setShowComplaintModal, setShowQRModal }) => {
+const StudentHome = ({ student, token, onProfileUpdate, setActivePage, setShowComplaintModal, setShowQRModal, setIsSidebarOpen }) => {
+    const getInitials = (name) => {
+        if (!name) return 'ST';
+        const parts = name.split(' ');
+        if (parts.length >= 2) {
+            return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    };
     const [mealHistory, setMealHistory] = useState([]);
     const [billData, setBillData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [activeBanner, setActiveBanner] = useState(0);
-
-    const banners = [
-        { id: 1, image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600&h=200', title: 'Healthy Meals, Happy Life', desc: 'Up to 20% off on special items' },
-        { id: 2, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=600&h=200', title: 'New Menu Unlocked', desc: 'Check out the latest recipes' },
-        { id: 3, image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=600&h=200', title: 'Daily Nutrition Tips', desc: 'Fuel your education properly' }
-    ];
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [meals, bill] = await Promise.all([
-                    apiService.fetchMealHistory(token),
-                    apiService.fetchBill(token)
-                ]);
-                setMealHistory(Array.isArray(meals) ? meals.slice(0, 5) : []);
-                setBillData(bill);
-            } catch (error) {
-                console.error('Error loading dashboard data:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-        
-        const interval = setInterval(() => {
-            setActiveBanner((prev) => (prev + 1) % banners.length);
-        }, 5000);
-        return () => clearInterval(interval);
-    }, [token, banners.length]);
+        // Initial data fetch
+        Promise.all([
+            apiService.fetchMealHistory(token),
+            apiService.fetchBill(token)
+        ]).then(([history, bill]) => {
+            setMealHistory(Array.isArray(history) ? history.slice(0, 5) : []);
+            setBillData(bill);
+            setLoading(false);
+        }).catch(error => {
+            console.error('Error loading dashboard data:', error);
+            setLoading(false);
+        });
+    }, [token]);
 
     const quickActions = [
         { id: 'scan', label: 'Scan to Eat', icon: <QrCode size={24} />, color: 'bg-blue-600', textColor: 'text-white', action: () => setShowQRModal(true) },
@@ -298,9 +291,8 @@ const StudentHome = ({ student, token, onProfileUpdate, setActivePage, setShowCo
         { id: 'feedback', label: 'Feedback', icon: <MessageSquare size={24} />, color: 'bg-white', textColor: 'text-blue-600', action: () => setActivePage('feedback') },
         { id: 'complaint', label: 'Complain', icon: <AlertCircle size={24} />, color: 'bg-white', textColor: 'text-blue-600', action: () => setShowComplaintModal(true) },
         { id: 'history', label: 'Meal History', icon: <Clock size={24} />, color: 'bg-white', textColor: 'text-blue-600', action: () => setActivePage('reports') },
-        { id: 'bill', label: 'Bill Payment', icon: <DollarSign size={24} />, color: 'bg-white', textColor: 'text-blue-600', action: () => setActivePage('reports') },
         { id: 'menu', label: 'Today Menu', icon: <UtensilsCrossed size={24} />, color: 'bg-white', textColor: 'text-blue-600', action: () => {} },
-        { id: 'profile', label: 'My Profile', icon: <User size={24} />, color: 'bg-white', textColor: 'text-blue-600', action: () => {} },
+        { id: 'fines', label: 'Fines', icon: <AlertCircle size={24} />, color: 'bg-white', textColor: 'text-blue-600', action: () => setActivePage('reports') },
     ];
 
     const totalBill = billData?.totalBill || student.bill || 0;
@@ -318,9 +310,12 @@ const StudentHome = ({ student, token, onProfileUpdate, setActivePage, setShowCo
                 {/* Mobile Header */}
                 <div className="bg-white px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-30">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-xs border-2 border-white shadow-sm overflow-hidden">
-                            {student.photo ? <img src={apiService.getPhotoUrl(student.photo)} alt="" className="w-full h-full object-cover" /> : student.name.charAt(0)}
-                        </div>
+                        <button 
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-[#9c27b0] font-black text-sm border-2 border-white shadow-sm overflow-hidden bg-[#fce4ec]"
+                        >
+                            {getInitials(student.name)}
+                        </button>
                         <div className="flex items-center gap-1 bg-[#1464aa] text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
                             <span>NITJ MESS</span>
                         </div>
@@ -335,18 +330,24 @@ const StudentHome = ({ student, token, onProfileUpdate, setActivePage, setShowCo
                 </div>
 
                 <div className="p-4 space-y-6">
-                    {/* Banner Carousel */}
-                    <div className="relative rounded-3xl overflow-hidden shadow-xl shadow-blue-200/40 aspect-[3/1] bg-slate-200">
-                        {banners.map((banner, idx) => (
-                            <div key={banner.id} className={`absolute inset-0 transition-opacity duration-1000 ${idx === activeBanner ? 'opacity-100' : 'opacity-0'}`}>
-                                <img src={banner.image} alt={banner.title} className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-center px-6 text-white">
-                                    <h3 className="text-lg font-black mb-1">{banner.title}</h3>
-                                    <p className="text-[10px] opacity-90">{banner.desc}</p>
-                                    <button className="mt-3 bg-white text-slate-900 px-4 py-1.5 rounded-full text-[10px] font-bold w-fit active:scale-95">View Details →</button>
+                    {/* CSS Welcome Banner (Mobile) */}
+                    <div className="relative bg-gradient-to-br from-[#1464aa] to-[#0d3b6e] text-white rounded-[2rem] p-6 shadow-xl shadow-blue-200/40 overflow-hidden group">
+                        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+                        <div className="relative z-10">
+                            <h1 className="text-2xl font-black mb-1">Welcome back, {student.name.split(' ')[0]}! 👋</h1>
+                            <p className="text-blue-100 text-[10px] font-medium opacity-80 mb-4">Registration No: {student.rollNo}</p>
+                            
+                            <div className="flex gap-3">
+                                <div className="bg-white/15 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20 text-center min-w-[70px]">
+                                    <p className="text-[8px] uppercase font-bold text-blue-200 mb-0.5">Room</p>
+                                    <p className="text-sm font-black">{student.roomNo}</p>
+                                </div>
+                                <div className="bg-white/15 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20 text-center min-w-[70px]">
+                                    <p className="text-[8px] uppercase font-bold text-blue-200 mb-0.5">Batch</p>
+                                    <p className="text-sm font-black">{student.rollNo.substring(0,2)}</p>
                                 </div>
                             </div>
-                        ))}
+                        </div>
                     </div>
 
                     {/* Quick Actions Grid */}
@@ -373,16 +374,16 @@ const StudentHome = ({ student, token, onProfileUpdate, setActivePage, setShowCo
                         </div>
                     </div>
 
-                    {/* Stats Scroller */}
-                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
-                        {stats.map((s, i) => (
-                            <div key={i} className="flex-shrink-0 bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${s.grad} text-white flex items-center justify-center`}>
-                                    {React.cloneElement(s.icon, { size: 16 })}
+                    {/* Mobile Stats Grid */}
+                    <div className="grid grid-cols-3 gap-2 px-1">
+                        {stats.filter(s => s.label !== 'Fines').map((s, i) => (
+                            <div key={i} className="bg-white p-3 rounded-2xl border border-slate-50 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-2 min-h-[80px] justify-center sm:justify-start">
+                                <div className={`w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0 shadow-lg ${i === 1 ? 'bg-emerald-500' : i === 2 ? 'bg-purple-500' : 'bg-blue-600'}`}>
+                                    {React.cloneElement(s.icon, { size: 14, strokeWidth: 3 })}
                                 </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase leading-none">{s.label}</p>
-                                    <p className="text-sm font-black text-slate-800">{s.value}</p>
+                                <div className="text-center sm:text-left min-w-0">
+                                    <p className="text-[7px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1 truncate">{s.label}</p>
+                                    <p className="text-[12px] font-black text-slate-800 leading-none">{s.value}</p>
                                 </div>
                             </div>
                         ))}
@@ -671,6 +672,7 @@ const StudentReports = ({ mealHistory, studentName, isSummary = false, token }) 
             fetchMonthData();
         } else {
             setFilteredHistory(mealHistory);
+            setLoading(false);
         }
     }, [selectedMonth, isSummary, token, mealHistory]);
     
@@ -1329,6 +1331,15 @@ function StudentDashboard() {
         window.location.href = '/login';
     };
 
+    const getInitials = (name) => {
+        if (!name) return 'ST';
+        const parts = name.split(' ');
+        if (parts.length >= 2) {
+            return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    };
+
     if (initialLoading) {
         return (
             <div className="flex items-center justify-center h-screen w-full bg-slate-50">
@@ -1362,6 +1373,7 @@ function StudentDashboard() {
                         setActivePage={setActivePage} 
                         setShowComplaintModal={setShowComplaintModal}
                         setShowQRModal={setShowQRModal}
+                        setIsSidebarOpen={setIsSidebarOpen}
                     />
                 );
             case 'reports': 
@@ -1378,6 +1390,7 @@ function StudentDashboard() {
                         setActivePage={setActivePage} 
                         setShowComplaintModal={setShowComplaintModal}
                         setShowQRModal={setShowQRModal}
+                        setIsSidebarOpen={setIsSidebarOpen}
                     />
                 );
         }
@@ -1419,18 +1432,8 @@ function StudentDashboard() {
                     {/* User Profile Card */}
                     <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6 flex items-center gap-4 relative overflow-hidden group">
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'linear-gradient(to right, rgba(20,100,170,0.05), rgba(20,100,170,0.1))' }}></div>
-                        <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md flex-shrink-0 bg-[#1464aa] text-white flex items-center justify-center font-bold text-xl">
-                             {student.photo ? (
-                                 <img 
-                                     src={student.photo.startsWith('http') ? student.photo : `${API_BASE_URL.replace('/api', '')}${student.photo}`} 
-                                     alt={student.name} 
-                                     className="w-full h-full object-cover"
-                                     onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-                                 />
-                             ) : null}
-                             <span className="w-full h-full flex items-center justify-center" style={{ display: student.photo ? 'none' : 'flex' }}>
-                                 {student.name.charAt(0)}
-                             </span>
+                        <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md flex-shrink-0 bg-[#fce4ec] text-[#9c27b0] flex items-center justify-center font-bold text-xl">
+                             {getInitials(student.name)}
                         </div>
                         <div className="relative min-w-0">
                             <h3 className="font-bold text-slate-800 truncate text-sm">{student.name}</h3>
@@ -1438,20 +1441,30 @@ function StudentDashboard() {
                         </div>
                     </div>
 
-                    <nav className="flex-1 overflow-y-auto">
+                    <nav className="flex-1 overflow-y-auto scrollbar-hide" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
                         <ul className="space-y-1">
                             <div className="px-4 mb-2 mt-2">
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Main Menu</p>
                             </div>
                             <NavItem 
                                 icon={<Home />} 
-                                text="Dashboard" 
+                                text="Home" 
                                 active={activePage === 'home'} 
                                 onClick={() => { setActivePage('home'); setIsSidebarOpen(false); }} 
                             />
+                            
+                            <div className="px-4 mb-2 mt-6">
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Quick Actions</p>
+                            </div>
                             <NavItem 
-                                icon={<BarChart2 />} 
-                                text="Reports" 
+                                icon={<QrCode />} 
+                                text="Scan to Eat" 
+                                active={false} 
+                                onClick={() => { setShowQRModal(true); setIsSidebarOpen(false); }} 
+                            />
+                            <NavItem 
+                                icon={<Clock />} 
+                                text="Meal History" 
                                 active={activePage === 'reports'} 
                                 onClick={() => { setActivePage('reports'); setIsSidebarOpen(false); }} 
                             />
@@ -1461,6 +1474,19 @@ function StudentDashboard() {
                                 active={activePage === 'messOff'} 
                                 onClick={() => { setActivePage('messOff'); setIsSidebarOpen(false); }} 
                             />
+                            <NavItem 
+                                icon={<UtensilsCrossed />} 
+                                text="Today Menu" 
+                                active={false} 
+                                onClick={() => { setIsSidebarOpen(false); }} 
+                            />
+                            <NavItem 
+                                icon={<AlertCircle />} 
+                                text="Fines" 
+                                active={activePage === 'reports'} 
+                                onClick={() => { setActivePage('reports'); setIsSidebarOpen(false); }} 
+                            />
+
                             <div className="px-4 mb-2 mt-6">
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Support</p>
                             </div>
@@ -1492,8 +1518,19 @@ function StudentDashboard() {
                 </div>
             </aside>
 
-            {/* Main Content */}
-            <main className={`flex-1 overflow-auto bg-slate-50 relative w-full transition-all duration-300 ease-in-out ${desktopSidebarOpen ? 'md:ml-80' : 'md:ml-0'}`}>
+            <main className={`flex-1 overflow-auto bg-slate-50 relative w-full transition-all duration-300 ease-in-out ${desktopSidebarOpen ? 'md:ml-80' : 'md:ml-0'} scrollbar-hide`} style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+                <style>{`
+                    .scrollbar-hide::-webkit-scrollbar {
+                        display: none;
+                    }
+                    * {
+                        -ms-overflow-style: none;
+                        scrollbar-width: none;
+                    }
+                    *::-webkit-scrollbar {
+                        display: none;
+                    }
+                `}</style>
                 {/* Header */}
                 <header className={`sticky top-0 z-30 bg-white/80 backdrop-blur-md px-6 py-4 border-b border-slate-100 flex justify-between items-center ${activePage === 'home' ? 'md:flex hidden' : 'flex'}`}>
                     <div className="flex items-center gap-4">
@@ -1501,9 +1538,12 @@ function StudentDashboard() {
                          <button onClick={() => setDesktopSidebarOpen(!desktopSidebarOpen)} className="hidden md:block p-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
                             <Menu size={24} />
                          </button>
-                         {/* Mobile Menu Toggle */}
-                         <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-50 rounded-lg">
-                            <Menu size={24} />
+                         {/* Mobile Initials Bubble (Hamburger) */}
+                         <button 
+                            onClick={() => setIsSidebarOpen(true)} 
+                            className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-[#9c27b0] font-black text-xs border-2 border-white shadow-sm overflow-hidden bg-[#fce4ec] -ml-1 mr-2"
+                         >
+                            {getInitials(student.name)}
                          </button>
 
                          <div className="flex items-center gap-3 md:hidden">
