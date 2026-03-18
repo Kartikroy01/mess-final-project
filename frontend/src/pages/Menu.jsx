@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { Capacitor } from '@capacitor/core';
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_URL || (Capacitor.getPlatform() === 'android' ? "http://10.0.2.2:5000/api" : "http://localhost:5000/api");
 
 // Fallback when API is down or no data
 const FALLBACK_HOSTELS = {

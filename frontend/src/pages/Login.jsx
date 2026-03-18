@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from "react";
+import { API_BASE_URL } from "../config";
 import {
   Lock,
   Mail,
@@ -60,7 +60,7 @@ export default function Login() {
     phoneNo: "",
   });
 
-  const API_URL = "http://localhost:5000/api";
+  const API_URL = API_BASE_URL;
 
   // Hostel options
   const hostelOptions = [
@@ -168,7 +168,7 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Login error:", error);
-      setError("Server error. Please try again later.");
+      setError(`Server error: ${error.message} (Target: ${API_URL})`);
       setLoading(false);
     }
   };
@@ -1001,7 +1001,7 @@ export default function Login() {
 
   // Login View
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-4 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center px-4 py-4 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-y-auto">
       {/* Clean Premium Grid Overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
       <div className="absolute inset-0 bg-nitj-accent/10 rounded-full filter blur-[120px] opacity-40"></div>
@@ -1107,16 +1107,18 @@ export default function Login() {
 
 
 
-          <button
-            type="button"
-            onClick={() => {
-              setShowRegister(true);
-              setError("");
-            }}
-            className="w-full py-4 bg-white/5 border-2 border-white/20 text-white hover:bg-white/10 hover:border-cyan-400/50 rounded-2xl font-semibold transition-all transform hover:scale-[1.02] hover:shadow-lg"
-          >
-            Create New Account
-          </button>
+          <div className="flex justify-center mt-6">
+            <button
+              type="button"
+              onClick={() => {
+                setShowRegister(true);
+                setError("");
+              }}
+              className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+            >
+              Don't have an account? Create New Account
+            </button>
+          </div>
         </form>
       </div>
 

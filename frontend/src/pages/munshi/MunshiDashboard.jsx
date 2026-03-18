@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getApiBaseUrl } from '../../config';
 import {
   Search,
   X,
@@ -137,9 +138,9 @@ const MealSelectionPage = ({ onSelectMeal, munshiName }) => {
       </div>
 
       <div className="w-full max-w-5xl p-6 relative z-10">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-3xl mb-8 shadow-xl shadow-indigo-100 animate-in zoom-in duration-700">
-            <UtensilsCrossed className="w-10 h-10 text-indigo-600" />
+        <div className="text-center mb-8 md:mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-white rounded-2xl md:rounded-3xl mb-6 md:mb-8 shadow-xl shadow-indigo-100 animate-in zoom-in duration-700">
+            <UtensilsCrossed className="w-8 h-8 md:w-10 md:h-10 text-indigo-600" />
           </div>
           
           <div className="mb-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200">
@@ -148,11 +149,11 @@ const MealSelectionPage = ({ onSelectMeal, munshiName }) => {
             </span>
           </div>
 
-          <h2 className="text-5xl font-black text-slate-800 mb-4 tracking-tighter animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+          <h2 className="text-3xl md:text-5xl font-black text-slate-800 mb-3 md:mb-4 tracking-tighter animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
             Hello, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">{munshiName || "Munshi"}</span>
           </h2>
           
-          <p className="text-slate-500 text-lg font-medium max-w-md mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
+          <p className="text-slate-500 text-base md:text-lg font-medium max-w-md mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
             Choose the current meal type to begin processing student orders for today.
           </p>
         </div>
@@ -162,20 +163,20 @@ const MealSelectionPage = ({ onSelectMeal, munshiName }) => {
             <button
               key={meal.id}
               onClick={() => onSelectMeal(meal.id)}
-              className="group relative overflow-hidden bg-white hover:bg-slate-50 border border-slate-100 rounded-[2rem] p-6 text-left transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1"
+              className="group relative overflow-hidden bg-white hover:bg-slate-50 border border-slate-100 rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 text-left transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1"
             >
               <div
-                className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${meal.color} opacity-10 rounded-bl-[4rem] transition-opacity group-hover:opacity-20`}
+                className={`absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br ${meal.color} opacity-10 rounded-bl-[3rem] md:rounded-bl-[4rem] transition-opacity group-hover:opacity-20`}
               ></div>
 
               <div className="relative z-10">
-                <div className="text-4xl mb-4 bg-slate-50 w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm">
+                <div className="text-3xl md:text-4xl mb-3 md:mb-4 bg-slate-50 w-14 h-14 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm">
                   {meal.icon}
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-1">
+                <h3 className="text-lg md:text-xl font-bold text-slate-800 mb-1">
                   {meal.label}
                 </h3>
-                <p className="text-sm text-slate-400 font-medium">
+                <p className="text-xs md:text-sm text-slate-400 font-medium">
                   {meal.time}
                 </p>
 
@@ -778,10 +779,10 @@ const DashboardView = ({
                     <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                     <input
                       type="text"
-                      placeholder="Enter Roll No or Room No..."
+                      placeholder="Roll No or Room No..."
                       value={studentIdInput}
                       onChange={(e) => setStudentIdInput(e.target.value)}
-                      className="w-full pl-14 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium text-slate-800 outline-none text-lg"
+                      className="w-full pl-12 md:pl-14 pr-4 py-3 md:py-4 bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-2xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium text-slate-800 outline-none text-base md:text-lg"
                       autoFocus
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -833,7 +834,7 @@ const DashboardView = ({
                     <div className="w-10 h-10 md:w-16 md:h-16 bg-white rounded-2xl overflow-hidden flex items-center justify-center shadow-sm text-indigo-600 text-lg md:text-xl font-bold shrink-0">
                       {scannedStudent.photo ? (
                           <img 
-                              src={scannedStudent.photo.startsWith('http') ? scannedStudent.photo : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${scannedStudent.photo}`} 
+                              src={scannedStudent.photo.startsWith('http') ? scannedStudent.photo : `${getApiBaseUrl()}${scannedStudent.photo}`} 
                               alt={scannedStudent.name} 
                               className="w-full h-full object-cover"
                               onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
@@ -993,7 +994,7 @@ const DashboardView = ({
                     >
                       <div className="aspect-square md:aspect-[4/3] overflow-hidden relative">
                         <img
-                          src={item.image ? (item.image.startsWith('http') ? item.image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${item.image}`) : "https://placehold.co/400?text=No+Image"}
+                          src={item.image ? (item.image.startsWith('http') ? item.image : `${getApiBaseUrl()}${item.image}`) : "https://placehold.co/400?text=No+Image"}
                           alt={item.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           onError={(e) => {
@@ -1107,7 +1108,7 @@ const DashboardView = ({
                       <div className="aspect-square md:aspect-[4/3] overflow-hidden relative">
                          {item.image ? (
                           <img
-                            src={item.image.startsWith('http') ? item.image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${item.image}`}
+                            src={item.image.startsWith('http') ? item.image : `${getApiBaseUrl()}${item.image}`}
                             alt={item.name}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             onError={(e) => {

@@ -27,27 +27,25 @@ export default function Navbar() {
       {/* ============================================================
           FULL HEADER — visible when at top of page
       ============================================================ */}
-      <header style={{ fontFamily: "Arial, sans-serif" }}>
-
+      <header className="sticky top-0 z-[100] md:relative md:z-auto" style={{ fontFamily: "Arial, sans-serif" }}>
+        
         {/* --- TOP DARK UTILITY BAR --- */}
         <div
-          className="text-white text-[11px] px-4 py-1 flex items-center justify-between"
+          className="text-white text-[11px] px-4 py-1 hidden md:flex items-center justify-between"
           style={{ backgroundColor: NITJ_UTILITY, minHeight: "30px" }}
         >
-          <div className="hidden md:flex items-center gap-4 font-semibold tracking-wide">
+          <div className="flex items-center gap-4 font-semibold tracking-wide">
             <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300">📋 MESS SCHEDULE</span>
             <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300">📜 NOTICES</span>
             <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300">📞 HELPDESK</span>
           </div>
-          <div className="hidden md:flex items-center gap-3 font-semibold tracking-wide ml-auto">
+          <div className="flex items-center gap-3 font-semibold tracking-wide ml-auto">
             <a href="https://v1.nitj.ac.in/erp/login" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-yellow-300">ERP</a>
             <span>|</span>
             <span className="cursor-pointer hover:text-yellow-300">NITJ PORTAL</span>
             <span>|</span>
             <span className="cursor-pointer hover:text-yellow-300">ISTEM</span>
           </div>
-          {/* Mobile: just site name */}
-          <span className="md:hidden font-bold tracking-wide text-xs">NITJ Hostel Mess Portal</span>
         </div>
 
         {/* --- WHITE IDENTITY STRIP --- */}
@@ -108,6 +106,7 @@ export default function Navbar() {
                     height: "132px",
                     objectFit: "contain",
                     display: "block",
+                    zIndex: 50
                   }}
                 />
               </Link>
@@ -174,31 +173,37 @@ export default function Navbar() {
             </button>
           </nav>
         </div>
-      </header>
 
-      {/* Mobile nav dropdown */}
-      {isOpen && (
-        <div
-          className="md:hidden text-white border-t border-white/20 z-[90] relative"
-          style={{ backgroundColor: NITJ_BLUE }}
-        >
-          <div className="flex flex-col p-4 gap-2">
-            <Link to="/" className="block px-3 py-2 rounded text-white font-bold text-sm uppercase hover:bg-white/20" onClick={() => setIsOpen(false)}>Home</Link>
-            <Link to="/hostels" className="block px-3 py-2 rounded text-white font-bold text-sm uppercase hover:bg-white/20" onClick={() => setIsOpen(false)}>Hostels</Link>
-            <Link to="/menu" className="block px-3 py-2 rounded text-white font-bold text-sm uppercase hover:bg-white/20" onClick={() => setIsOpen(false)}>Menu</Link>
-            <Link to="/about" className="block px-3 py-2 rounded text-white font-bold text-sm uppercase hover:bg-white/20" onClick={() => setIsOpen(false)}>About</Link>
-            <Link to="/contact" className="block px-3 py-2 rounded text-white font-bold text-sm uppercase hover:bg-white/20" onClick={() => setIsOpen(false)}>Contact</Link>
-            <Link to="/login" className="block text-white px-3 py-2 rounded font-bold text-center mt-2 text-sm uppercase hover:brightness-110" style={{ backgroundColor: NITJ_ORANGE }} onClick={() => setIsOpen(false)}>Login / Register</Link>
+        {/* Mobile nav dropdown - Moved INSIDE header so it sticks too */}
+        {isOpen && (
+          <div
+            className="md:hidden text-white border-t border-white/20 z-[90] relative shadow-2xl"
+            style={{ backgroundColor: NITJ_BLUE }}
+          >
+            <div className="flex flex-col p-4 gap-2">
+              <Link to="/" className="block px-3 py-2 rounded text-white font-bold text-sm uppercase hover:bg-white/20" onClick={() => setIsOpen(false)}>Home</Link>
+              <Link to="/hostels" className="block px-3 py-2 rounded text-white font-bold text-sm uppercase hover:bg-white/20" onClick={() => setIsOpen(false)}>Hostels</Link>
+              <Link to="/menu" className="block px-3 py-2 rounded text-white font-bold text-sm uppercase hover:bg-white/20" onClick={() => setIsOpen(false)}>Menu</Link>
+              <Link to="/about" className="block px-3 py-2 rounded text-white font-bold text-sm uppercase hover:bg-white/20" onClick={() => setIsOpen(false)}>About</Link>
+              <Link to="/contact" className="block px-3 py-2 rounded text-white font-bold text-sm uppercase hover:bg-white/20" onClick={() => setIsOpen(false)}>Contact</Link>
+              <Link 
+              to="/login" 
+              className="block bg-white text-[#1464aa] px-3 py-2.5 rounded-xl font-bold text-center mt-3 text-sm uppercase shadow-lg shadow-black/10 hover:bg-white/90 active:scale-95 transition-all" 
+              onClick={() => setIsOpen(false)}
+            >
+              Login / Register
+            </Link>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </header>
 
       {/* ============================================================
           STICKY NAV — same 2-tier design as full header (no utility bar)
           Slides in from top when user scrolls past 140px
       ============================================================ */}
       <div
-        className="fixed top-0 left-0 right-0 z-[200] shadow-lg"
+        className="fixed top-0 left-0 right-0 z-[200] shadow-lg hidden md:block"
         style={{
           transform: isSticky ? "translateY(0)" : "translateY(-100%)",
           transition: "transform 0.28s ease",

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../../config';
 import { AlertCircle, CheckCircle, Send, X, ShieldAlert } from 'lucide-react';
 
 const ComplaintForm = ({ token, onClose, onSuccess }) => {
@@ -31,7 +32,8 @@ const ComplaintForm = ({ token, onClose, onSuccess }) => {
 
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5000/api/complaint/submit', {
+            const API_URL = `${API_BASE_URL}/complaint/submit`;
+            const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

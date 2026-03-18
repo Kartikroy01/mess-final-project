@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_BASE_URL } from "../../config";
 import {
   DollarSign,
   Calendar,
@@ -55,7 +56,7 @@ const AddBillPage = () => {
     try {
       const token = localStorage.getItem("authToken");
       const response = await fetch(
-        "http://localhost:5000/api/munshi/all-students",
+        `${API_BASE_URL}/munshi/all-students`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -139,7 +140,7 @@ const AddBillPage = () => {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/munshi/bill/add-charge",
+        `${API_BASE_URL}/munshi/bill/add-charge`,
         {
           method: "POST",
           headers: {

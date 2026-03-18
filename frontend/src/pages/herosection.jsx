@@ -33,7 +33,7 @@ export default function HeroSection() {
   }, [slides.length]);
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-gray-900">
+    <div className="relative h-[65vh] md:h-screen w-full overflow-hidden bg-gray-900">
       {/* Background Image Slider */}
       {slides.map((slide, index) => (
         <div
@@ -61,11 +61,11 @@ export default function HeroSection() {
           }`}
         >
           {/* Static Welcome Text */}
-          <h2 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight drop-shadow-2xl mb-8">
+          <h2 className="text-3xl md:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight drop-shadow-2xl mb-6 md:mb-8">
             Welcome to <span className="text-[#FF5722] whitespace-nowrap">NITJ MESS</span>
           </h2>
 
-          <div className="relative w-full min-h-[120px] md:min-h-[140px] flex items-center justify-center">
+          <div className="relative w-full min-h-[100px] md:min-h-[140px] flex items-center justify-center">
             {/* Dynamic Content Cycling with Slider */}
             {slides.map((slide, index) => (
               <div
@@ -74,20 +74,20 @@ export default function HeroSection() {
                   index === currentSlide ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none"
                 }`}
               >
-                <p className="text-xl md:text-2xl text-white font-medium italic drop-shadow-md px-4">
+                <p className="text-lg md:text-2xl text-white font-medium italic drop-shadow-md px-4">
                   "{slide.heading}"
                 </p>
-                <p className="text-lg md:text-xl text-slate-200 mt-3 font-normal max-w-2xl mx-auto drop-shadow-sm px-4">
+                <p className="text-base md:text-xl text-slate-200 mt-2 md:mt-3 font-normal max-w-2xl mx-auto drop-shadow-sm px-4">
                   "{slide.subheading}"
                 </p>
               </div>
             ))}
           </div>
 
-          <div className="flex flex-col items-center gap-6 pt-12">
+          <div className="flex flex-col items-center gap-6 pt-8 md:pt-12">
             <Link
               to="/login"
-              className="px-10 py-3.5 bg-transparent text-white border-[1.5px] border-[#FF5722] rounded-md font-bold text-lg hover:bg-[#FF5722]/10 hover:border-[#FF7043] transition-all duration-300 transform active:scale-95 shadow-lg shadow-[#FF5722]/20"
+              className="px-8 py-3 md:px-10 md:py-3.5 bg-transparent text-white border-[1.5px] border-[#FF5722] rounded-md font-bold text-base md:text-lg hover:bg-[#FF5722]/10 hover:border-[#FF7043] transition-all duration-300 transform active:scale-95 shadow-lg shadow-[#FF5722]/20"
             >
               Get In
             </Link>

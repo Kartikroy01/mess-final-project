@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NITJ MESS</string>
+    <string name="title_activity_main">NITJ MESS</string>
+    <string name="package_name">com.nitj.mess</string>
+    <string name="custom_url_scheme">com.nitj.mess</string>
+</resources>

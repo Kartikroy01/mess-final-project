@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getApiBaseUrl } from '../../config';
 import { munshiApi } from "./api";
 import { 
   LogOut, 
@@ -817,7 +818,7 @@ export default function ClerkDashboard() {
                                     <div className="w-16 h-16 rounded-xl bg-slate-100 flex-shrink-0 overflow-hidden border border-slate-200 relative">
                                         {item.image ? (
                                             <img 
-                                                src={item.image.startsWith('http') || item.image.startsWith('data:') ? item.image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${item.image}`} 
+                                                src={item.image.startsWith('http') || item.image.startsWith('data:') ? item.image : `${getApiBaseUrl()}${item.image}`} 
                                                 alt={item.name} 
                                                 className="w-full h-full object-cover" 
                                                 onError={(e) => {
