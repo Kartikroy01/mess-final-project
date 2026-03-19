@@ -131,7 +131,8 @@ const MealSelectionPage = ({ onSelectMeal, munshiName }) => {
   ];
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#F8FAFC]">
+    <div className="flex flex-col min-h-screen bg-[#F8FAFC]">
+
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
@@ -1647,11 +1648,9 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
       >
         <div className="p-8 h-full flex flex-col">
           <div className="flex items-center gap-3 mb-10 px-2">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-              <UtensilsCrossed size={20} />
-            </div>
+            <img src="/logo_250.png" alt="Logo" className="w-11 h-11 object-contain" />
             <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
-              Munshi<span className="text-indigo-600">Dash</span>
+              NITJ<span className="text-indigo-600">Mess</span>
             </h1>
           </div>
 
@@ -1743,6 +1742,21 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
       <main className="flex-1 lg:ml-72 min-h-screen relative">
 
         
+        {/* --- TOP UTILITY BAR (Mobile/Tablet App Version) --- */}
+        <div 
+          className="lg:hidden text-white text-[10px] px-4 py-1.5 flex items-center justify-between z-40 relative shadow-md"
+          style={{ backgroundColor: "#144d8b", minHeight: "30px" }}
+        >
+          <div className="flex items-center gap-3 font-semibold tracking-wide">
+            <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300 whitespace-nowrap">📋 MESS SCHEDULE</span>
+          </div>
+          <div className="flex items-center gap-2 font-semibold tracking-wide">
+            <a href="https://v1.nitj.ac.in/erp/login" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-yellow-300">ERP</a>
+            <span className="opacity-50">|</span>
+            <span className="cursor-pointer hover:text-yellow-300 whitespace-nowrap">NITJ PORTAL</span>
+          </div>
+        </div>
+
         {/* Header */}
         <header className="relative z-30 bg-[#F8FAFC]/80 backdrop-blur-md px-8 py-5 flex items-center justify-between border-b border-slate-200/50 shadow-sm overflow-visible">
           <div className="lg:hidden">

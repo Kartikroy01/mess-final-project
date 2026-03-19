@@ -11,10 +11,24 @@ const Header = ({ user, onLogout, setPage }) => {
 
     return (
         <header className="bg-white shadow-md sticky top-0 z-40">
+            {/* --- TOP UTILITY BAR (Mobile/Tablet App Version) --- */}
+            <div 
+                className="md:hidden text-white text-[10px] px-4 py-1.5 flex items-center justify-between z-40 relative shadow-md bg-[#144d8b]"
+                style={{ minHeight: "30px" }}
+            >
+                <div className="flex items-center gap-3 font-semibold tracking-wide">
+                <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300 whitespace-nowrap">📋 MESS SCHEDULE</span>
+                </div>
+                <div className="flex items-center gap-2 font-semibold tracking-wide">
+                <a href="https://v1.nitj.ac.in/erp/login" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-yellow-300">ERP</a>
+                <span className="opacity-50">|</span>
+                <span className="cursor-pointer hover:text-yellow-300 whitespace-nowrap">NITJ PORTAL</span>
+                </div>
+            </div>
             <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
                 <div className="text-2xl font-bold text-gray-800 flex items-center cursor-pointer" onClick={() => handleLinkClick('home')}>
-                    <UtensilsCrossed className="inline-block mr-2 text-blue-600" />
-                    Hostel Mess
+                    <img src="/logo_250.png" alt="Logo" className="w-10 h-10 object-contain mr-2" />
+                    NITJ Mess
                 </div>
 
                 {!user && (

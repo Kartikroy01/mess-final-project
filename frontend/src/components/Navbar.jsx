@@ -27,24 +27,24 @@ export default function Navbar() {
       {/* ============================================================
           FULL HEADER — visible when at top of page
       ============================================================ */}
-      <header className="sticky top-0 z-[100] md:relative md:z-auto" style={{ fontFamily: "Arial, sans-serif" }}>
+      <header className="sticky top-0 z-[1000] md:relative md:z-auto" style={{ fontFamily: "Arial, sans-serif" }}>
         
         {/* --- TOP DARK UTILITY BAR --- */}
         <div
-          className="text-white text-[11px] px-4 py-1 hidden md:flex items-center justify-between"
-          style={{ backgroundColor: NITJ_UTILITY, minHeight: "30px" }}
+          className="relative z-[1100] w-full text-white text-[11px] md:text-[11px] px-4 py-2 md:py-1 flex items-center justify-between border-b border-white/5"
+          style={{ backgroundColor: NITJ_UTILITY, minHeight: "32px" }}
         >
-          <div className="flex items-center gap-4 font-semibold tracking-wide">
-            <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300">📋 MESS SCHEDULE</span>
-            <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300">📜 NOTICES</span>
-            <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300">📞 HELPDESK</span>
+          <div className="flex items-center gap-3 md:gap-4 font-semibold tracking-wide">
+            <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300 whitespace-nowrap">📋 MESS SCHEDULE</span>
+            <span className="hidden md:flex items-center gap-1 cursor-pointer hover:text-yellow-300">📜 NOTICES</span>
+            <span className="hidden md:flex items-center gap-1 cursor-pointer hover:text-yellow-300">📞 HELPDESK</span>
           </div>
-          <div className="flex items-center gap-3 font-semibold tracking-wide ml-auto">
+          <div className="flex items-center gap-2 md:gap-3 font-semibold tracking-wide ml-auto">
             <a href="https://v1.nitj.ac.in/erp/login" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-yellow-300">ERP</a>
-            <span>|</span>
-            <span className="cursor-pointer hover:text-yellow-300">NITJ PORTAL</span>
-            <span>|</span>
-            <span className="cursor-pointer hover:text-yellow-300">ISTEM</span>
+            <span className="opacity-50">|</span>
+            <span className="cursor-pointer hover:text-yellow-300 whitespace-nowrap">NITJ PORTAL</span>
+            <span className="hidden md:inline opacity-50">|</span>
+            <span className="hidden md:flex cursor-pointer hover:text-yellow-300">ISTEM</span>
           </div>
         </div>
 

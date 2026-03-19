@@ -145,9 +145,13 @@ export default function Footer() {
           <p>© Copyright {new Date().getFullYear()}, All Rights Reserved NIT Jalandhar</p>
           <p>
             Developed in-house by{" "}
-            <span className="font-semibold" style={{ color: "#E28122" }}>
+            <Link
+              to="/dev-team"
+              className="font-semibold hover:brightness-125 transition-all active:scale-95 cursor-pointer no-underline"
+              style={{ color: "#E28122" }}
+            >
               Mess Portal Dev Team
-            </span>
+            </Link>
           </p>
         </div>
       </div>

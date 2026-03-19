@@ -12,6 +12,7 @@ import Menu from "./pages/Menu";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Hostels from "./pages/Hostels";
+import DevTeam from "./pages/DevTeam";
 
 // Dashboards
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/menu" element={<Menu />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/dev-team" element={<DevTeam />} />
         </Route>
 
         {/* 2. Dashboard Routes: These pages will NOT have the public Navbar and Footer */}

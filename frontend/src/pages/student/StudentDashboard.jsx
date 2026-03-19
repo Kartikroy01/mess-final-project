@@ -35,7 +35,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import html2canvas from "html2canvas";
 import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css"; // Add crop styles
-import ComplaintForm from "./ComplaintForm";
+import StudentComplaint from "./StudentComplaint";
 
 // --- API SERVICE LAYER ---
 const API_BASE_URL_LOCAL = API_BASE_URL;
@@ -311,7 +311,6 @@ const StudentHome = ({
   token,
   onProfileUpdate,
   setActivePage,
-  setShowComplaintModal,
   setShowQRModal,
   setIsSidebarOpen,
 }) => {
@@ -377,7 +376,7 @@ const StudentHome = ({
       icon: <AlertCircle size={24} />,
       color: "bg-white",
       textColor: "text-blue-600",
-      action: () => setShowComplaintModal(true),
+      action: () => setActivePage("complaint"),
     },
     {
       id: "history",
@@ -436,9 +435,24 @@ const StudentHome = ({
   return (
     <div className="min-h-screen bg-[#f5f9ff] md:bg-transparent -m-4 md:-m-0 pb-24 md:pb-0">
       {/* --- MOBILE ONLY VIEW --- */}
-      <div className="md:hidden space-y-6">
+      <div className="md:hidden">
+        {/* --- TOP UTILITY BAR (Mobile/Tablet App Version) --- */}
+        <div 
+          className="text-white text-[11px] px-4 py-2 flex items-center justify-between z-40 relative shadow-md bg-[#144d8b] border-b border-white/5"
+          style={{ minHeight: "32px" }}
+        >
+          <div className="flex items-center gap-3 font-semibold tracking-wide">
+          <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300 whitespace-nowrap">📋 MESS SCHEDULE</span>
+          </div>
+          <div className="flex items-center gap-2 font-semibold tracking-wide">
+          <a href="https://v1.nitj.ac.in/erp/login" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-yellow-300">ERP</a>
+          <span className="opacity-50">|</span>
+          <span className="cursor-pointer hover:text-yellow-300 whitespace-nowrap">NITJ PORTAL</span>
+          </div>
+        </div>
+
         {/* Mobile Header */}
-        <div className="bg-white px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-30">
+        <div className="bg-white px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-[1001]">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarOpen(true)}
@@ -446,8 +460,9 @@ const StudentHome = ({
             >
               {getInitials(student.name)}
             </button>
-            <div className="flex items-center gap-1 bg-[#1464aa] text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
-              <span>NITJ MESS</span>
+            <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-full shadow-sm">
+              <img src="/logo_250.png" alt="Logo" className="h-7 w-auto object-contain" />
+              <span className="text-[10px] font-black text-[#144d8b] tracking-tight">NITJ MESS</span>
             </div>
           </div>
           <div className="flex items-center gap-4 text-slate-600">
@@ -1971,7 +1986,6 @@ function StudentDashboard() {
   const [activePage, setActivePage] = useState("home");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile sidebar
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true); // Desktop sidebar
-  const [showComplaintModal, setShowComplaintModal] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -2068,7 +2082,6 @@ function StudentDashboard() {
             student={student}
             token={token}
             setActivePage={setActivePage}
-            setShowComplaintModal={setShowComplaintModal}
             setShowQRModal={setShowQRModal}
             setIsSidebarOpen={setIsSidebarOpen}
           />
@@ -2085,13 +2098,14 @@ function StudentDashboard() {
         return <MessOffPage studentName={student.name} token={token} />;
       case "feedback":
         return <StudentFeedback token={token} />;
+      case "complaint":
+        return <StudentComplaint token={token} onSuccess={() => {}} />;
       default:
         return (
           <StudentHome
             student={student}
             token={token}
             setActivePage={setActivePage}
-            setShowComplaintModal={setShowComplaintModal}
             setShowQRModal={setShowQRModal}
             setIsSidebarOpen={setIsSidebarOpen}
           />
@@ -2259,9 +2273,9 @@ function StudentDashboard() {
               <NavItem
                 icon={<AlertCircle />}
                 text="Complain"
-                active={false}
+                active={activePage === "complaint"}
                 onClick={() => {
-                  setShowComplaintModal(true);
+                  setActivePage("complaint");
                   setIsSidebarOpen(false);
                 }}
               />
@@ -2302,6 +2316,21 @@ function StudentDashboard() {
                         display: none;
                     }
                 `}</style>
+        {/* --- TOP UTILITY BAR (Mobile/Tablet App Version) --- */}
+        <div 
+          className="md:hidden text-white text-[10px] px-4 py-1.5 flex items-center justify-between z-[45] relative bg-[#144d8b]"
+          style={{ minHeight: "30px" }}
+        >
+          <div className="flex items-center gap-3 font-semibold tracking-wide">
+            <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300 whitespace-nowrap">📋 MESS SCHEDULE</span>
+          </div>
+          <div className="flex items-center gap-2 font-semibold tracking-wide">
+            <a href="https://v1.nitj.ac.in/erp/login" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-yellow-300">ERP</a>
+            <span className="opacity-50">|</span>
+            <span className="cursor-pointer hover:text-yellow-300 whitespace-nowrap">NITJ PORTAL</span>
+          </div>
+        </div>
+
         {/* Header */}
         <header
           className={`sticky top-0 z-30 bg-white/80 backdrop-blur-md px-6 py-4 border-b border-slate-100 flex justify-between items-center ${activePage === "home" ? "md:flex hidden" : "flex"}`}
@@ -2335,14 +2364,9 @@ function StudentDashboard() {
               </button>
             )}
 
-            <div className="flex items-center gap-3 md:hidden">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
-                style={{ backgroundColor: "#1464aa" }}
-              >
-                <span className="font-bold text-sm">NM</span>
-              </div>
-              <h1 className="font-bold text-slate-800">NITJ MESS</h1>
+            <div className="flex items-center gap-2 md:hidden">
+              <img src="/logo_250.png" alt="Logo" className="w-7 h-7 object-contain" />
+              <h1 className="font-bold text-slate-800 whitespace-nowrap text-sm tracking-tight">NITJ MESS</h1>
             </div>
 
             <div className="hidden md:block">
@@ -2394,22 +2418,6 @@ function StudentDashboard() {
         <div className="p-4 md:p-10 max-w-7xl mx-auto pb-32 md:pb-20">
           {renderContent()}
         </div>
-
-        {/* Complaint Modal */}
-        {showComplaintModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="scale-95 animate-in zoom-in duration-300 w-full max-w-lg">
-              <ComplaintForm
-                token={token}
-                onClose={() => setShowComplaintModal(false)}
-                onSuccess={() => {
-                  alert("Complaint submitted successfully!");
-                  // Optionally refresh complaints if there was a list
-                }}
-              />
-            </div>
-          </div>
-        )}
 
         {/* QR Card Modal (Paytm Style) */}
         {showQRModal && (

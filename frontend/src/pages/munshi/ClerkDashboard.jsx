@@ -593,11 +593,9 @@ export default function ClerkDashboard() {
         <div className="p-8 h-full flex flex-col">
           <div className="flex items-center justify-between mb-10 px-2">
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-                <FileText size={20} />
-                </div>
+                <img src="/logo_250.png" alt="Logo" className="w-11 h-11 object-contain" />
                 <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
-                Clerk<span className="text-indigo-600">Dash</span>
+                NITJ<span className="text-indigo-600">Mess</span>
                 </h1>
             </div>
             <button 
@@ -681,7 +679,22 @@ export default function ClerkDashboard() {
 
       {/* Main Content */}
       <main className={`flex-1 min-h-screen relative transition-all duration-300 ease-in-out ${sidebarOpen ? "md:ml-72" : "md:ml-0"}`}>
-         {/* Header */}
+         {/* --- TOP UTILITY BAR (Mobile/Tablet App Version) --- */}
+        <div 
+          className="md:hidden text-white text-[10px] px-4 py-1.5 flex items-center justify-between z-40 relative shadow-md bg-[#144d8b]"
+          style={{ minHeight: "30px" }}
+        >
+          <div className="flex items-center gap-3 font-semibold tracking-wide">
+            <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300 whitespace-nowrap">📋 MESS SCHEDULE</span>
+          </div>
+          <div className="flex items-center gap-2 font-semibold tracking-wide">
+            <a href="https://v1.nitj.ac.in/erp/login" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-yellow-300">ERP</a>
+            <span className="opacity-50">|</span>
+            <span className="cursor-pointer hover:text-yellow-300 whitespace-nowrap">NITJ PORTAL</span>
+          </div>
+        </div>
+
+        {/* Header */}
         <header className="sticky top-0 z-20 bg-[#F8FAFC]/80 backdrop-blur-md px-8 py-5 flex items-center gap-4">
           <div className="flex items-center gap-4">
             <button

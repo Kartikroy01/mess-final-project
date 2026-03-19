@@ -1008,8 +1008,8 @@ export default function Login() {
       
       <div className="bg-white/5 backdrop-blur-3xl rounded-2xl w-full max-w-md p-6 relative z-10 border border-white/10 shadow-2xl">
         <div className="text-center mb-5">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-nitj-accent rounded-2xl mb-3 shadow-xl shadow-nitj-accent/30 text-white">
-            <Lock className="w-7 h-7 text-white" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl mb-3 shadow-xl shadow-black/10 overflow-hidden">
+            <img src="/logo_250.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-1 tracking-tight">
             Welcome Back

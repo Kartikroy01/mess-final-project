@@ -115,7 +115,10 @@ function StudentDashboard({ student, onLogout, isAdminView = false }) {
         <div className="flex h-full min-h-screen bg-gray-100 font-sans">
             <aside className={`bg-white text-gray-800 w-64 fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-lg md:shadow-none`}>
                 <div className="p-4 border-b flex items-center justify-between">
-                    <div className="text-2xl font-bold text-gray-800 flex items-center"><UtensilsCrossed className="inline-block mr-2 text-blue-600" /><span>Mess</span></div>
+                    <div className="text-2xl font-bold text-gray-800 flex items-center">
+                        <img src="/logo_250.png" alt="Logo" className="w-10 h-10 object-contain mr-2" />
+                        <span>NITJ Mess</span>
+                    </div>
                      <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-gray-600 hover:text-gray-900"><X size={24} /></button>
                 </div>
                 <div className="p-4 border-b">
@@ -135,7 +138,21 @@ function StudentDashboard({ student, onLogout, isAdminView = false }) {
                 </nav>
             </aside>
             <div className="flex-1">
-                 <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden p-2 m-2 bg-white rounded-md shadow-md fixed top-4 left-4 z-40"><Menu /></button>
+                {/* --- TOP UTILITY BAR (Mobile/Tablet App Version) --- */}
+                <div 
+                    className="md:hidden text-white text-[10px] px-4 py-1.5 flex items-center justify-between z-40 relative shadow-md bg-[#144d8b]"
+                    style={{ minHeight: "30px" }}
+                >
+                    <div className="flex items-center gap-3 font-semibold tracking-wide">
+                    <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300 whitespace-nowrap">📋 MESS SCHEDULE</span>
+                    </div>
+                    <div className="flex items-center gap-2 font-semibold tracking-wide">
+                    <a href="https://v1.nitj.ac.in/erp/login" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-yellow-300">ERP</a>
+                    <span className="opacity-50">|</span>
+                    <span className="cursor-pointer hover:text-yellow-300 whitespace-nowrap">NITJ PORTAL</span>
+                    </div>
+                </div>
+                 <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden p-2 m-2 bg-white rounded-md shadow-md fixed top-10 left-4 z-40"><Menu /></button>
                 <div className="p-4 md:p-8 bg-blue-50/50 min-h-full">{renderContent()}</div>
             </div>
         </div>
