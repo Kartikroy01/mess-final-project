@@ -28,10 +28,10 @@ export default function Navbar() {
           FULL HEADER — visible when at top of page
       ============================================================ */}
       <header 
-        className="sticky top-0 z-[1000] md:relative md:z-auto" 
+        className="sticky top-0 z-[1000] bg-white md:bg-transparent md:relative md:z-auto" 
         style={{ 
           fontFamily: "Arial, sans-serif",
-          paddingTop: "env(safe-area-inset-top)"
+          paddingTop: "calc(8px + env(safe-area-inset-top))"
         }}
       >
         

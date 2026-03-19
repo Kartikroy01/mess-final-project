@@ -1770,7 +1770,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
 
         
         {/* Header */}
-        <header className="relative z-30 bg-[#F8FAFC]/80 backdrop-blur-md px-4 md:px-8 py-4 md:py-5 flex items-center justify-between border-b border-slate-200/50 shadow-sm overflow-visible" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+        <header className="relative z-30 bg-[#F8FAFC] px-4 md:px-8 pb-4 md:pb-5 flex items-center justify-between border-b border-slate-200/50 shadow-sm overflow-visible" style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}>
           <div className="lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(true)}

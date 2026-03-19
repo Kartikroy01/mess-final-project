@@ -74,29 +74,21 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="p-8">
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-2xl font-black text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors">
-                    {item.name}
-                  </h3>
+              <div className="p-6 md:p-7">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-1 w-8 bg-indigo-600 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 -translate-x-2 group-hover:translate-x-0"></div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">
+                    {item.type}
+                  </span>
                 </div>
-                <p className="text-slate-500 text-sm leading-relaxed mb-6 line-clamp-2">
+                
+                <h3 className="text-xl md:text-2xl font-black text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors mb-3">
+                  {item.name}
+                </h3>
+                
+                <p className="text-slate-500 text-sm leading-relaxed line-clamp-3">
                   {item.desc}
                 </p>
-
-                <div className="flex justify-between items-center pt-6 border-t border-slate-50">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Price</span>
-                    <span className="text-3xl font-black text-indigo-600 tracking-tight">
-                      ₹{item.price}
-                    </span>
-                  </div>
-                  <button className="bg-slate-900 text-white p-3.5 rounded-2xl hover:bg-indigo-600 transition-all duration-300 active:scale-95 shadow-lg shadow-slate-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                </div>
               </div>
             </div>
           ))}

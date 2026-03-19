@@ -680,7 +680,7 @@ export default function ClerkDashboard() {
       {/* Main Content */}
       <main className={`flex-1 min-h-screen relative transition-all duration-300 ease-in-out ${sidebarOpen ? "md:ml-72" : "md:ml-0"}`}>
         {/* Header */}
-        <header className="sticky top-0 z-20 bg-[#F8FAFC]/80 backdrop-blur-md px-8 py-5 flex items-center gap-4" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+        <header className="sticky top-0 z-20 bg-[#F8FAFC] px-8 pb-5 flex items-center gap-4" style={{ paddingTop: "calc(1.25rem + env(safe-area-inset-top))" }}>
           <div className="flex items-center gap-4">
             <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}

@@ -2303,24 +2303,12 @@ function StudentDashboard() {
                         display: none;
                     }
                 `}</style>
-        {/* --- TOP UTILITY BAR (Mobile/Tablet App Version) --- */}
-        <div 
-          className="md:hidden text-white text-[10px] px-4 py-1.5 flex items-center justify-between z-[45] relative bg-[#144d8b]"
-          style={{ minHeight: "30px" }}
-        >
-          <div className="flex items-center gap-3 font-semibold tracking-wide">
-            <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300 whitespace-nowrap">📋 MESS SCHEDULE</span>
-          </div>
-          <div className="flex items-center gap-2 font-semibold tracking-wide">
-            <a href="https://v1.nitj.ac.in/erp/login" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-yellow-300">ERP</a>
-            <span className="opacity-50">|</span>
-            <span className="cursor-pointer hover:text-yellow-300 whitespace-nowrap">NITJ PORTAL</span>
-          </div>
-        </div>
+
 
         {/* Header */}
         <header
-          className={`sticky top-0 z-30 bg-white/80 backdrop-blur-md px-6 py-4 border-b border-slate-100 flex justify-between items-center ${activePage === "home" ? "md:flex hidden" : "flex"}`}
+          className={`sticky top-0 z-30 bg-white px-6 pb-4 border-b border-slate-100 flex justify-between items-center ${activePage === "home" ? "md:flex hidden" : "flex"}`}
+          style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}
         >
           <div className="flex items-center gap-4">
             {/* Mobile Back Button */}
