@@ -1,13 +1,16 @@
 const nodemailer = require('nodemailer');
 const dns = require('dns');
 
+// Force IPv4 globally for Node.js to prevent ENETUNREACH on Render
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
 // Create transporter with Gmail
 const createTransporter = () => {
   console.log(`Setting up email transporter for: ${process.env.EMAIL_USER}`);
   return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // Use STARTTLS
+    service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD, // Gmail app password
