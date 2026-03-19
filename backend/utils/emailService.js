@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const dns = require('dns');
 
 // Create transporter with Gmail
 const createTransporter = () => {
@@ -15,8 +16,10 @@ const createTransporter = () => {
     connectionTimeout: 20000, 
     greetingTimeout: 20000,
     socketTimeout: 30000,
-    // Force IPv4 explicitly
-    family: 4
+    // Strictly force IPv4 using custom lookup
+    lookup: (hostname, options, callback) => {
+      dns.lookup(hostname, { family: 4 }, callback);
+    }
   });
 };
 
