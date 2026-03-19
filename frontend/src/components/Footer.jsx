@@ -4,7 +4,7 @@ import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Instagram, Youtube } 
 
 export default function Footer() {
   return (
-    <footer style={{ backgroundColor: "#0d1b2e", color: "#d1d5db" }}>
+    <footer className="hidden md:block" style={{ backgroundColor: "#0d1b2e", color: "#d1d5db" }}>
       {/* Main footer grid */}
       <div className="max-w-7xl mx-auto px-6 py-10">
         <div className="grid md:grid-cols-4 gap-8">

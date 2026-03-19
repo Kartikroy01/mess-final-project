@@ -439,7 +439,7 @@ const StudentHome = ({
         {/* Removed duplicate utility bar */}
 
         {/* Mobile Header */}
-        <div className="bg-white px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-[1001]">
+        <div className="bg-white px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-[1001]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarOpen(true)}

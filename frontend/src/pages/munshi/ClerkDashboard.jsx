@@ -679,23 +679,8 @@ export default function ClerkDashboard() {
 
       {/* Main Content */}
       <main className={`flex-1 min-h-screen relative transition-all duration-300 ease-in-out ${sidebarOpen ? "md:ml-72" : "md:ml-0"}`}>
-         {/* --- TOP UTILITY BAR (Mobile/Tablet App Version) --- */}
-        <div 
-          className="md:hidden text-white text-[10px] px-4 py-1.5 flex items-center justify-between z-40 relative shadow-md bg-[#144d8b]"
-          style={{ minHeight: "30px" }}
-        >
-          <div className="flex items-center gap-3 font-semibold tracking-wide">
-            <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300 whitespace-nowrap">📋 MESS SCHEDULE</span>
-          </div>
-          <div className="flex items-center gap-2 font-semibold tracking-wide">
-            <a href="https://v1.nitj.ac.in/erp/login" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-yellow-300">ERP</a>
-            <span className="opacity-50">|</span>
-            <span className="cursor-pointer hover:text-yellow-300 whitespace-nowrap">NITJ PORTAL</span>
-          </div>
-        </div>
-
         {/* Header */}
-        <header className="sticky top-0 z-20 bg-[#F8FAFC]/80 backdrop-blur-md px-8 py-5 flex items-center gap-4">
+        <header className="sticky top-0 z-20 bg-[#F8FAFC]/80 backdrop-blur-md px-8 py-5 flex items-center gap-4" style={{ paddingTop: "env(safe-area-inset-top)" }}>
           <div className="flex items-center gap-4">
             <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}

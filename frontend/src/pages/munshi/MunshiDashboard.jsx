@@ -133,7 +133,7 @@ const MealSelectionPage = ({ onSelectMeal, munshiName }) => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8FAFC]">
+    <div className="flex flex-col min-h-screen bg-[#F8FAFC]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
@@ -1374,6 +1374,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
 
   const [categories, setCategories] = useState(["All"]);
   const [sessionStats, setSessionStats] = useState({ taken: [], notTaken: [], messOff: [] });
+  const [activeStatsFilter, setActiveStatsFilter] = useState("all");
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -1768,23 +1769,8 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
       <main className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'} min-h-screen relative`}>
 
         
-        {/* --- TOP UTILITY BAR (Mobile/Tablet App Version) --- */}
-        <div 
-          className="lg:hidden text-white text-[10px] px-4 py-1.5 flex items-center justify-between z-40 relative shadow-md"
-          style={{ backgroundColor: "#144d8b", minHeight: "30px" }}
-        >
-          <div className="flex items-center gap-3 font-semibold tracking-wide">
-            <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300 whitespace-nowrap">📋 MESS SCHEDULE</span>
-          </div>
-          <div className="flex items-center gap-2 font-semibold tracking-wide">
-            <a href="https://v1.nitj.ac.in/erp/login" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-yellow-300">ERP</a>
-            <span className="opacity-50">|</span>
-            <span className="cursor-pointer hover:text-yellow-300 whitespace-nowrap">NITJ PORTAL</span>
-          </div>
-        </div>
-
         {/* Header */}
-        <header className="relative z-30 bg-[#F8FAFC]/80 backdrop-blur-md px-4 md:px-8 py-4 md:py-5 flex items-center justify-between border-b border-slate-200/50 shadow-sm overflow-visible">
+        <header className="relative z-30 bg-[#F8FAFC]/80 backdrop-blur-md px-4 md:px-8 py-4 md:py-5 flex items-center justify-between border-b border-slate-200/50 shadow-sm overflow-visible" style={{ paddingTop: "env(safe-area-inset-top)" }}>
           <div className="lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(true)}
@@ -1936,14 +1922,30 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
 
                  {/* Session Stats Section */}
                 <Card className="p-6">
-                    <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <TrendingUp className="text-indigo-600" />
-                        Session Status: <span className="text-indigo-600 capitalize">{sessionMeal}</span>
+                    <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                            <TrendingUp className="text-indigo-600" />
+                            Session Status: <span className="text-indigo-600 capitalize">{sessionMeal}</span>
+                        </div>
+                        
+                        {/* Mobile Filter Dropdown */}
+                        <div className="md:hidden">
+                            <select 
+                                value={activeStatsFilter}
+                                onChange={(e) => setActiveStatsFilter(e.target.value)}
+                                className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 outline-none focus:border-indigo-500"
+                            >
+                                <option value="all">All</option>
+                                <option value="taken">Taken</option>
+                                <option value="notTaken">Not Taken</option>
+                                <option value="messOff">Closed</option>
+                            </select>
+                        </div>
                     </h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Taken Diet */}
-                        <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
+                        <div className={`bg-emerald-50 rounded-2xl p-4 border border-emerald-100 ${activeStatsFilter === 'all' || activeStatsFilter === 'taken' ? 'block' : 'hidden md:block'}`}>
                             <div className="flex justify-between items-center mb-4">
                                 <h4 className="font-bold text-emerald-800 flex items-center gap-2">
                                     <CheckCircle size={18} />
@@ -1972,7 +1974,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
                         </div>
 
                         {/* Not Taken Diet */}
-                        <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                        <div className={`bg-slate-50 rounded-2xl p-4 border border-slate-200 ${activeStatsFilter === 'all' || activeStatsFilter === 'notTaken' ? 'block' : 'hidden md:block'}`}>
                             <div className="flex justify-between items-center mb-4">
                                 <div className="flex items-center gap-2">
                                     <h4 className="font-bold text-slate-700 flex items-center gap-2">
@@ -2022,7 +2024,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
                         </div>
 
                         {/* Mess Off */}
-                        <div className="bg-rose-50 rounded-2xl p-4 border border-rose-100">
+                        <div className={`bg-rose-50 rounded-2xl p-4 border border-rose-100 ${activeStatsFilter === 'all' || activeStatsFilter === 'messOff' ? 'block' : 'hidden md:block'}`}>
                             <div className="flex justify-between items-center mb-4">
                                 <h4 className="font-bold text-rose-800 flex items-center gap-2">
                                     <LogOut size={18} />

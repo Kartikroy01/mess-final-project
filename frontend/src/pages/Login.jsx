@@ -455,7 +455,7 @@ export default function Login() {
   // Reset Password View
   if (showResetPassword) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         {/* Clean Premium Grid Overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
         <div className="absolute inset-0 bg-nitj-accent/10 rounded-full filter blur-[120px] opacity-40"></div>
@@ -581,7 +581,7 @@ export default function Login() {
   // Forgot Password View
   if (showForgotPassword) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         {/* Clean Premium Grid Overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
         <div className="absolute inset-0 bg-nitj-accent/10 rounded-full filter blur-[120px] opacity-40"></div>
@@ -666,7 +666,7 @@ export default function Login() {
   // Register View
   if (showRegister) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         {/* Clean Premium Grid Overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
         <div className="absolute inset-0 bg-nitj-accent/10 rounded-full filter blur-[120px] opacity-40"></div>
@@ -1001,7 +1001,7 @@ export default function Login() {
 
   // Login View
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-4 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-y-auto">
+    <div className="min-h-screen flex items-center justify-center px-4 py-4 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-y-auto" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       {/* Clean Premium Grid Overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
       <div className="absolute inset-0 bg-nitj-accent/10 rounded-full filter blur-[120px] opacity-40"></div>

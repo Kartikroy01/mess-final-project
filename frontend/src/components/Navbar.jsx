@@ -27,11 +27,17 @@ export default function Navbar() {
       {/* ============================================================
           FULL HEADER — visible when at top of page
       ============================================================ */}
-      <header className="sticky top-0 z-[1000] md:relative md:z-auto" style={{ fontFamily: "Arial, sans-serif" }}>
+      <header 
+        className="sticky top-0 z-[1000] md:relative md:z-auto" 
+        style={{ 
+          fontFamily: "Arial, sans-serif",
+          paddingTop: "env(safe-area-inset-top)"
+        }}
+      >
         
         {/* --- TOP DARK UTILITY BAR --- */}
         <div
-          className="relative z-[1100] w-full text-white text-[11px] md:text-[11px] px-4 py-2 md:py-1 flex items-center justify-between border-b border-white/5"
+          className="hidden md:flex relative z-[1100] w-full text-white text-[11px] px-4 py-1 items-center justify-between border-b border-white/5"
           style={{ backgroundColor: NITJ_UTILITY, minHeight: "32px" }}
         >
           <div className="flex items-center gap-3 md:gap-4 font-semibold tracking-wide">

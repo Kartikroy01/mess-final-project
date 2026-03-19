@@ -138,21 +138,14 @@ function StudentDashboard({ student, onLogout, isAdminView = false }) {
                 </nav>
             </aside>
             <div className="flex-1">
-                {/* --- TOP UTILITY BAR (Mobile/Tablet App Version) --- */}
-                <div 
-                    className="md:hidden text-white text-[10px] px-4 py-1.5 flex items-center justify-between z-40 relative shadow-md bg-[#144d8b]"
-                    style={{ minHeight: "30px" }}
+
+                 <button 
+                  onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+                  className="lg:hidden p-2 m-2 bg-white rounded-md shadow-md fixed left-4 z-40"
+                  style={{ top: "calc(env(safe-area-inset-top) + 0.5rem)" }}
                 >
-                    <div className="flex items-center gap-3 font-semibold tracking-wide">
-                    <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300 whitespace-nowrap">📋 MESS SCHEDULE</span>
-                    </div>
-                    <div className="flex items-center gap-2 font-semibold tracking-wide">
-                    <a href="https://v1.nitj.ac.in/erp/login" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-yellow-300">ERP</a>
-                    <span className="opacity-50">|</span>
-                    <span className="cursor-pointer hover:text-yellow-300 whitespace-nowrap">NITJ PORTAL</span>
-                    </div>
-                </div>
-                 <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden p-2 m-2 bg-white rounded-md shadow-md fixed top-10 left-4 z-40"><Menu /></button>
+                  <Menu />
+                </button>
                 <div className="p-4 md:p-8 bg-blue-50/50 min-h-full">{renderContent()}</div>
             </div>
         </div>
