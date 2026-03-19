@@ -12,11 +12,11 @@ const createTransporter = () => {
       pass: process.env.EMAIL_PASSWORD, // Gmail app password
     },
     // Add timeout to prevent hanging
-    connectionTimeout: 10000, 
-    greetingTimeout: 10000,
-    socketTimeout: 20000,
-    // Force IPv4 if needed (optional but helpful for ENETUNREACH)
-    dnsV6: false 
+    connectionTimeout: 20000, 
+    greetingTimeout: 20000,
+    socketTimeout: 30000,
+    // Force IPv4 explicitly
+    family: 4
   });
 };
 
