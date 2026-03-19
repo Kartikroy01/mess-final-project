@@ -10,11 +10,11 @@ if (dns.setDefaultResultOrder) {
 const createTransporter = () => {
   console.log(`Setting up email transporter for: ${process.env.EMAIL_USER}`);
   
-  // Use a direct IPv4 host and port 587 to bypass Render's IPv6 issues
+  // Use a hardcoded IPv4 address for Gmail SMTP to strictly bypass Render's IPv6 issues
   return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // Use STARTTLS
+    host: '74.125.130.108', // smtp.gmail.com IPv4 address
+    port: 465,
+    secure: true, // Use SSL/TLS
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD, // Gmail app password
@@ -23,16 +23,8 @@ const createTransporter = () => {
     connectionTimeout: 20000, 
     greetingTimeout: 20000,
     socketTimeout: 30000,
-    // Explicitly set family to 4 for the socket
-    family: 4,
-    // Provide a custom lookup that ONLY returns IPv4
-    lookup: (hostname, options, callback) => {
-      dns.lookup(hostname, { family: 4 }, (err, address, family) => {
-        if (err) return callback(err);
-        console.log(`DNS Lookup for ${hostname}: ${address} (Family: ${family})`);
-        callback(null, address, family);
-      });
-    }
+    // Strictly force family 4
+    family: 4
   });
 };
 
