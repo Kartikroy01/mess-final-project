@@ -25,7 +25,9 @@ import {
   IceCream,
   Pizza,
   Zap,
-  LayoutGrid
+  LayoutGrid,
+  PanelLeftClose,
+  PanelLeftOpen
 } from "lucide-react";
 import { useNavigate, useLocation, Routes, Route, Navigate } from "react-router-dom";
 import MessOffRequestsPage from "./MessOffRequest";
@@ -66,7 +68,7 @@ const Button = ({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`px-6 py-3 rounded-2xl font-bold transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${className}`}
+      className={`px-4 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl font-bold transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${className}`}
     >
       {Icon && (
         <Icon
@@ -775,7 +777,7 @@ const DashboardView = ({
 
             {!scannedStudent ? (
               <div className="space-y-6">
-                <div className="flex flex-row gap-2 md:gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                   <form onSubmit={handleScan} className="flex-1 relative group">
                     <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                     <input
@@ -783,16 +785,16 @@ const DashboardView = ({
                       placeholder="Roll No or Room No..."
                       value={studentIdInput}
                       onChange={(e) => setStudentIdInput(e.target.value)}
-                      className="w-full pl-12 md:pl-14 pr-4 py-3 md:py-4 bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-2xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium text-slate-800 outline-none text-base md:text-lg"
+                      className="w-full pl-12 md:pl-14 pr-24 md:pr-4 py-3 md:py-4 bg-slate-50 border-2 border-slate-100 rounded-xl md:rounded-2xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium text-slate-800 outline-none text-base md:text-lg"
                       autoFocus
                     />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
                       <Button
                         type="submit"
                         disabled={scanLoading}
-                        className="py-2 px-4 text-sm rounded-xl"
+                        className="py-2 px-4 shadow-none text-xs md:text-sm h-10 md:h-12 rounded-lg md:rounded-xl"
                       >
-                        {scanLoading ? "Wait..." : "Find"}
+                        {scanLoading ? "..." : "Find"}
                       </Button>
                     </div>
                   </form>
@@ -800,7 +802,7 @@ const DashboardView = ({
                   <Button
                     variant={isScanning ? "danger" : "secondary"}
                     onClick={() => setIsScanning(!isScanning)}
-                    className="sm:w-auto px-8"
+                    className="w-full sm:w-auto px-8"
                     icon={isScanning ? X : QrCode}
                   >
                     {isScanning ? "Close" : "Scan"}
@@ -830,9 +832,9 @@ const DashboardView = ({
               <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-3xl p-4 md:p-6 border border-indigo-100 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
 
-                <div className="flex flex-row items-center justify-between gap-2 relative z-10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 md:w-16 md:h-16 bg-white rounded-2xl overflow-hidden flex items-center justify-center shadow-sm text-indigo-600 text-lg md:text-xl font-bold shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-2xl overflow-hidden flex items-center justify-center shadow-sm text-indigo-600 text-lg md:text-xl font-bold shrink-0">
                       {scannedStudent.photo ? (
                           <img 
                               src={scannedStudent.photo.startsWith('http') ? scannedStudent.photo : `${getApiBaseUrl()}${scannedStudent.photo}`} 
@@ -840,58 +842,57 @@ const DashboardView = ({
                               className="w-full h-full object-cover"
                               onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
                           />
-                      ) : null}
-                      <span className="w-full h-full flex items-center justify-center" style={{ display: scannedStudent.photo ? 'none' : 'flex' }}>
-                          {scannedStudent.name.charAt(0)}
-                      </span>
+                      ) : (
+                        <User className="w-6 h-6 md:w-8 md:h-8 text-slate-300" />
+                      )}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-lg md:text-2xl font-bold text-slate-800 truncate">
+                      <h3 className="text-base md:text-2xl font-black text-slate-800 truncate leading-tight">
                         {scannedStudent.name}
                       </h3>
-                      <div className="flex flex-wrap gap-1 md:gap-2 mt-0.5 md:mt-1">
-                        <Badge variant="info">
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        <Badge variant="info" className="text-[10px] md:text-xs">
                           {scannedStudent.rollNumber}
                         </Badge>
-                        <Badge variant="warning">
+                        <Badge variant="warning" className="text-[10px] md:text-xs">
                           {scannedStudent.roomNumber}
                         </Badge>
                         {scannedStudent.isMessClosed && (
-                            <Badge variant="danger">Mess Closed</Badge>
+                            <Badge variant="danger" className="text-[10px] md:text-xs">Mess Closed</Badge>
                         )}
                         {!scannedStudent.isMessClosed && scannedStudent.takenMeals?.includes(sessionMeal) && (
-                            <Badge variant="success">Diet Taken</Badge>
+                            <Badge variant="success" className="text-[10px] md:text-xs">Diet Taken</Badge>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 md:gap-4 md:bg-white/60 md:p-4 rounded-2xl backdrop-blur-sm shrink-0">
-                    <div className="text-right">
-                      <p className="hidden md:block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto md:bg-white/60 md:p-4 rounded-2xl backdrop-blur-sm">
+                    <div className="text-left sm:text-right">
+                      <p className="md:block text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
                         Balance
                       </p>
                       <p
-                        className={`text-base md:text-xl font-bold ${scannedStudent.balance > 0 ? "text-emerald-600" : "text-slate-800"}`}
+                        className={`text-lg md:text-2xl font-black leading-none ${scannedStudent.balance > 0 ? "text-emerald-600" : "text-slate-800"}`}
                       >
                         ₹{scannedStudent.balance}
                       </p>
                     </div>
-                    <div className="hidden md:block h-8 w-px bg-slate-200"></div>
+                    <div className="hidden sm:block h-8 w-px bg-slate-200"></div>
                     <Button 
                         onClick={handleSubmitExtras}
                         variant="success"
-                        className="py-1.5 px-3 md:py-2 md:px-4 shadow-emerald-200 text-xs md:text-sm"
+                        className="py-2.5 px-5 md:py-3 md:px-6 shadow-emerald-200 text-sm md:text-base h-11 md:h-14"
                         disabled={scannedStudent?.isMessClosed || (scannedStudent?.takenMeals?.includes(sessionMeal) && extraItems.length === 0)}
                     >
                         Process
                     </Button>
-                    <div className="hidden md:block h-8 w-px bg-slate-200"></div>
+                    <div className="hidden sm:block h-8 w-px bg-slate-200"></div>
                     <button
                       onClick={handleClear}
-                      className="p-1.5 md:p-2 hover:bg-white rounded-xl transition-colors text-slate-400 hover:text-rose-500"
+                      className="p-2.5 hover:bg-white rounded-xl transition-colors text-slate-400 hover:text-rose-500 bg-slate-100 sm:bg-transparent"
                     >
-                      <X size={18} className="md:w-5 md:h-5" />
+                      <X size={20} />
                     </button>
                   </div>
                 </div>
@@ -902,35 +903,31 @@ const DashboardView = ({
           {/* Menu Items */}
           <Card className="p-4 md:p-6 lg:p-8">
             <div className="flex flex-row items-center justify-between gap-4 mb-4 md:mb-6 lg:mb-8">
-              <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                <div className="p-2 md:p-3 bg-orange-50 rounded-xl md:rounded-2xl">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2.5 bg-orange-50 rounded-xl md:rounded-2xl shrink-0">
                   <UtensilsCrossed className="w-5 h-5 md:w-6 md:h-6 text-orange-600" />
                 </div>
-                <div>
-                  <h2 className="text-lg md:text-xl font-bold text-slate-800">
+                <div className="min-w-0">
+                  <h2 className="text-base md:text-xl font-black text-slate-800 tracking-tight leading-tight truncate">
                     Available Menu
                   </h2>
-                  <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mt-1">
-                    Session:{" "}
-                    <span className="text-indigo-600">{sessionMeal}</span>
+                  <p className="text-slate-500 text-[10px] md:text-xs font-bold uppercase tracking-widest mt-0.5 truncate">
+                    Session: <span className="text-indigo-600">{sessionMeal}</span>
                   </p>
                 </div>
               </div>
 
-               {/* Category Tabs - Beside Available Menu */}
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar w-full justify-end">
+              {/* Category Tabs & Add Buttons */}
+              <div className="flex flex-wrap items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                <button
+                  onClick={onAddExtraClick}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold whitespace-nowrap border border-indigo-600 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all active:scale-95 shrink-0"
+                >
+                  <Plus size={14} />
+                  Add Item
+                </button>
                 
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={onAddExtraClick}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold whitespace-nowrap border border-indigo-600 hover:bg-indigo-700 hover:shadow-md transition-all active:scale-95"
-                  >
-                    <Plus size={14} />
-                    Add Extra Item
-                  </button>
-                </div>
-                
-                <div className="h-4 w-px bg-slate-200 mx-1 shrink-0"></div>
+                <div className="h-4 w-px bg-slate-200 mx-1 hidden md:block shrink-0"></div>
 
                 {categories
                   .filter(cat => cat !== 'Snacks')
@@ -941,7 +938,7 @@ const DashboardView = ({
                       e.stopPropagation();
                       setSelectedCategory(cat);
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border shrink-0 ${
+                    className={`hidden md:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border shrink-0 ${
                       selectedCategory === cat
                         ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200"
                         : "bg-white text-slate-600 border-slate-100 hover:border-indigo-100 hover:bg-indigo-50"
@@ -952,21 +949,14 @@ const DashboardView = ({
                   </button>
                 ))}
               </div>
-
-               {/* Mobile Badge */}
-               <div className="md:hidden">
-                  {scannedStudent && extraItems.length > 0 && (
-                    <Badge variant="success">{extraItems.length}</Badge>
-                  )}
-               </div>
             </div>
 
             {menuLoading ? (
-              <div className="text-center py-12 text-slate-400">
+              <div className="text-center py-12 text-slate-400 font-medium">
                 Loading menu...
               </div>
             ) : (
-              <div className="grid grid-cols-4 md:grid-cols-5 gap-2 md:gap-4">
+              <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-5 gap-3 md:gap-4 lg:gap-6">
                 {(meals[sessionMeal] || []).map((item) => {
                   const isSelected = extraItems.find((i) => i.id === item.id);
                   const showDelete = showDeleteId === item.id;
@@ -1015,12 +1005,12 @@ const DashboardView = ({
                           </div>
                         )}
                       </div>
-                      <div className="p-3 md:p-4 lg:p-5">
-                        <div className="flex justify-between items-start mb-1 md:mb-2">
-                          <h3 className={`font-bold text-sm md:text-base transition-colors ${showDelete ? 'text-rose-600' : 'text-slate-800 group-hover:text-indigo-700'}`}>
+                      <div className="p-2 md:p-4 lg:p-5">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-1 md:mb-2 gap-0.5">
+                          <h3 className={`font-bold text-[9px] md:text-sm lg:text-base transition-colors line-clamp-2 leading-tight ${showDelete ? 'text-rose-600' : 'text-slate-800 group-hover:text-indigo-700'}`}>
                             {item.name}
                           </h3>
-                          <div className="bg-slate-100 px-2 py-1 rounded-lg text-xs font-bold text-slate-600">
+                          <div className="bg-slate-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg text-[9px] md:text-xs font-bold text-slate-600 shrink-0">
                             ₹{item.price}
                           </div>
                         </div>
@@ -1057,10 +1047,6 @@ const DashboardView = ({
                               Delete
                             </button>
                           </div>
-                        )}
-                        
-                        {!scannedStudent && !showDelete && (
-                          <p className="text-[10px] text-slate-400 font-medium mt-1">Click to manage</p>
                         )}
                       </div>
                     </div>
@@ -1138,12 +1124,12 @@ const DashboardView = ({
                           </div>
                         )}
                       </div>
-                      <div className="p-3 md:p-4 lg:p-5">
-                        <div className="flex justify-between items-start mb-1 md:mb-2">
-                          <h3 className={`font-bold text-sm md:text-base transition-colors ${showExtraActions ? 'text-rose-600' : 'text-slate-800 group-hover:text-indigo-700'}`}>
+                      <div className="p-2 md:p-4 lg:p-5">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-1 md:mb-2 gap-0.5">
+                          <h3 className={`font-bold text-[9px] md:text-sm lg:text-base transition-colors line-clamp-2 leading-tight ${showExtraActions ? 'text-rose-600' : 'text-slate-800 group-hover:text-indigo-700'}`}>
                             {item.name}
                           </h3>
-                          <div className="bg-slate-100 px-2 py-1 rounded-lg text-xs font-bold text-slate-600">
+                          <div className="bg-slate-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg text-[9px] md:text-xs font-bold text-slate-600 shrink-0">
                             ₹{item.price}
                           </div>
                         </div>
@@ -1179,9 +1165,7 @@ const DashboardView = ({
                           </div>
                         )}
 
-                        {!scannedStudent && !showExtraActions && (
-                          <p className="text-[10px] text-slate-400 font-medium mt-1">Click to manage</p>
-                        )}
+                        
                       </div>
                     </div>
                   )})}
@@ -1192,65 +1176,70 @@ const DashboardView = ({
 
         {/* Sidebar Order Summary */}
         <div className="space-y-6">
-          <Card className="p-6 sticky top-8 border-indigo-100 shadow-indigo-100/50">
-            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-              <ShoppingBag className="text-indigo-600" size={20} />
+          <Card className="p-3 md:p-4 sticky top-8 border-indigo-100 shadow-indigo-100/50">
+            <h3 className="text-sm md:text-base font-black text-slate-800 mb-3 md:mb-4 flex items-center gap-2">
+              <ShoppingBag className="text-indigo-600" size={16} />
               Current Order
             </h3>
 
             {scannedStudent ? (
               <>
                 {extraItems.length > 0 ? (
-                  <div className="space-y-3 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="space-y-2 md:space-y-3 mb-4 md:mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                     {extraItems.map((item) => {
-                      const itemTotal = calculateItemPrice(item);
                       return (
                         <div
                           key={item.id}
-                          className="flex flex-col p-4 bg-slate-50 rounded-2xl group hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 transition-all gap-3"
+                          className="flex flex-col p-2 md:p-3 bg-slate-50 rounded-lg md:rounded-xl group hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 transition-all"
                         >
-                          <div className="flex justify-between items-center">
-                            <span className="text-slate-700 font-bold text-sm tracking-tight">
-                              {item.name}
-                            </span>
-                            <button
-                              onClick={() => toggleExtraItem(item)}
-                              className="text-slate-300 hover:text-rose-500 transition-colors p-1 rounded-lg hover:bg-rose-50"
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <button
+                                onClick={() => toggleExtraItem(item)}
+                                className="text-slate-300 hover:text-rose-500 transition-colors p-1"
+                                title="Remove item"
+                              >
+                                <X size={14} className="md:w-4 md:h-4 text-slate-400 group-hover:text-rose-500" />
+                              </button>
+                              <span className="text-slate-700 font-bold text-xs md:text-sm truncate">
+                                {item.name}
+                              </span>
+                            </div>
 
-                          <div className="flex justify-between items-center bg-white/50 p-2 rounded-xl border border-slate-100/50">
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => updateItemQty(item.id, -1)}
-                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all active:scale-95 disabled:opacity-30"
-                                disabled={item.qty <= 1}
-                              >
-                                -
-                              </button>
-                              <span className="w-10 text-center font-black text-slate-800">
-                                {item.qty}
+                            <div className="flex items-center gap-2 shrink-0">
+                              <div className="flex items-center bg-white/50 p-1 rounded-lg border border-slate-100 shadow-sm">
+                                <button
+                                  onClick={() => {
+                                      const newQty = Math.max(1, item.qty - 1);
+                                      setExtraItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: newQty } : i));
+                                  }}
+                                  className="w-7 h-7 md:w-8 md:h-8 rounded-md bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors disabled:opacity-30"
+                                  disabled={item.qty <= 1}
+                                >
+                                  <span className="text-lg">-</span>
+                                </button>
+                                <div className="w-8 md:w-10 text-center font-black text-slate-800 text-xs md:text-sm">
+                                  {item.qty}
+                                </div>
+                                <button
+                                  onClick={() => {
+                                      setExtraItems(prev => prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i));
+                                  }}
+                                  className="w-7 h-7 md:w-8 md:h-8 rounded-md bg-indigo-600 flex items-center justify-center text-white hover:bg-indigo-700 transition-colors shadow-sm"
+                                >
+                                  <span className="text-lg">+</span>
+                                </button>
+                              </div>
+                              <span className="text-indigo-600 font-black text-xs md:text-sm min-w-[35px] text-right">
+                                ₹{item.price * item.qty}
                               </span>
-                              <button
-                                onClick={() => updateItemQty(item.id, 1)}
-                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all active:scale-95"
-                              >
-                                +
-                              </button>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-indigo-600 font-black text-sm">
-                                ₹{itemTotal}
-                              </span>
-                              {item.qty > 1 && item.price === 15 && (
-                                <p className="text-[9px] text-emerald-500 font-bold uppercase tracking-tighter">
-                                  Bundle Applied
-                                </p>
-                              )}
                             </div>
                           </div>
+                          {item.qty > 1 && item.price === 15 && (
+                            <p className="text-[9px] md:text-[10px] text-emerald-500 font-bold uppercase tracking-tighter mt-1 pl-8">
+                              Bundle Price Applied
+                            </p>
+                          )}
                         </div>
                       );
                     })}
@@ -1285,17 +1274,17 @@ const DashboardView = ({
                     </div>
                 )}
 
-                 <div className="bg-slate-900 rounded-2xl p-5 text-white mb-4 relative overflow-hidden">
+                 <div className="bg-slate-900 rounded-lg md:rounded-xl p-3 md:p-4 text-white mb-3 md:mb-4 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
                   <div className="flex justify-between items-end relative z-10">
                     <div>
-                      <p className="text-indigo-200 text-xs font-bold uppercase tracking-wider mb-1">
+                      <p className="text-indigo-200 text-[9px] md:text-[10px] font-bold uppercase tracking-wider mb-0.5 md:mb-1">
                         Total Amount
                       </p>
-                      <p className="text-3xl font-bold">₹{totalAmount}</p>
+                      <p className="text-xl md:text-2xl font-black">₹{totalAmount}</p>
                     </div>
-                    <div className="bg-white/10 p-2 rounded-lg">
-                      <DollarSign size={20} />
+                    <div className="bg-white/10 p-1.5 md:p-2 rounded-lg">
+                      <DollarSign size={14} className="md:w-4 md:h-4" />
                     </div>
                   </div>
                 </div>
@@ -1303,13 +1292,13 @@ const DashboardView = ({
                 <Button
                   onClick={handleSubmitExtras}
                   variant={scannedStudent?.isMessClosed || (scannedStudent?.takenMeals?.includes(sessionMeal) && extraItems.length === 0) ? "secondary" : "success"}
-                  className={`w-full py-4 text-lg ${scannedStudent?.isMessClosed || (scannedStudent?.takenMeals?.includes(sessionMeal) && extraItems.length === 0) ? '' : 'shadow-emerald-200'}`}
+                  className={`w-full py-2.5 md:py-3 text-sm md:text-base ${scannedStudent?.isMessClosed || (scannedStudent?.takenMeals?.includes(sessionMeal) && extraItems.length === 0) ? '' : 'shadow-emerald-200 shadow-lg'}`}
                   disabled={scannedStudent?.isMessClosed || (scannedStudent?.takenMeals?.includes(sessionMeal) && extraItems.length === 0)}
                 >
                   {scannedStudent?.isMessClosed 
-                     ? "Process cannot be done (Mess Closed)"
+                     ? "Mess Closed"
                      : (scannedStudent?.takenMeals?.includes(sessionMeal) && extraItems.length === 0 
-                         ? "Process cannot be done without extra items" 
+                         ? "Add extra items" 
                          : (extraItems.length === 0 ? "Mark Diet Only" : "Process Order"))}
                 </Button>
               </>
@@ -1347,6 +1336,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
 
   const [sessionMeal, setSessionMeal] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isAddMealModalOpen, setIsAddMealModalOpen] = useState(false);
   
   // Extra Item Edit State
@@ -1644,38 +1634,60 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
       )}
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-100 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-50 ${isSidebarCollapsed ? 'lg:w-20' : 'lg:w-72'} w-72 bg-white border-r border-slate-100 transform transition-all duration-300 ease-in-out lg:translate-x-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
-        <div className="p-8 h-full flex flex-col">
-          <div className="flex items-center gap-3 mb-10 px-2">
-            <img src="/logo_250.png" alt="Logo" className="w-11 h-11 object-contain" />
-            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
-              NITJ<span className="text-indigo-600">Mess</span>
-            </h1>
+        <div className={`p-4 md:p-6 lg:p-8 h-full flex flex-col ${isSidebarCollapsed ? 'items-center' : ''}`}>
+          <div className="flex items-center justify-between mb-10 w-full px-2">
+            <div className="flex items-center gap-3 min-w-0">
+              <img src="/logo_250.png" alt="Logo" className="w-11 h-11 object-contain shrink-0" />
+              {!isSidebarCollapsed && (
+                <h1 className="text-2xl font-bold text-slate-800 tracking-tight truncate">
+                  NITJ<span className="text-indigo-600">Mess</span>
+                </h1>
+              )}
+            </div>
+            
+            {/* Collapse Toggle Button (Desktop Only) */}
+            <button
+               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+               className="hidden lg:flex p-2 hover:bg-slate-50 rounded-xl text-slate-400 hover:text-indigo-600 transition-all active:scale-95 shrink-0"
+               title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            >
+               {isSidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
+            </button>
           </div>
 
           {/* New Upper Sidebar Profile Section */}
-          <div className="px-2 mb-8 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50 group hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-200">
-                {munshiName ? munshiName.charAt(0).toUpperCase() : "M"}
-              </div>
-              <div className="overflow-hidden">
-                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">
-                  Munshi Profile
-                </p>
-                <h4 className="text-sm font-black text-slate-800 truncate leading-tight group-hover:text-indigo-600 transition-colors">
-                  {munshiName || "Munshi"}
-                </h4>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <Home size={10} className="text-slate-400" />
-                  <p className="text-[10px] font-bold text-slate-500 truncate">
-                    {munshiHostel || "Hostel"}
+          {!isSidebarCollapsed && (
+            <div className="px-2 mb-8 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50 group hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-200">
+                  {munshiName ? munshiName.charAt(0).toUpperCase() : "M"}
+                </div>
+                <div className="overflow-hidden">
+                  <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">
+                    Munshi Profile
                   </p>
+                  <h4 className="text-sm font-black text-slate-800 truncate leading-tight group-hover:text-indigo-600 transition-colors">
+                    {munshiName || "Munshi"}
+                  </h4>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Home size={10} className="text-slate-400" />
+                    <p className="text-[10px] font-bold text-slate-500 truncate">
+                      {munshiHostel || "Hostel"}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
+          {isSidebarCollapsed && (
+            <div className="mb-8 flex justify-center">
+               <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-200 cursor-pointer">
+                  {munshiName ? munshiName.charAt(0).toUpperCase() : "M"}
+               </div>
+            </div>
+          )}
 
           <nav className="space-y-2 flex-1">
             {tabs.map((tab) => {
@@ -1686,17 +1698,21 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
                   key={tab.id}
                   onClick={() => {
                     navigate(tab.path);
-                    setMobileMenuOpen(false);
+                    if (mobileMenuOpen) setMobileMenuOpen(false);
                   }}
-                  className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 font-bold text-sm relative overflow-hidden group ${isActive ? "bg-indigo-600 text-white shadow-xl shadow-indigo-200" : "text-slate-500 hover:bg-slate-50 hover:text-indigo-600"}`}
+                  className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-6'} py-4 rounded-2xl transition-all duration-300 font-bold text-sm relative overflow-hidden group ${isActive ? "bg-indigo-600 text-white shadow-xl shadow-indigo-200" : "text-slate-500 hover:bg-slate-50 hover:text-indigo-600"}`}
+                  title={isSidebarCollapsed ? tab.label : ""}
                 >
                   <Icon
                     size={20}
                     className={`relative z-10 transition-transform group-hover:scale-110 ${isActive ? "stroke-[2.5]" : ""}`}
                   />
-                  <span className="relative z-10">{tab.label}</span>
-                  {isActive && (
+                  {!isSidebarCollapsed && <span className="relative z-10">{tab.label}</span>}
+                  {isActive && !isSidebarCollapsed && (
                     <div className="absolute inset-0 bg-white/20 blur-xl"></div>
+                  )}
+                  {isSidebarCollapsed && isActive && (
+                    <div className="absolute left-0 w-1 h-8 bg-white rounded-r-full" />
                   )}
                 </button>
               );
@@ -1705,26 +1721,36 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
 
           <div className="mt-auto pt-8 border-t border-slate-100 flex flex-col gap-4">
             {/* Current Session Indicator */}
-            <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3 border border-slate-100/50">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-indigo-500 font-bold shadow-sm">
-                <Calendar size={18} />
+            {!isSidebarCollapsed && (
+              <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3 border border-slate-100/50">
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-indigo-500 font-bold shadow-sm">
+                  <Calendar size={18} />
+                </div>
+                <div className="overflow-hidden">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Session
+                  </p>
+                  <p className="text-xs text-slate-700 font-bold capitalize truncate">
+                    {sessionMeal}
+                  </p>
+                </div>
               </div>
-              <div className="overflow-hidden">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  Session
-                </p>
-                <p className="text-xs text-slate-700 font-bold capitalize truncate">
-                  {sessionMeal}
-                </p>
-              </div>
-            </div>
+            )}
+            {isSidebarCollapsed && (
+               <div className="flex justify-center">
+                  <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-indigo-500 font-bold border border-slate-100/50" title={`Session: ${sessionMeal}`}>
+                    <Calendar size={18} />
+                  </div>
+               </div>
+            )}
 
             <button
               onClick={onLogout}
-              className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-2xl text-slate-500 font-bold hover:bg-rose-50 hover:text-rose-600 transition-all active:scale-95"
+              className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-center gap-2 px-6'} py-4 rounded-2xl text-slate-500 font-bold hover:bg-rose-50 hover:text-rose-600 transition-all active:scale-95`}
+              title={isSidebarCollapsed ? "Sign Out" : ""}
             >
               <LogOut size={20} />
-              <span>Sign Out</span>
+              {!isSidebarCollapsed && <span>Sign Out</span>}
             </button>
           </div>
         </div>
@@ -1739,7 +1765,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 lg:ml-72 min-h-screen relative">
+      <main className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'} min-h-screen relative`}>
 
         
         {/* --- TOP UTILITY BAR (Mobile/Tablet App Version) --- */}
@@ -1758,7 +1784,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
         </div>
 
         {/* Header */}
-        <header className="relative z-30 bg-[#F8FAFC]/80 backdrop-blur-md px-8 py-5 flex items-center justify-between border-b border-slate-200/50 shadow-sm overflow-visible">
+        <header className="relative z-30 bg-[#F8FAFC]/80 backdrop-blur-md px-4 md:px-8 py-4 md:py-5 flex items-center justify-between border-b border-slate-200/50 shadow-sm overflow-visible">
           <div className="lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(true)}
@@ -1831,7 +1857,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
         </header>
 
         {/* Content Wrapper */}
-        <div className="p-6 md:p-8 md:pt-4 pb-24 max-w-7xl mx-auto">
+        <div className="p-4 md:p-8 md:pt-4 pb-24 max-w-7xl mx-auto">
           {activeTab === "dashboard" && (
             <>
               <DashboardView
