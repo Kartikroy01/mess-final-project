@@ -26,7 +26,7 @@ app.use('/uploads', express.static('uploads'));
 
 const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/student');
-const messOffRoutes = require('./routes/messOff');
+const messOffRoutes = require('./routes/messoff');
 const feedbackRoutes = require('./routes/feedback');
 const menuRoutes = require('./routes/menu');
 const billRoutes = require('./routes/bill');
