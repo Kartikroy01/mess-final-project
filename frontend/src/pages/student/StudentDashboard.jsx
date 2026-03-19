@@ -436,20 +436,7 @@ const StudentHome = ({
     <div className="min-h-screen bg-[#f5f9ff] md:bg-transparent -m-4 md:-m-0 pb-24 md:pb-0">
       {/* --- MOBILE ONLY VIEW --- */}
       <div className="md:hidden">
-        {/* --- TOP UTILITY BAR (Mobile/Tablet App Version) --- */}
-        <div 
-          className="text-white text-[11px] px-4 py-2 flex items-center justify-between z-40 relative shadow-md bg-[#144d8b] border-b border-white/5"
-          style={{ minHeight: "32px" }}
-        >
-          <div className="flex items-center gap-3 font-semibold tracking-wide">
-          <span className="flex items-center gap-1 cursor-pointer hover:text-yellow-300 whitespace-nowrap">📋 MESS SCHEDULE</span>
-          </div>
-          <div className="flex items-center gap-2 font-semibold tracking-wide">
-          <a href="https://v1.nitj.ac.in/erp/login" target="_blank" rel="noreferrer" className="cursor-pointer hover:text-yellow-300">ERP</a>
-          <span className="opacity-50">|</span>
-          <span className="cursor-pointer hover:text-yellow-300 whitespace-nowrap">NITJ PORTAL</span>
-          </div>
-        </div>
+        {/* Removed duplicate utility bar */}
 
         {/* Mobile Header */}
         <div className="bg-white px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-[1001]">

@@ -1,7 +1,7 @@
 services:
   - type: web
     name: mess-management-api
-    runtime: node
+    env: node
     plan: free
     rootDir: backend
     buildCommand: npm install

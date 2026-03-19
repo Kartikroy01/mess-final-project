@@ -5,8 +5,8 @@ const createTransporter = () => {
   console.log(`Setting up email transporter for: ${process.env.EMAIL_USER}`);
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Use SSL/TLS
+    port: 587,
+    secure: false, // Use STARTTLS
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD, // Gmail app password
@@ -14,7 +14,9 @@ const createTransporter = () => {
     // Add timeout to prevent hanging
     connectionTimeout: 10000, 
     greetingTimeout: 10000,
-    socketTimeout: 20000
+    socketTimeout: 20000,
+    // Force IPv4 if needed (optional but helpful for ENETUNREACH)
+    dnsV6: false 
   });
 };
 
