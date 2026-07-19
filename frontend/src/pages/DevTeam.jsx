@@ -1,161 +1,164 @@
 import React, { useState } from "react";
-import { Linkedin, Github, Instagram, User, GraduationCap, Briefcase, Twitter, Mail, Phone } from "lucide-react";
+import { Linkedin, Github, User, GraduationCap, Briefcase, Mail } from "lucide-react";
 
 const teamData = {
   mentor: {
     name: "Dr. [Mentor Name]",
-    role: "Mentor & Supervisor",
-    batch: "Faculty Advisor",
+    role: "Faculty Advisor",
+    batch: "Faculty Mentor",
     image: "/dev-team/mentor.jpg",
     linkedin: "#",
     github: "#",
+    isMentor: true
   },
   developers: [
     {
       name: "Kartik Roy",
       role: "Lead Developer",
-      batch: "2022-2026",
+      batch: "Batch of 2026",
       image: "/dev-team/kartik.jpg",
       linkedin: "https://linkedin.com/in/kartikroy",
       github: "https://github.com/Kartikroy01",
-      twitter: "#",
       email: "mailto:kartik@example.com",
-      phone: "tel:+910000000000",
-      instagram: "#",
       isLead: true,
     },
     {
       name: "[Developer 2]",
       role: "Full Stack Developer",
-      batch: "2022-2026",
+      batch: "Batch of 2026",
       image: "/dev-team/dev2.jpg",
       linkedin: "#",
       github: "#",
+      email: "mailto:dev2@example.com",
     },
     {
       name: "[Developer 3]",
       role: "Frontend Developer",
-      batch: "2022-2026",
+      batch: "Batch of 2026",
       image: "/dev-team/dev3.jpg",
       linkedin: "#",
       github: "#",
-    },
-  ],
-};
-
-const TeamCard = ({ member, isMentor = false }) => {
-  const [imgError, setImgError] = useState(false);
-
-  return (
-    <div className={`bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-cyan-500/10 group ${isMentor ? 'md:max-w-xl mx-auto mb-12' : ''}`}>
-      <div className="p-8 flex flex-col items-center">
-        {/* Profile Image */}
-        <div className={`relative mb-6 group`}>
-          <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500 to-blue-600 rounded-full blur-2xl opacity-10 group-hover:opacity-30 transition-opacity duration-500"></div>
-          <div className={`relative w-32 h-32 ${isMentor ? 'md:w-40 md:h-40' : ''} rounded-full border-4 border-white/5 overflow-hidden bg-nitj-dark flex items-center justify-center shadow-inner`}>
-            {imgError || !member.image ? (
-              <User className="w-1/2 h-1/2 text-white/20" />
-            ) : (
-              <img 
-                src={member.image} 
-                alt={member.name} 
-                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                onError={() => setImgError(true)}
-              />
-            )}
-          </div>
-          {isMentor && (
-            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-nitj-accent text-white text-[11px] font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-xl">
-              Faculty Mentor
-            </div>
-          )}
-        </div>
-
-        {/* Member Info */}
-        <h3 className={`text-white font-extrabold text-center ${isMentor ? 'text-2xl' : 'text-xl'} mb-2 tracking-tight`}>
-          {member.name}
-        </h3>
-        
-        <div className="flex items-center gap-2 text-cyan-400 font-medium text-sm mb-2">
-          <Briefcase className="w-4 h-4" />
-          <span>{member.role}</span>
-        </div>
-
-        <div className="flex items-center gap-2 text-slate-400 text-xs mb-6 px-4 py-1 bg-white/5 rounded-full">
-          <GraduationCap className="w-4 h-4" />
-          <span>{member.batch}</span>
-        </div>
-
-        {/* Social Links */}
-        <div className="flex flex-wrap justify-center gap-4 mt-auto">
-          {member.linkedin && (
-            <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#0077b5] transform hover:scale-110 transition-all duration-300">
-              <Linkedin className="w-6 h-6" />
-            </a>
-          )}
-          {member.twitter && (
-            <a href={member.twitter} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transform hover:scale-110 transition-all duration-300">
-              <Twitter className="w-6 h-6" />
-            </a>
-          )}
-          {member.email && (
-            <a href={member.email} className="text-slate-400 hover:text-white transform hover:scale-110 transition-all duration-300 bg-transparent hover:bg-red-600 rounded-full p-1 border border-transparent hover:border-red-600">
-              <Mail className="w-5 h-5" />
-            </a>
-          )}
-          {member.phone && (
-            <a href={member.phone} className="text-slate-400 hover:text-green-500 transform hover:scale-110 transition-all duration-300">
-              <Phone className="w-6 h-6" />
-            </a>
-          )}
-          {member.instagram && (
-            <a href={member.instagram} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-pink-500 transform hover:scale-110 transition-all duration-300">
-              <Instagram className="w-6 h-6" />
-            </a>
-          )}
-          {member.github && !member.isLead && (
-            <a href={member.github} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transform hover:scale-110 transition-all duration-300">
-              <Github className="w-6 h-6" />
-            </a>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+      email: "mailto:dev3@example.com",
+    }
+  ]
 };
 
 export default function DevTeam() {
+  const [imgErrors, setImgErrors] = useState({});
+
+  const handleImgError = (name) => {
+    setImgErrors(prev => ({ ...prev, [name]: true }));
+  };
+
+  const allMembers = [teamData.mentor, ...teamData.developers];
+
   return (
-    <div className="min-h-screen bg-[#0d1b2e] pt-32 pb-20 px-4 relative overflow-hidden">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div className="h-screen w-screen bg-white flex flex-col justify-between p-6 overflow-hidden relative font-sans text-slate-800 select-none">
+      
+      {/* Background Decorative Gradients */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-50/50 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-50/50 rounded-full blur-[120px] pointer-events-none"></div>
 
-      <div className="max-w-6xl mx-auto relative z-10">
-        {/* Header Section */}
-        <div className="text-center mb-16 animate-in fade-in slide-in-from-top-4 duration-700">
-          <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tighter uppercase italic">
-            Mess Portal <span className="text-cyan-500">Dev Team</span>
+
+
+      {/* Middle Section: Profiles grid */}
+      <div className="flex-1 flex flex-col justify-start pt-6 max-w-7xl w-full mx-auto my-4 z-10">
+        
+        {/* Title */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-slate-900 mb-1 uppercase italic">
+            Meet The <span className="text-indigo-650 font-black">Dev Team</span>
           </h1>
-          <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
-            The dedicated team of students and faculty working to modernize the NIT Jalandhar hostel mess experience.
+          <p className="text-slate-500 text-xs md:text-sm max-w-lg mx-auto font-medium">
+            Building a seamless digital dining experience for Dr. B. R. Ambedkar NIT Jalandhar.
           </p>
-          <div className="w-24 h-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 mx-auto mt-8 rounded-full"></div>
         </div>
 
-        {/* Mentor Highlight */}
-        <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
-          <TeamCard member={teamData.mentor} isMentor={true} />
-        </div>
+        {/* 4-column Grid matching the screen height perfectly */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full items-stretch">
+          {allMembers.map((member) => (
+            <div 
+              key={member.name}
+              className={`relative bg-white border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-100 rounded-2xl p-5 flex flex-col justify-between items-center group overflow-hidden ${
+                member.isMentor 
+                  ? 'border-indigo-100 bg-gradient-to-b from-indigo-50/40 to-white shadow-md' 
+                  : 'border-slate-100 shadow-sm'
+              }`}
+            >
+              {/* Highlight background lines for mentor */}
+              {member.isMentor && (
+                <div className="absolute top-0 right-0 bg-indigo-600 text-[9px] font-black tracking-widest text-white px-3 py-1 rounded-bl-xl uppercase">
+                  Mentor
+                </div>
+              )}
 
-        {/* Developers Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-12 duration-700 delay-500">
-          {teamData.developers.map((dev, idx) => (
-            <TeamCard key={idx} member={dev} />
+              <div className="w-full flex flex-col items-center">
+                {/* Avatar with glow */}
+                <div className="relative mb-4 mt-2">
+                  <div className={`absolute inset-0 rounded-full blur-xl opacity-20 transition-opacity duration-300 group-hover:opacity-40 bg-gradient-to-tr ${
+                    member.isMentor ? 'from-indigo-100 to-purple-100' : 'from-blue-50 to-indigo-50'
+                  }`}></div>
+                  <div className={`relative w-22 h-22 rounded-full overflow-hidden border-2 flex items-center justify-center bg-slate-50 ${
+                    member.isMentor ? 'border-indigo-200/50' : 'border-slate-200/60'
+                  }`}>
+                    {imgErrors[member.name] || !member.image ? (
+                      <User className="w-10 h-10 text-slate-400" />
+                    ) : (
+                      <img 
+                        src={member.image} 
+                        alt={member.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={() => handleImgError(member.name)}
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {/* Info Text */}
+                <h3 className="text-sm font-extrabold text-slate-800 text-center tracking-tight mb-1 group-hover:text-indigo-650 transition-colors">
+                  {member.name}
+                </h3>
+                
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-650 mb-2">
+                  <Briefcase size={11} className="text-indigo-550" />
+                  <span>{member.role}</span>
+                </div>
+
+                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-50 border border-slate-100 text-[9px] font-medium text-slate-500">
+                  <GraduationCap size={10} className="text-slate-400" />
+                  <span>{member.batch}</span>
+                </div>
+              </div>
+
+              {/* Social Links Row */}
+              <div className="flex items-center gap-3 mt-5 pt-4 border-t border-slate-100 w-full justify-center">
+                {member.linkedin && member.linkedin !== '#' && (
+                  <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-[#0077b5] transition-colors p-1.5 hover:bg-slate-50 rounded-lg" title="LinkedIn">
+                    <Linkedin size={15} />
+                  </a>
+                )}
+                {member.github && member.github !== '#' && (
+                  <a href={member.github} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-800 transition-colors p-1.5 hover:bg-slate-50 rounded-lg" title="GitHub">
+                    <Github size={15} />
+                  </a>
+                )}
+                {member.email && member.email !== '#' && (
+                  <a href={member.email} className="text-slate-400 hover:text-red-500 transition-colors p-1.5 hover:bg-slate-50 rounded-lg" title="Email">
+                    <Mail size={15} />
+                  </a>
+                )}
+              </div>
+
+            </div>
           ))}
         </div>
-
       </div>
+
+      {/* Footer bar */}
+      <footer className="w-full flex items-center justify-center text-[10px] text-slate-400 border-t border-slate-100 pt-4 max-w-7xl mx-auto z-10">
+        <span>© 2026 NITJ Hostel Mess Portal</span>
+      </footer>
+
     </div>
   );
 }

@@ -607,6 +607,17 @@ const DashboardView = ({
   const [error, setError] = useState("");
   const [extraItems, setExtraItems] = useState([]);
   const [notification, setNotification] = useState(null);
+  const notificationTimeoutRef = React.useRef(null);
+  const showNotification = (type, message) => {
+    if (notificationTimeoutRef.current) {
+      clearTimeout(notificationTimeoutRef.current);
+    }
+    setNotification({ type, message });
+    notificationTimeoutRef.current = setTimeout(() => {
+      setNotification(null);
+      notificationTimeoutRef.current = null;
+    }, 2000);
+  };
   const [isScanning, setIsScanning] = useState(false);
   const [showDeleteId, setShowDeleteId] = useState(null);
 
@@ -784,7 +795,7 @@ const DashboardView = ({
 
             {!scannedStudent ? (
               <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-row gap-3 items-stretch">
                   <form onSubmit={handleScan} className="flex-1 relative group">
                     <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                     <input
@@ -809,7 +820,7 @@ const DashboardView = ({
                   <Button
                     variant={isScanning ? "danger" : "secondary"}
                     onClick={() => setIsScanning(!isScanning)}
-                    className="w-full sm:w-auto px-8"
+                    className="px-4 md:px-8 shrink-0 whitespace-nowrap text-sm md:text-base"
                     icon={isScanning ? X : QrCode}
                   >
                     {isScanning ? "Close" : "Scan"}
@@ -843,12 +854,20 @@ const DashboardView = ({
                   <div className="flex items-center gap-3 md:gap-4">
                     <div className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-2xl overflow-hidden flex items-center justify-center shadow-sm text-indigo-600 text-lg md:text-xl font-bold shrink-0">
                       {scannedStudent.photo ? (
+                        <>
                           <img 
                               src={scannedStudent.photo.startsWith('http') ? scannedStudent.photo : `${getApiBaseUrl()}${scannedStudent.photo}`} 
                               alt={scannedStudent.name} 
                               className="w-full h-full object-cover"
-                              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                              onError={(e) => { 
+                                e.target.style.display = 'none'; 
+                                if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex'; 
+                              }}
                           />
+                          <span className="w-full h-full flex items-center justify-center bg-slate-50" style={{ display: 'none' }}>
+                            <User className="w-6 h-6 md:w-8 md:h-8 text-slate-300" />
+                          </span>
+                        </>
                       ) : (
                         <User className="w-6 h-6 md:w-8 md:h-8 text-slate-300" />
                       )}
@@ -1346,7 +1365,7 @@ const DashboardView = ({
                       <p className="text-xl md:text-2xl font-black">₹{totalAmount}</p>
                     </div>
                     <div className="bg-white/10 p-1.5 md:p-2 rounded-lg">
-                      <DollarSign size={14} className="md:w-4 md:h-4" />
+                      <IndianRupee size={14} className="md:w-4 md:h-4" />
                     </div>
                   </div>
                 </div>

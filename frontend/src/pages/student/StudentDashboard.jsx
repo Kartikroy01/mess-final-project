@@ -674,63 +674,24 @@ const StudentHome = ({
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-6 px-2">
-              <h2 className="text-2xl font-black text-slate-800 tracking-tight">
-                Recent Activity
-              </h2>
-              <button
-                onClick={() => setActivePage("reports")}
-                className="text-[#1464aa] font-bold flex items-center gap-1 hover:gap-2 transition-all"
-              >
-                View Full History <ChevronRight size={20} />
-              </button>
-            </div>
-            <StudentReports
-              mealHistory={mealHistory}
-              studentName={student.name}
-              isSummary={true}
-              token={token}
-            />
-          </div>
-          <div>
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-6 px-2">
-              My ID Card
+        <div className="space-y-6">
+          <div className="flex items-center justify-between mb-6 px-2">
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight">
+              Recent Activity
             </h2>
-            <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl shadow-slate-200/60 border border-slate-50 text-center group">
-              <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-3xl border-4 border-white shadow-xl mx-auto mb-6 overflow-hidden">
-                {student.photo ? (
-                  <img
-                    src={apiService.getPhotoUrl(student.photo)}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  student.name.charAt(0)
-                )}
-              </div>
-              <div className="bg-slate-50 p-6 rounded-[2rem] inline-block border-2 border-dashed border-slate-200 group-hover:bg-white transition-colors duration-500">
-                <QRCodeCanvas
-                  value={
-                    student.qrCode ||
-                    `${student.rollNo}-${student.hostelNo}-${student.roomNo}`
-                  }
-                  size={160}
-                  level={"H"}
-                />
-              </div>
-              <p className="mt-6 text-sm font-black text-slate-400 uppercase tracking-[0.2em]">
-                {student.qrCode}
-              </p>
-              <button
-                onClick={() => setShowQRModal(true)}
-                className="mt-8 w-full py-4 bg-[#1464aa] text-white rounded-2xl font-bold shadow-lg shadow-blue-200 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <QrCode size={20} /> Preview & Print
-              </button>
-            </div>
+            <button
+              onClick={() => setActivePage("reports")}
+              className="text-[#1464aa] font-bold flex items-center gap-1 hover:gap-2 transition-all"
+            >
+              View Full History <ChevronRight size={20} />
+            </button>
           </div>
+          <StudentReports
+            mealHistory={mealHistory}
+            studentName={student.name}
+            isSummary={true}
+            token={token}
+          />
         </div>
       </div>
     </div>
@@ -839,7 +800,7 @@ const StudentFeedback = ({ token }) => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
+    <div className="max-w-7xl w-full mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
       <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/60 p-8 md:p-12 border border-slate-100 relative overflow-hidden">
         {/* Decorative background element */}
         <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
@@ -853,10 +814,10 @@ const StudentFeedback = ({ token }) => {
                 strokeWidth={2.5}
               />
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight">
+            <h2 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
               We Value Your Feedback
             </h2>
-            <p className="text-slate-500 mt-2 text-lg">
+            <p className="text-slate-400 mt-1.5 text-xs md:text-sm font-medium">
               Help us improve the dining experience for everyone.
             </p>
           </div>
@@ -877,7 +838,7 @@ const StudentFeedback = ({ token }) => {
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="block text-sm font-bold text-slate-700 ml-1">
+                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider ml-1">
                     Date
                   </label>
                   <input
@@ -888,7 +849,7 @@ const StudentFeedback = ({ token }) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-sm font-bold text-slate-700 ml-1">
+                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider ml-1">
                     Meal
                   </label>
                   <select
@@ -910,9 +871,9 @@ const StudentFeedback = ({ token }) => {
 
               {selectedMealType && mealItems.length > 0 && (
                 <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                  <label className="block text-sm font-bold text-slate-700 ml-1">
+                  <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider ml-1">
                     Specific Item{" "}
-                    <span className="text-slate-400 font-normal">
+                    <span className="text-slate-400 font-normal normal-case font-bold">
                       (Optional)
                     </span>
                   </label>
@@ -932,7 +893,7 @@ const StudentFeedback = ({ token }) => {
               )}
 
               <div className="space-y-4">
-                <label className="block text-sm font-bold text-slate-700 ml-1 text-center md:text-left">
+                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider ml-1 text-center md:text-left">
                   How was your meal?
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -954,7 +915,7 @@ const StudentFeedback = ({ token }) => {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-bold text-slate-700 ml-1">
+                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider ml-1">
                   Comments
                 </label>
                 <textarea
@@ -1256,7 +1217,7 @@ const StudentReports = ({
                   const itemsStr =
                     meal.items && meal.items.length > 0
                       ? meal.items.map((i) => i.name).join(", ")
-                      : "No items recorded";
+                      : (meal.dietCount > 0 ? "Standard Diet" : "No items recorded");
                   return (
                     <li
                       key={index}
@@ -1391,7 +1352,7 @@ const StudentReports = ({
                                   ))
                                 ) : (
                                   <span className="text-slate-400 text-sm italic">
-                                    No items recorded
+                                    {meal.dietCount > 0 ? "Standard Diet" : "No items recorded"}
                                   </span>
                                 )}
                               </div>
@@ -1474,7 +1435,7 @@ const StudentReports = ({
                     const itemsStr =
                       meal.items && meal.items.length > 0
                         ? meal.items.map((i) => i.name).join(", ")
-                        : "No items recorded";
+                        : (meal.dietCount > 0 ? "Standard Diet" : "No items recorded");
                     return (
                       <li
                         key={index}
@@ -1603,7 +1564,7 @@ const StudentReports = ({
                                 ))
                               ) : (
                                 <span className="text-slate-400 text-sm italic">
-                                  No items recorded
+                                  {meal.dietCount > 0 ? "Standard Diet" : "No items recorded"}
                                 </span>
                               )}
                             </div>
@@ -1747,7 +1708,7 @@ const MessOffForm = ({ token, onSubmitSuccess }) => {
   };
 
   return (
-    <div className="bg-white rounded-[2rem] shadow-xl shadow-blue-200/40 p-8 border border-slate-100 relative overflow-hidden">
+    <div className="bg-white rounded-[2rem] shadow-xl shadow-blue-200/40 p-6 md:p-8 border border-slate-100 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-40 h-40 bg-blue-50 rounded-full blur-3xl opacity-60 -mr-10 -mt-10 pointer-events-none"></div>
 
       <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center relative z-10">
@@ -1756,7 +1717,7 @@ const MessOffForm = ({ token, onSubmitSuccess }) => {
       </h2>
 
       <div className="space-y-5 relative z-10">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">
               From
@@ -1884,7 +1845,7 @@ const MessOffStatus = ({ requests, loading }) => {
 
   return (
     <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-      <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-white">
+      <div className="p-6 md:p-8 border-b border-slate-50 flex justify-between items-center bg-white">
         <h2 className="text-xl font-bold text-slate-800 flex items-center">
           <span className="w-1 h-6 bg-slate-200 rounded-full mr-3"></span>
           Application History
@@ -2295,9 +2256,6 @@ function StudentDashboard() {
               />
               <span>Sign Out</span>
             </button>
-            <p className="text-center text-[10px] text-slate-300 mt-4 font-semibold uppercase tracking-widest">
-              v2.5.0 • NITJ MESS
-            </p>
           </div>
         </div>
       </aside>

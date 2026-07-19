@@ -91,11 +91,11 @@ const StudentComplaint = ({ token, onSuccess }) => {
     }
 
     return (
-        <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-6 duration-700">
+        <div className="max-w-7xl w-full mx-auto animate-in fade-in slide-in-from-bottom-6 duration-700">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+                    <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3">
                         <div className="p-2.5 bg-[#1464aa] text-white rounded-2xl shadow-lg shadow-blue-100">
                             <MessageSquare size={28} strokeWidth={2.5} />
                         </div>
@@ -108,7 +108,7 @@ const StudentComplaint = ({ token, onSuccess }) => {
 
             </div>
 
-            <div className="max-w-3xl mx-auto">
+            <div className="w-full">
                 {/* Form Section */}
                 <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 p-8 md:p-10 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-40 -mr-20 -mt-20 pointer-events-none"></div>

@@ -184,7 +184,7 @@ const AddBillPage = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-7xl w-full mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Premium Header Widget */}
       <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -256,20 +256,38 @@ const AddBillPage = () => {
 
           {/* Student Selector (only show if not applying to all) */}
           {!formData.applyToAll && (
-            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-4 animate-in slide-in-from-top-3">
-              <div className="flex items-center justify-between">
+            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-4 animate-in slide-in-from-top-3">              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
                   Select Target Students ({selectedStudents.length} selected)
                 </h3>
-                {selectedStudents.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedStudents([])}
-                    className="text-xs text-rose-600 hover:text-rose-700 font-bold cursor-pointer"
-                  >
-                    Clear All Selection
-                  </button>
-                )}
+                <div className="flex items-center gap-4">
+                  {filteredStudents.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const filteredIds = filteredStudents.map(s => s._id);
+                        const allSelected = filteredIds.every(id => selectedStudents.includes(id));
+                        if (allSelected) {
+                          setSelectedStudents(prev => prev.filter(id => !filteredIds.includes(id)));
+                        } else {
+                          setSelectedStudents(prev => [...new Set([...prev, ...filteredIds])]);
+                        }
+                      }}
+                      className="text-xs text-indigo-600 hover:text-indigo-750 font-bold cursor-pointer transition-colors"
+                    >
+                      {filteredStudents.every(s => selectedStudents.includes(s._id)) ? "Deselect Filtered" : "Select Filtered"}
+                    </button>
+                  )}
+                  {selectedStudents.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStudents([])}
+                      className="text-xs text-rose-600 hover:text-rose-750 font-bold cursor-pointer transition-colors"
+                    >
+                      Clear Selection
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Search */}
@@ -285,7 +303,7 @@ const AddBillPage = () => {
               </div>
 
               {/* Student List */}
-              <div className="max-h-56 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+              <div className="max-h-[28rem] overflow-y-auto pr-1 custom-scrollbar">
                 {loadingStudents ? (
                   <div className="text-center py-8 text-slate-400 text-xs font-semibold">
                     <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
@@ -296,39 +314,41 @@ const AddBillPage = () => {
                     No students matching your search criteria
                   </div>
                 ) : (
-                  filteredStudents.map((student) => {
-                    const isSelected = selectedStudents.includes(student._id);
-                    return (
-                      <label
-                        key={student._id}
-                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${
-                          isSelected
-                            ? "bg-indigo-50/50 border-indigo-200"
-                            : "bg-white border-slate-150 hover:bg-slate-50"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleStudent(student._id)}
-                          className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-slate-700 text-sm truncate">
-                            {student.name}
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-bold mt-0.5">
-                            {student.rollNo} · Room {student.roomNo}
-                          </p>
-                        </div>
-                        {isSelected && (
-                          <span className="p-1 bg-indigo-100 rounded-lg text-indigo-600 shrink-0">
-                            <Check size={12} />
-                          </span>
-                        )}
-                      </label>
-                    );
-                  })
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {filteredStudents.map((student) => {
+                      const isSelected = selectedStudents.includes(student._id);
+                      return (
+                        <label
+                          key={student._id}
+                          className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${
+                            isSelected
+                              ? "bg-indigo-50/50 border-indigo-200"
+                              : "bg-white border-slate-150 hover:bg-slate-50"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleStudent(student._id)}
+                            className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-slate-700 text-sm truncate">
+                              {student.name}
+                            </p>
+                            <p className="text-[10px] text-slate-400 font-bold mt-0.5">
+                              {student.rollNo} · Room {student.roomNo}
+                            </p>
+                          </div>
+                          {isSelected && (
+                            <span className="p-1 bg-indigo-100 rounded-lg text-indigo-600 shrink-0">
+                              <Check size={12} />
+                            </span>
+                          )}
+                        </label>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             </div>
