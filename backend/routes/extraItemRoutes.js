@@ -53,7 +53,7 @@ router.post('/add', munshiAuth, upload.single('image'), async (req, res) => {
 // @desc    Delete extra item
 // @route   DELETE /api/extra-items/:id
 // @access  Private (Clerk/Admin)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', munshiAuth, async (req, res) => {
   try {
     const item = await ExtraItem.findById(req.params.id);
 

@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth');
+const munshiAuth = require('../middleware/munshiAuth');
 const MessOff = require('../models/MessOff');
 
 // @route   GET /api/mess-off/all
 // @desc    Get all mess-off requests (for munshi dashboard)
 // @access  Public
-router.get('/all', async (req, res) => {
+router.get('/all', munshiAuth, async (req, res) => {
     try {
         const requests = await MessOff.find()
             .populate('studentId', 'name rollNo roomNo')
@@ -39,7 +40,7 @@ router.get('/all', async (req, res) => {
 // @route   PATCH /api/mess-off/:id/status
 // @desc    Approve or reject a mess-off request (munshi)
 // @access  Public
-router.patch('/:id/status', async (req, res) => {
+router.patch('/:id/status', munshiAuth, async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;

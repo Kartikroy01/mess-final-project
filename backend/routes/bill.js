@@ -123,50 +123,6 @@ router.get('/history', authMiddleware, async (req, res) => {
     }
 });
 
-// @route   POST /api/bill/add-fine
-// @desc    Add fine to current bill (admin only in production)
-// @access  Private
-router.post('/add-fine', authMiddleware, async (req, res) => {
-    try {
-        const { amount, reason } = req.body;
-        const studentId = req.student._id;
 
-        if (!amount || amount <= 0) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Please provide a valid fine amount' 
-            });
-        }
-
-        const currentMonth = new Date().getMonth() + 1;
-        const currentYear = new Date().getFullYear();
-
-        const bill = await Bill.findOneAndUpdate(
-            { studentId, month: currentMonth, year: currentYear },
-            { 
-                $inc: { 
-                    fines: amount,
-                    totalBill: amount
-                }
-            },
-            { upsert: true, new: true }
-        );
-
-        res.json({
-            success: true,
-            message: 'Fine added successfully',
-            data: {
-                fines: bill.fines,
-                totalBill: bill.totalBill
-            }
-        });
-    } catch (error) {
-        console.error('Add fine error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Server error adding fine' 
-        });
-    }
-});
 
 module.exports = router;

@@ -9,6 +9,11 @@ const jwt = require('jsonwebtoken');
 
 dotenv.config();
 
+if (!process.env.JWT_SECRET) {
+  console.error('CRITICAL: JWT_SECRET environment variable is not defined!');
+  process.exit(1);
+}
+
 const app = express();
 
 // Middleware
@@ -42,9 +47,11 @@ app.use((req, res, next) => {
 
 console.log('[Server] Registering routes...');
 
+const adminAuth = require('./middleware/adminAuth');
+
 // PUBLIC MENU ENDPOINT - Must be registered BEFORE protected routes
 app.get('/api/menu/public', getPublicMenu);
-app.put('/api/menu/public', upsertPublicMenu);
+app.put('/api/menu/public', adminAuth, upsertPublicMenu);
 console.log('[Server] Registered /api/menu/public (PUBLIC - NO AUTH)');
 
 // Use Routes
