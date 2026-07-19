@@ -1,6 +1,6 @@
 // server.js
 const express = require('express');
-// Force backend restart for menu updates (2)
+// Force backend restart for menu updates (5)
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -31,6 +31,7 @@ const feedbackRoutes = require('./routes/feedback');
 const menuRoutes = require('./routes/menu');
 const billRoutes = require('./routes/bill');
 const munshiRoutes = require('./routes/munshi');
+const adminRoutes = require('./routes/admin');
 const { getPublicMenu, upsertPublicMenu } = require('./controllers/menuPageController');
 
 // Request logging middleware
@@ -79,6 +80,9 @@ console.log('[Server] Registered /api/complaint');
 
 app.use('/api/munshi', munshiRoutes);
 console.log('[Server] Registered /api/munshi');
+
+app.use('/api/admin', adminRoutes);
+console.log('[Server] Registered /api/admin');
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

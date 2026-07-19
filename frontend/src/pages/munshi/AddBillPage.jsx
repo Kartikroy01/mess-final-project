@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { API_BASE_URL } from "../../config";
 import {
-  DollarSign,
+  IndianRupee,
   Calendar,
   FileText,
   AlertCircle,
@@ -10,6 +10,10 @@ import {
   User,
   Search,
   X,
+  PlusCircle,
+  ShoppingBag,
+  AlertTriangle,
+  Check,
 } from "lucide-react";
 
 const AddBillPage = () => {
@@ -180,262 +184,268 @@ const AddBillPage = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-indigo-100/50 border border-white/50 p-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-100">
-          <div className="w-14 h-14 bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-            <DollarSign size={28} className="stroke-[2.5]" />
+    <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Premium Header Widget */}
+      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-gradient-to-br from-[#003B6F] to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-650/10 shrink-0">
+            <IndianRupee size={26} className="stroke-[2.5]" />
           </div>
           <div>
-            <h2 className="text-3xl font-bold text-slate-800 tracking-tight">
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight">
               Add Bill Charge
             </h2>
-            <p className="text-slate-500 text-sm font-medium mt-1">
-              Add fines or extra charges to students in your hostel
+            <p className="text-slate-500 text-xs mt-0.5">
+              Add custom extra charges or fines to student accounts in your hostel.
             </p>
           </div>
         </div>
+      </div>
 
+      <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
         {/* Alert Messages */}
         {error && (
-          <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-3">
-            <AlertCircle
-              className="text-rose-600 flex-shrink-0 mt-0.5"
-              size={20}
-            />
-            <p className="text-rose-700 text-sm font-medium">{error}</p>
+          <div className="mb-6 p-4 bg-rose-50/50 border border-rose-100 rounded-2xl flex items-start gap-3 animate-in slide-in-from-top-2">
+            <AlertCircle className="text-rose-600 shrink-0 mt-0.5" size={18} />
+            <p className="text-rose-700 text-xs font-bold leading-normal">{error}</p>
           </div>
         )}
 
         {success && (
-          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-3">
-            <CheckCircle
-              className="text-emerald-600 flex-shrink-0 mt-0.5"
-              size={20}
-            />
-            <p className="text-emerald-700 text-sm font-medium">{success}</p>
+          <div className="mb-6 p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex items-start gap-3 animate-in slide-in-from-top-2">
+            <CheckCircle className="text-emerald-600 shrink-0 mt-0.5" size={18} />
+            <p className="text-emerald-700 text-xs font-bold leading-normal">{success}</p>
           </div>
         )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
+          
           {/* Apply To Selection */}
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">
-              <Users size={16} className="inline mr-2" />
-              Apply To
+            <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-3">
+              Apply Charge To
             </label>
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
-                onClick={() =>
-                  setFormData((prev) => ({ ...prev, applyToAll: true }))
-                }
-                className={`px-6 py-4 rounded-xl font-bold transition-all border-2 flex items-center justify-center gap-2 ${
+                onClick={() => setFormData((prev) => ({ ...prev, applyToAll: true }))}
+                className={`px-5 py-4 rounded-2xl font-bold transition-all border flex flex-col items-center gap-2 cursor-pointer ${
                   formData.applyToAll
-                    ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200"
-                    : "bg-white text-slate-600 border-slate-200 hover:border-indigo-200 hover:bg-indigo-50"
+                    ? "bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                 }`}
               >
-                <Users size={20} />
-                All Students
+                <Users size={22} className={formData.applyToAll ? "text-indigo-600" : "text-slate-400"} />
+                <span className="text-sm">All Students</span>
               </button>
               <button
                 type="button"
-                onClick={() =>
-                  setFormData((prev) => ({ ...prev, applyToAll: false }))
-                }
-                className={`px-6 py-4 rounded-xl font-bold transition-all border-2 flex items-center justify-center gap-2 ${
+                onClick={() => setFormData((prev) => ({ ...prev, applyToAll: false }))}
+                className={`px-5 py-4 rounded-2xl font-bold transition-all border flex flex-col items-center gap-2 cursor-pointer ${
                   !formData.applyToAll
-                    ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200"
-                    : "bg-white text-slate-600 border-slate-200 hover:border-indigo-200 hover:bg-indigo-50"
+                    ? "bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                 }`}
               >
-                <User size={20} />
-                Select Students
+                <User size={22} className={!formData.applyToAll ? "text-indigo-600" : "text-slate-400"} />
+                <span className="text-sm">Select Students</span>
               </button>
             </div>
           </div>
 
-          {/* Student Selection (only show if not applying to all) */}
+          {/* Student Selector (only show if not applying to all) */}
           {!formData.applyToAll && (
-            <div className="bg-slate-50 rounded-2xl p-6 border-2 border-slate-100">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-slate-700">
-                  Select Students ({selectedStudents.length} selected)
+            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-4 animate-in slide-in-from-top-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+                  Select Target Students ({selectedStudents.length} selected)
                 </h3>
                 {selectedStudents.length > 0 && (
                   <button
                     type="button"
                     onClick={() => setSelectedStudents([])}
-                    className="text-xs text-rose-600 hover:text-rose-700 font-bold"
+                    className="text-xs text-rose-600 hover:text-rose-700 font-bold cursor-pointer"
                   >
-                    Clear All
+                    Clear All Selection
                   </button>
                 )}
               </div>
 
               {/* Search */}
-              <div className="relative mb-4">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                  size={18}
-                />
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search by name, roll no, or room..."
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none font-medium text-slate-700"
+                  placeholder="Search student by name, roll number, or room..."
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-indigo-400 outline-none transition text-sm text-slate-700"
                 />
               </div>
 
               {/* Student List */}
-              <div className="max-h-64 overflow-y-auto space-y-2">
+              <div className="max-h-56 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                 {loadingStudents ? (
-                  <div className="text-center py-8 text-slate-500">
-                    Loading students...
+                  <div className="text-center py-8 text-slate-400 text-xs font-semibold">
+                    <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    Fetching student list...
                   </div>
                 ) : filteredStudents.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500">
-                    No students found
+                  <div className="text-center py-8 text-slate-400 text-xs font-semibold">
+                    No students matching your search criteria
                   </div>
                 ) : (
-                  filteredStudents.map((student) => (
-                    <label
-                      key={student._id}
-                      className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
-                        selectedStudents.includes(student._id)
-                          ? "bg-indigo-50 border-2 border-indigo-200"
-                          : "bg-white border-2 border-slate-100 hover:border-indigo-100"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedStudents.includes(student._id)}
-                        onChange={() => toggleStudent(student._id)}
-                        className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                      />
-                      <div className="flex-1">
-                        <p className="font-bold text-slate-800 text-sm">
-                          {student.name}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {student.rollNo} • Room {student.roomNo}
-                        </p>
-                      </div>
-                    </label>
-                  ))
+                  filteredStudents.map((student) => {
+                    const isSelected = selectedStudents.includes(student._id);
+                    return (
+                      <label
+                        key={student._id}
+                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${
+                          isSelected
+                            ? "bg-indigo-50/50 border-indigo-200"
+                            : "bg-white border-slate-150 hover:bg-slate-50"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleStudent(student._id)}
+                          className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-slate-700 text-sm truncate">
+                            {student.name}
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-bold mt-0.5">
+                            {student.rollNo} · Room {student.roomNo}
+                          </p>
+                        </div>
+                        {isSelected && (
+                          <span className="p-1 bg-indigo-100 rounded-lg text-indigo-600 shrink-0">
+                            <Check size={12} />
+                          </span>
+                        )}
+                      </label>
+                    );
+                  })
                 )}
               </div>
             </div>
           )}
 
-          {/* Month and Year */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Month and Year Selection */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">
-                <Calendar size={16} className="inline mr-2" />
-                Month
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
+                Billing Month
               </label>
-              <select
-                name="month"
-                value={formData.month}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none font-medium text-slate-700"
-                required
-              >
-                {months.map((month, index) => (
-                  <option key={index} value={index + 1}>
-                    {month}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                <select
+                  name="month"
+                  value={formData.month}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-indigo-400 transition text-sm text-slate-700 bg-white cursor-pointer"
+                  required
+                >
+                  {months.map((month, index) => (
+                    <option key={index} value={index + 1}>
+                      {month}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">
-                <Calendar size={16} className="inline mr-2" />
-                Year
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
+                Billing Year
               </label>
+              <div className="relative">
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                <input
+                  type="number"
+                  name="year"
+                  value={formData.year}
+                  onChange={handleChange}
+                  min="2020"
+                  max="2099"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-indigo-400 transition text-sm text-slate-700 bg-white"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Charge Type Card Group */}
+          <div>
+            <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-3">
+              Charge Type
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, chargeType: 'extras' }))}
+                className={`px-5 py-4 rounded-2xl font-bold transition-all border flex items-center justify-center gap-3 cursor-pointer ${
+                  formData.chargeType === 'extras'
+                    ? "bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                }`}
+              >
+                <ShoppingBag size={18} className={formData.chargeType === 'extras' ? "text-indigo-600" : "text-slate-400"} />
+                <span className="text-sm">Extra Items / Foods</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, chargeType: 'fines' }))}
+                className={`px-5 py-4 rounded-2xl font-bold transition-all border flex items-center justify-center gap-3 cursor-pointer ${
+                  formData.chargeType === 'fines'
+                    ? "bg-rose-50 border-rose-500 text-rose-700 shadow-sm"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                }`}
+              >
+                <AlertTriangle size={18} className={formData.chargeType === 'fines' ? "text-rose-600" : "text-slate-400"} />
+                <span className="text-sm">Hostel Fines / Penalties</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Amount / Price Field */}
+          <div>
+            <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
+              Price (₹)
+            </label>
+            <div className="relative">
+              <div className="absolute left-0 top-0 bottom-0 px-4 bg-slate-50 border-r border-slate-200 rounded-l-xl flex items-center text-slate-500 font-bold text-sm">
+                ₹
+              </div>
               <input
                 type="number"
-                name="year"
-                value={formData.year}
+                name="amount"
+                value={formData.amount}
                 onChange={handleChange}
-                min="2020"
-                max="2099"
-                className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none font-medium text-slate-700"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                className="w-full pl-14 pr-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-indigo-400 transition text-sm text-slate-700 font-extrabold"
                 required
               />
             </div>
           </div>
 
-          {/* Charge Type */}
+          {/* Item Name / Description Field */}
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">
-              <FileText size={16} className="inline mr-2" />
-              Charge Type
-            </label>
-            <div className="grid grid-cols-2 gap-4">
-               <button
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, chargeType: 'extras' }))}
-                className={`px-4 py-3 rounded-xl font-bold border-2 transition-all ${
-                  formData.chargeType === 'extras'
-                    ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200"
-                    : "bg-white text-slate-600 border-slate-200 hover:border-indigo-200 hover:bg-indigo-50"
-                }`}
-              >
-                Extras
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, chargeType: 'fines' }))}
-                className={`px-4 py-3 rounded-xl font-bold border-2 transition-all ${
-                  formData.chargeType === 'fines'
-                    ? "bg-rose-600 text-white border-rose-600 shadow-lg shadow-rose-200"
-                    : "bg-white text-slate-600 border-slate-200 hover:border-rose-200 hover:bg-rose-50"
-                }`}
-              >
-                Fine
-              </button>
-            </div>
-          </div>
-
-          {/* Amount */}
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">
-              <DollarSign size={16} className="inline mr-2" />
-              Price (₹)
-            </label>
-            <input
-              type="number"
-              name="amount"
-              value={formData.amount}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              placeholder="Enter price"
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none font-medium text-slate-700"
-              required
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">
-              <FileText size={16} className="inline mr-2" />
-              Item Name
+            <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
+              Item Name / Reason
             </label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
               rows="3"
-              placeholder="Enter item name "
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all outline-none font-medium text-slate-700 resize-none"
+              placeholder="e.g. Special Mess Feast, Room Heater Penalty, etc."
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-indigo-400 transition text-sm text-slate-700 resize-none font-medium"
               required
             />
           </div>
@@ -444,31 +454,36 @@ const AddBillPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full px-6 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className={`w-full py-4 text-white rounded-2xl font-bold transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg cursor-pointer ${
+              formData.chargeType === 'fines'
+                ? "bg-rose-600 hover:bg-rose-700 shadow-rose-600/10"
+                : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-650/10"
+            }`}
           >
             {loading ? (
               <>
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Adding Charge...
+                Processing...
               </>
             ) : (
               <>
-                <DollarSign size={20} className="stroke-[2.5]" />
+                <PlusCircle size={20} className="stroke-[2.5]" />
                 {formData.applyToAll
-                  ? "Add Charge to All Students"
-                  : `Add Charge to ${selectedStudents.length} Student(s)`}
+                  ? "Apply Charge to All Students"
+                  : `Apply Charge to ${selectedStudents.length} Selected Student(s)`}
               </>
             )}
           </button>
         </form>
 
-        {/* Info Box */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
-          <p className="text-blue-700 text-sm font-medium">
-            <strong>Note:</strong>{" "}
+        {/* Informative Note Widget */}
+        <div className="mt-6 p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-start gap-3">
+          <FileText size={18} className="text-slate-400 shrink-0 mt-0.5" />
+          <p className="text-slate-500 text-xs font-medium leading-relaxed">
+            <strong>Billing Note:</strong>{" "}
             {formData.applyToAll
-              ? "This charge will be applied to all active students in your hostel for the selected month."
-              : "This charge will be applied only to the selected students for the selected month."}
+              ? "This charge will automatically post to the bill of all verified students assigned to your hostel."
+              : "This charge will be applied only to the selected students for their current month billing cycles."}
           </p>
         </div>
       </div>

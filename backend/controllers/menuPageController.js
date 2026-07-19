@@ -25,7 +25,7 @@ const DEFAULT_MENU_PAGE = Object.freeze({
     { name: 'Dinner', items: ['MILK PACKET', 'CURD PACKET', 'HOT MILK', 'OMELETTE', 'EG G BHURJI'] },
   ],
   hostels: {
-    boys: ['MBH', 'BH-1', 'BH-2', 'BH-3', 'BH-4', 'BH-5', 'BH-6', 'BH-7'],
+    boys: ['MBH-A', 'MBH-B', 'MBH-E', 'MBH-F', 'BH-1', 'BH-2', 'BH-3', 'BH-4', 'BH-5', 'BH-6', 'BH-7'],
     girls: ['GH-1', 'GH-2', 'MGH-1', 'MGH-2'],
   },
 });

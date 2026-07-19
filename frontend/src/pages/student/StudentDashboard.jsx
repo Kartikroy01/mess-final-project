@@ -20,7 +20,7 @@ import {
   User,
   ChevronRight,
   Activity,
-  DollarSign,
+  IndianRupee,
   ArrowLeft,
   ChevronDown,
   Calendar,
@@ -285,6 +285,26 @@ const NavItem = ({ icon, text, active, onClick, badge }) => (
   </li>
 );
 
+// --- MOBILE BOTTOM NAV COMPONENT ---
+const BottomNavItem = ({ icon, label, active, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`flex flex-col items-center justify-center w-full py-2 gap-1 transition-all ${
+      active ? "text-[#1464aa] scale-105" : "text-slate-400 hover:text-slate-500"
+    }`}
+  >
+    <div className={`relative ${active ? "drop-shadow-md" : ""}`}>
+      {React.cloneElement(icon, { size: active ? 22 : 20, strokeWidth: active ? 2.5 : 2 })}
+      {active && (
+        <span className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#1464aa] rounded-full"></span>
+      )}
+    </div>
+    <span className={`text-[9px] font-bold ${active ? "text-[#1464aa]" : "text-slate-400"}`}>
+      {label}
+    </span>
+  </button>
+);
+
 // --- LOADING COMPONENT ---
 const LoadingSpinner = ({ message = "Loading..." }) => (
   <div className="flex flex-col items-center justify-center h-full py-12">
@@ -409,7 +429,7 @@ const StudentHome = ({
     {
       label: "Total Bill",
       value: `₹${totalBill}`,
-      icon: <DollarSign />,
+      icon: <IndianRupee />,
       grad: "from-blue-500 to-blue-600",
     },
     {
@@ -441,15 +461,9 @@ const StudentHome = ({
         {/* Mobile Header */}
         <div className="bg-white px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-[1001]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="w-10 h-10 rounded-full flex items-center justify-center text-[#9c27b0] font-black text-sm border-2 border-white shadow-sm overflow-hidden bg-[#fce4ec]"
-            >
-              {getInitials(student.name)}
-            </button>
-            <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-full shadow-sm">
-              <img src="/logo_250.png" alt="Logo" className="h-7 w-auto object-contain" />
-              <span className="text-[10px] font-black text-[#144d8b] tracking-tight">NITJ MESS</span>
+            {/* Native style header without hamburger */}
+            <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-sm">
+              <span className="text-[11px] font-black text-[#144d8b] tracking-tight">NITJ MESS</span>
             </div>
           </div>
           <div className="flex items-center gap-4 text-slate-600">
@@ -468,8 +482,9 @@ const StudentHome = ({
 
         <div className="p-4 space-y-6">
           {/* CSS Welcome Banner (Mobile) */}
-          <div className="relative bg-gradient-to-br from-[#1464aa] to-[#0d3b6e] text-white rounded-[2rem] p-6 shadow-xl shadow-blue-200/40 overflow-hidden group">
-            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+          <div className="relative bg-[#0f172a] text-white rounded-[2rem] p-6 shadow-[0_15px_30px_rgba(15,23,42,0.25)] overflow-hidden group border border-slate-800">
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl"></div>
+            <div className="absolute inset-0 w-full h-full bg-white/[0.02] backdrop-blur-xl pointer-events-none"></div>
             <div className="relative z-10">
               <div className="pr-[80px] md:pr-[90px]">
                 <h1 className="text-xl md:text-2xl font-black mb-0.5">
@@ -589,8 +604,9 @@ const StudentHome = ({
 
       {/* --- DESKTOP ONLY VIEW (Original Design) --- */}
       <div className="hidden md:block space-y-8 animate-in fade-in duration-500">
-        <div className="relative bg-gradient-to-br from-[#1464aa] to-[#0d3b6e] text-white rounded-[2.5rem] p-10 shadow-2xl overflow-hidden group">
-          <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-white/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
+        <div className="relative bg-[#0f172a] text-white rounded-[2.5rem] p-10 shadow-[0_20px_50px_rgba(15,23,42,0.3)] overflow-hidden group border border-slate-800">
+          <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
+          <div className="absolute bottom-0 left-0 w-full h-full bg-white/[0.02] backdrop-blur-xl pointer-events-none"></div>
           <div className="relative z-10 flex flex-col lg:flex-row justify-between items-center">
             <div className="text-center lg:text-left">
               <h1 className="text-4xl lg:text-5xl font-black tracking-tight mb-2">
@@ -637,12 +653,11 @@ const StudentHome = ({
         </div>
       </div>
 
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {stats.map((s, i) => (
             <div
               key={i}
-              className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-50 group hover:-translate-y-2 transition-all duration-300"
+              className="bg-white/80 backdrop-blur-xl p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 group hover:-translate-y-2 transition-all duration-300"
             >
               <div
                 className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${s.grad} text-white flex items-center justify-center mb-6 shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform`}
@@ -2101,7 +2116,7 @@ function StudentDashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
+    <div className="flex h-screen bg-[#f8fafc] font-sans overflow-hidden">
       {/* Sidebar Overlay for Mobile */}
       {isSidebarOpen && (
         <div
@@ -2288,7 +2303,7 @@ function StudentDashboard() {
       </aside>
 
       <main
-        className={`flex-1 overflow-auto bg-slate-50 relative w-full transition-all duration-300 ease-in-out ${desktopSidebarOpen ? "md:ml-80" : "md:ml-0"} scrollbar-hide`}
+        className={`flex-1 overflow-auto bg-[#f8fafc] relative w-full transition-all duration-300 ease-in-out ${desktopSidebarOpen ? "md:ml-80" : "md:ml-0"} scrollbar-hide`}
         style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
       >
         <style>{`
@@ -2330,17 +2345,8 @@ function StudentDashboard() {
             </button>
 
             {/* Mobile Initials Bubble (Hamburger) - Hide when back button is present */}
-            {activePage === "home" && (
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-[#9c27b0] font-black text-xs border-2 border-white shadow-sm overflow-hidden bg-[#fce4ec] -ml-1 mr-2"
-              >
-                {getInitials(student.name)}
-              </button>
-            )}
-
+            {/* Removed hamburger button for native mobile look */}
             <div className="flex items-center gap-2 md:hidden">
-              <img src="/logo_250.png" alt="Logo" className="w-7 h-7 object-contain" />
               <h1 className="font-bold text-slate-800 whitespace-nowrap text-sm tracking-tight">NITJ MESS</h1>
             </div>
 
@@ -2598,6 +2604,25 @@ function StudentDashboard() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* --- MOBILE BOTTOM NAVIGATION --- */}
+        <div 
+          className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-3xl border-t border-slate-100/50 z-[1000] flex justify-around items-end pt-2 pb-4 px-2 shadow-[0_-10px_40px_rgba(0,0,0,0.06)]"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
+        >
+          <BottomNavItem icon={<Home />} label="Home" active={activePage === "home"} onClick={() => setActivePage("home")} />
+          <BottomNavItem icon={<Clock />} label="History" active={activePage === "reports"} onClick={() => setActivePage("reports")} />
+          <div className="relative -top-5 px-2">
+            <button
+              onClick={() => setShowQRModal(true)}
+              className="w-14 h-14 bg-gradient-to-tr from-[#1464aa] to-[#1e88e5] rounded-full flex items-center justify-center text-white shadow-[0_8px_25px_rgba(20,100,170,0.5)] border-[4px] border-[#f8fafc] active:scale-95 transition-all"
+            >
+              <QrCode size={24} strokeWidth={2.5} />
+            </button>
+          </div>
+          <BottomNavItem icon={<CalendarOff />} label="Leave" active={activePage === "messOff"} onClick={() => setActivePage("messOff")} />
+          <BottomNavItem icon={<MessageSquare />} label="Feedback" active={activePage === "feedback"} onClick={() => setActivePage("feedback")} />
         </div>
       </main>
     </div>

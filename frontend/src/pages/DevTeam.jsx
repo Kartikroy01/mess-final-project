@@ -155,11 +155,6 @@ export default function DevTeam() {
           ))}
         </div>
 
-        {/* Closing Footer */}
-        <div className="mt-20 text-center text-slate-500 px-6 py-8 border-t border-white/5">
-          <p className="text-sm font-medium italic opacity-60">"Building future-ready campus solutions, one line of code at a time."</p>
-          <p className="mt-4 text-xs tracking-widest uppercase opacity-40">© {new Date().getFullYear()} NIT Jalandhar Digital Initiatives</p>
-        </div>
       </div>
     </div>
   );

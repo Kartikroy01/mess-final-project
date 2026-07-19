@@ -171,6 +171,17 @@ export const munshiApi = {
     return data.data;
   },
 
+  async createManualMessOff(payload) {
+    const res = await fetch(`${API_BASE}/munshi/mess-off/manual`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to create manual mess off");
+    return data;
+  },
+
   async getStudentsForBill(month) {
     const res = await fetch(
       `${API_BASE}/munshi/students-for-bill?month=${encodeURIComponent(month)}`,

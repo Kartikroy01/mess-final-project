@@ -151,6 +151,17 @@ router.patch(
 );
 
 /**
+ * @route   POST /api/munshi/mess-off/manual
+ * @desc    Manually add an approved mess-off request for a student
+ * @body    studentId, fromDate, toDate, meals, reason
+ * @access  Private (munshi)
+ */
+router.post(
+  "/mess-off/manual",
+  munshiController.createManualMessOff,
+);
+
+/**
  * @route   POST /api/munshi/bulk-diet-record
  * @desc    Bulk record diet for multiple students
  * @body    studentIds, mealType

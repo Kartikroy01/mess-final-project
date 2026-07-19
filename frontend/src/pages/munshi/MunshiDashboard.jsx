@@ -17,7 +17,7 @@ import {
   Bell,
   UtensilsCrossed,
   Home,
-  DollarSign,
+  IndianRupee,
   QrCode,
   Trash2,
   Edit2,
@@ -720,10 +720,17 @@ const DashboardView = ({
         return;
       }
 
-      // If diet already taken or mess closed, we don't count another diet
-      const dietCount = (shouldCountDiet && !isDietTaken && !isMessClosed) ? 1 : 0;
+      // Calculate extra diets selected by Munshi
+      const extraDietItem = extraItems.find(i => i.id === 'extra-diet-item');
+      const extraDietQty = extraDietItem ? extraDietItem.qty : 0;
 
-      await onAddExtraItems(scannedStudent.id, extraItems, dietCount);
+      // If diet already taken or mess closed, we don't count another standard diet
+      const standardDietCount = (shouldCountDiet && !isDietTaken && !isMessClosed) ? 1 : 0;
+
+      // Total diet count includes standard diet count + extra diet quantity
+      const totalDietCount = standardDietCount + extraDietQty;
+
+      await onAddExtraItems(scannedStudent.id, extraItems, totalDietCount);
       showNotification("success", `Marked ${extraItems.length > 0 ? extraItems.length + " item(s)" : "Diet"} for ${scannedStudent.name}`);
     } catch (err) {
       showNotification("error", err.message || "Failed to process order.");
@@ -957,6 +964,61 @@ const DashboardView = ({
               </div>
             ) : (
               <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-5 gap-3 md:gap-4 lg:gap-6">
+                {/* Special Extra Diet Card */}
+                {sessionMeal && sessionMeal.toLowerCase() !== 'snacks' && selectedCategory === 'All' && (
+                  <div
+                    onClick={() => {
+                      if (scannedStudent) {
+                        if (scannedStudent.isMessClosed) {
+                          showNotification("error", "Cannot add options when Mess is Closed.");
+                          return;
+                        }
+                        const existingExtraDiet = extraItems.find(i => i.id === 'extra-diet-item');
+                        if (existingExtraDiet) {
+                          updateItemQty(existingExtraDiet.id, 1);
+                        } else {
+                          toggleExtraItem({
+                            id: 'extra-diet-item',
+                            name: 'Extra Diet',
+                            price: 0,
+                            isExtraDiet: true
+                          });
+                        }
+                      } else {
+                        showNotification("error", "Scan a student first to mark Extra Diet.");
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    className={`group relative overflow-hidden rounded-xl md:rounded-2xl border-2 text-left transition-all duration-300 cursor-pointer ${
+                      extraItems.some(i => i.id === 'extra-diet-item')
+                        ? "border-indigo-500 bg-indigo-50/50"
+                        : "border-slate-100 bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-500/5"
+                    }`}
+                  >
+                    <div className="aspect-square md:aspect-[4/3] bg-indigo-50 flex items-center justify-center relative">
+                      <UtensilsCrossed size={36} className="text-indigo-500 group-hover:scale-110 transition-transform duration-500" />
+                      {extraItems.some(i => i.id === 'extra-diet-item') && (
+                        <div className="absolute inset-0 bg-indigo-900/20 flex items-center justify-center backdrop-blur-[2px]">
+                          <div className="bg-white rounded-full p-2 text-indigo-600 shadow-xl scale-100 animate-in zoom-in duration-200">
+                            <CheckCircle size={24} fill="currentColor" className="text-white" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-2 md:p-4 lg:p-5">
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-1 md:mb-2 gap-0.5">
+                        <h3 className="font-bold text-[9px] md:text-sm lg:text-base text-slate-800 group-hover:text-indigo-700 line-clamp-2 leading-tight">
+                          Extra Diet
+                        </h3>
+                        <div className="bg-slate-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg text-[9px] md:text-xs font-bold text-slate-600 shrink-0">
+                          ₹0
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {(meals[sessionMeal] || []).map((item) => {
                   const isSelected = extraItems.find((i) => i.id === item.id);
                   const showDelete = showDeleteId === item.id;
@@ -1605,7 +1667,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
     { id: "messoff", label: "Mess Off", icon: Calendar, path: "/munshi/dashboard/messoff" },
     { id: "reports", label: "Reports", icon: TrendingUp, path: "/munshi/dashboard/reports" },
     { id: "adddiet", label: "Add Diet", icon: Plus, path: "/munshi/dashboard/adddiet" },
-    { id: "addbill", label: "Add Bill", icon: DollarSign, path: "/munshi/dashboard/addbill" },
+    { id: "addbill", label: "Add Bill", icon: IndianRupee, path: "/munshi/dashboard/addbill" },
   ];
 
   if (!authChecked)
@@ -1635,15 +1697,15 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
       )}
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 ${isSidebarCollapsed ? 'lg:w-20' : 'lg:w-72'} w-72 bg-white border-r border-slate-100 transform transition-all duration-300 ease-in-out lg:translate-x-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-50 ${isSidebarCollapsed ? 'lg:w-20' : 'lg:w-72'} w-72 bg-[#003B6F] text-white border-r border-white/10 transform transition-all duration-300 ease-in-out lg:translate-x-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className={`p-4 md:p-6 lg:p-8 h-full flex flex-col ${isSidebarCollapsed ? 'items-center' : ''}`}>
           <div className="flex items-center justify-between mb-10 w-full px-2">
             <div className="flex items-center gap-3 min-w-0">
               <img src="/logo_250.png" alt="Logo" className="w-11 h-11 object-contain shrink-0" />
               {!isSidebarCollapsed && (
-                <h1 className="text-2xl font-bold text-slate-800 tracking-tight truncate">
-                  NITJ<span className="text-indigo-600">Mess</span>
+                <h1 className="text-2xl font-bold text-white tracking-tight truncate">
+                  NITJ<span className="text-indigo-300">Mess</span>
                 </h1>
               )}
             </div>
@@ -1651,7 +1713,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
             {/* Collapse Toggle Button (Desktop Only) */}
             <button
                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-               className="hidden lg:flex p-2 hover:bg-slate-50 rounded-xl text-slate-400 hover:text-indigo-600 transition-all active:scale-95 shrink-0"
+               className="hidden lg:flex p-2 hover:bg-white/10 rounded-xl text-slate-300 hover:text-white transition-all active:scale-95 shrink-0 cursor-pointer"
                title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
             >
                {isSidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
@@ -1660,21 +1722,21 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
 
           {/* New Upper Sidebar Profile Section */}
           {!isSidebarCollapsed && (
-            <div className="px-2 mb-8 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50 group hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
+            <div className="px-2 mb-8 bg-white/10 p-4 rounded-2xl border border-white/10 group hover:bg-white/20 transition-all duration-500">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-200">
+                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg">
                   {munshiName ? munshiName.charAt(0).toUpperCase() : "M"}
                 </div>
                 <div className="overflow-hidden">
-                  <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">
+                  <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-0.5">
                     Munshi Profile
                   </p>
-                  <h4 className="text-sm font-black text-slate-800 truncate leading-tight group-hover:text-indigo-600 transition-colors">
+                  <h4 className="text-sm font-black text-slate-100 truncate leading-tight group-hover:text-white transition-colors">
                     {munshiName || "Munshi"}
                   </h4>
                   <div className="flex items-center gap-1.5 mt-1">
-                    <Home size={10} className="text-slate-400" />
-                    <p className="text-[10px] font-bold text-slate-500 truncate">
+                    <Home size={10} className="text-slate-300" />
+                    <p className="text-[10px] font-bold text-slate-300 truncate">
                       {munshiHostel || "Hostel"}
                     </p>
                   </div>
@@ -1684,7 +1746,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
           )}
           {isSidebarCollapsed && (
             <div className="mb-8 flex justify-center">
-               <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-200 cursor-pointer">
+               <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg cursor-pointer">
                   {munshiName ? munshiName.charAt(0).toUpperCase() : "M"}
                </div>
             </div>
@@ -1701,7 +1763,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
                     navigate(tab.path);
                     if (mobileMenuOpen) setMobileMenuOpen(false);
                   }}
-                  className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-6'} py-4 rounded-2xl transition-all duration-300 font-bold text-sm relative overflow-hidden group ${isActive ? "bg-indigo-600 text-white shadow-xl shadow-indigo-200" : "text-slate-500 hover:bg-slate-50 hover:text-indigo-600"}`}
+                  className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-6'} py-4 rounded-2xl transition-all duration-300 font-bold text-sm relative overflow-hidden group cursor-pointer ${isActive ? "bg-indigo-600 text-white shadow-xl shadow-indigo-600/20" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
                   title={isSidebarCollapsed ? tab.label : ""}
                 >
                   <Icon
@@ -1720,18 +1782,18 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
             })}
           </nav>
 
-          <div className="mt-auto pt-8 border-t border-slate-100 flex flex-col gap-4">
+          <div className="mt-auto pt-8 border-t border-white/10 flex flex-col gap-4">
             {/* Current Session Indicator */}
             {!isSidebarCollapsed && (
-              <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3 border border-slate-100/50">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-indigo-500 font-bold shadow-sm">
+              <div className="bg-white/10 p-4 rounded-2xl flex items-center gap-3 border border-white/10">
+                <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-indigo-300 font-bold shadow-sm">
                   <Calendar size={18} />
                 </div>
                 <div className="overflow-hidden">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
                     Session
                   </p>
-                  <p className="text-xs text-slate-700 font-bold capitalize truncate">
+                  <p className="text-xs text-slate-100 font-bold capitalize truncate">
                     {sessionMeal}
                   </p>
                 </div>
@@ -1739,7 +1801,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
             )}
             {isSidebarCollapsed && (
                <div className="flex justify-center">
-                  <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-indigo-500 font-bold border border-slate-100/50" title={`Session: ${sessionMeal}`}>
+                  <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-indigo-300 font-bold border border-white/10" title={`Session: ${sessionMeal}`}>
                     <Calendar size={18} />
                   </div>
                </div>
@@ -1747,7 +1809,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
 
             <button
               onClick={onLogout}
-              className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-center gap-2 px-6'} py-4 rounded-2xl text-slate-500 font-bold hover:bg-rose-50 hover:text-rose-600 transition-all active:scale-95`}
+              className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-center gap-2 px-6'} py-4 rounded-2xl text-red-300 bg-red-600/10 hover:bg-red-650 hover:text-white transition-all active:scale-95 cursor-pointer font-bold`}
               title={isSidebarCollapsed ? "Sign Out" : ""}
             >
               <LogOut size={20} />
@@ -1900,6 +1962,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
             <MessOffRequestsPage
               requests={messOffRequests}
               handleAction={handleRequestAction}
+              refreshRequests={refreshMessOffRequests}
             />
           )}
           {activeTab === "reports" && (

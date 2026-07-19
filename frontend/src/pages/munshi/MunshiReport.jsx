@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, DollarSign, ShoppingBag, TrendingUp, Search, Calendar, Filter, UtensilsCrossed, Trash2 } from 'lucide-react';
+import { Download, IndianRupee, ShoppingBag, TrendingUp, Search, Calendar, Filter, UtensilsCrossed, Trash2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -170,7 +170,7 @@ const ReportsPage = ({ orders = [], onOrderDeleted, currentPage = 1, totalPages 
             <div className="flex items-center gap-2 md:gap-3">
                <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800">₹{totalSales}</span>
                <div className="p-1.5 md:p-2 bg-indigo-50 rounded-xl text-indigo-600">
-                  <DollarSign size={20} className="md:w-6 md:h-6" />
+                  <IndianRupee size={20} className="md:w-6 md:h-6" />
                </div>
             </div>
           </div>

@@ -67,6 +67,7 @@ export default function Login() {
     { value: "", label: "Select Hostel", disabled: true },
     { value: "MBH-A", label: "MBH-A - Mega Boys Hostel" },
     { value: "MBH-B", label: "MBH-B - Mega Boys Hostel" },
+    { value: "MBH-E", label: "MBH-E - Mega Boys Hostel" },
     { value: "MBH-F", label: "MBH-F - Mega Boys Hostel" },
     { value: "BH-1", label: "BH-1 - Boys Hostel 1" },
     { value: "BH-2", label: "BH-2 - Boys Hostel 2" },
@@ -129,15 +130,16 @@ export default function Login() {
         return;
       }
 
-      // Store authentication data (role: student | munshi)
+      // Store authentication data (role: student | munshi | admin)
       const role = data.role || "student";
-      const user = data.student || data.munshi;
+      const user = data.student || data.munshi || data.admin;
       const authData = {
         isAuthenticated: true,
         token: data.token,
         role,
         student: data.student || null,
         munshi: data.munshi || null,
+        admin: data.admin || null,
         user,
         loginTime: new Date().toISOString(),
       };
@@ -156,7 +158,9 @@ export default function Login() {
 
       setLoading(false);
 
-      if (role === "munshi") {
+      if (role === "admin") {
+        window.location.href = "/admin-dashboard";
+      } else if (role === "munshi") {
         const munshiType = data.munshi?.type || "munshi";
         if (munshiType === "clerk") {
           window.location.href = "/clerk-dashboard";

@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const Student = require("../models/Student");
 const Munshi = require("../models/Munshi");
+const Admin = require("../models/Admin");
 const Bill = require("../models/Bill");
 const MealHistory = require("../models/MealHistory");
 const {
@@ -324,6 +325,39 @@ exports.login = async (req, res) => {
         userType: "munshi",
         role: "munshi",
         munshi: munshiPayload,
+      });
+    }
+
+    // 3. Try admin
+    const admin = await Admin.findOne({ email: normalizedEmail }).select('+password');
+    if (admin) {
+      const valid = await admin.comparePassword(password);
+      if (!valid) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Invalid email or password" });
+      }
+      if (!admin.isActive) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Account is inactive" });
+      }
+      const token = jwt.sign({ id: admin._id, role: "admin" }, JWT_SECRET, {
+        expiresIn: TOKEN_EXPIRY,
+      });
+      const adminPayload = {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: "admin",
+      };
+      return res.json({
+        success: true,
+        message: "Login successful",
+        token,
+        userType: "admin",
+        role: "admin",
+        admin: adminPayload,
       });
     }
 

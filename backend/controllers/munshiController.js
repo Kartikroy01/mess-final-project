@@ -209,10 +209,10 @@ exports.createOrder = async (req, res) => {
 
     if (isMessClosed) {
         finalDietCount = 0;
-    } else if (existingDiet) {
-        finalDietCount = 0;
     } else if (dietCount !== undefined) {
         finalDietCount = dietCount;
+    } else if (existingDiet) {
+        finalDietCount = 0;
     } else {
         // Default Logic: Meal (not snacks) = 1 diet
         finalDietCount = (mealType && mealType.toLowerCase().startsWith('snack')) ? 0 : 1;
@@ -466,6 +466,117 @@ exports.getMessOffRequests = async (req, res) => {
 };
 
 /**
+ * Automatically record the first 2 diets of a mess-off period as taken,
+ * according to the rule that the next 2 diets are still counted.
+ */
+const recordAutomaticDietsForMessOff = async (studentId, fromDate, toDate, meals, session) => {
+  try {
+    const ExtraOrder = require('../models/ExtraOrder');
+    const MealHistory = require('../models/MealHistory');
+    const Bill = require('../models/Bill');
+
+    // Chronologically find the first 2 meals in the requested period
+    const dailyOrder = ['Breakfast', 'Lunch', 'Dinner'];
+    const start = new Date(fromDate);
+    const end = new Date(toDate);
+    
+    start.setHours(0,0,0,0);
+    end.setHours(0,0,0,0);
+    
+    const current = new Date(start);
+    const targetMeals = [];
+
+    while (current <= end && targetMeals.length < 2) {
+      for (const meal of dailyOrder) {
+        // Match case-insensitively
+        const matchedMeal = meals.find(m => m.toLowerCase() === meal.toLowerCase());
+        if (matchedMeal) {
+          targetMeals.push({
+            date: new Date(current),
+            mealType: meal.toLowerCase()
+          });
+          if (targetMeals.length === 2) {
+            break;
+          }
+        }
+      }
+      current.setDate(current.getDate() + 1);
+    }
+
+    console.log(`[Mess Off Rule] Automatically recording ${targetMeals.length} diets for student ${studentId}`);
+
+    for (const target of targetMeals) {
+      const targetDateStart = new Date(target.date);
+      targetDateStart.setHours(0,0,0,0);
+      const targetDateEnd = new Date(target.date);
+      targetDateEnd.setHours(23,59,59,999);
+
+      // Check if a diet is already recorded for this student, date, and mealType
+      const existing = await ExtraOrder.findOne({
+        studentId: studentId,
+        mealType: target.mealType,
+        date: { $gte: targetDateStart, $lte: targetDateEnd },
+        dietCount: { $gt: 0 }
+      }).session(session);
+
+      if (existing) {
+        console.log(`[Mess Off Rule] Diet already exists for ${target.mealType} on ${target.date.toISOString().split('T')[0]}`);
+        continue;
+      }
+
+      const itemName = `Standard Diet (Mess Off Rule)`;
+
+      // Create ExtraOrder
+      const order = new ExtraOrder({
+        studentId: studentId,
+        items: [{
+          name: itemName,
+          qty: 1,
+          price: 0
+        }],
+        totalAmount: 0,
+        mealType: target.mealType,
+        dietCount: 1,
+        date: target.date
+      });
+      await order.save({ session });
+
+      // Create MealHistory
+      const mealHistory = new MealHistory({
+        studentId: studentId,
+        date: target.date,
+        type: target.mealType.charAt(0).toUpperCase() + target.mealType.slice(1),
+        items: [{
+          name: itemName,
+          qty: 1,
+          price: 0
+        }],
+        totalCost: 0,
+        dietCount: 1
+      });
+      await mealHistory.save({ session });
+
+      // Increment Bill mealCount
+      const month = target.date.getMonth() + 1;
+      const year = target.date.getFullYear();
+
+      await Bill.findOneAndUpdate(
+        { studentId: studentId, month, year },
+        {
+          $inc: {
+            mealCount: 1
+          }
+        },
+        { upsert: true, new: true, session }
+      );
+    }
+  } catch (error) {
+    console.error('[Mess Off Rule] Error recording automatic diets:', error);
+    throw error;
+  }
+};
+
+/**
  * Approve or reject a mess-off request
  * Only for requests from students in munshi's hostel
  * 
@@ -473,6 +584,9 @@ exports.getMessOffRequests = async (req, res) => {
  * @access Private (munshi)
  */
 exports.updateMessOffStatus = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { id } = req.params;
     const { status, rejectionReason } = req.body;
@@ -495,17 +609,31 @@ exports.updateMessOffStatus = async (req, res) => {
     const messOff = await MessOff.findOneAndUpdate(
       { _id: id, studentId: { $in: studentIds } },
       updateData,
-      { new: true }
+      { new: true, session }
     )
       .populate('studentId', 'name rollNo')
       .lean();
 
     if (!messOff) {
+      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: ERROR_MESSAGES.NOT_IN_HOSTEL,
       });
     }
+
+    // Apply 2-diet rule if status is Approved
+    if (status === 'Approved') {
+      await recordAutomaticDietsForMessOff(
+        messOff.studentId._id || messOff.studentId,
+        messOff.fromDate,
+        messOff.toDate,
+        messOff.meals || ['Breakfast', 'Lunch', 'Dinner'],
+        session
+      );
+    }
+
+    await session.commitTransaction();
 
     console.log(
       `[Munshi Controller] Mess-off request ${id} ${status.toLowerCase()} by munshi ${req.munshi.email}`
@@ -521,10 +649,134 @@ exports.updateMessOffStatus = async (req, res) => {
       },
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error('[Munshi Controller] Mess-off update error:', error);
     res.status(500).json({
       success: false,
     });
+  } finally {
+    session.endSession();
+  }
+};
+
+/**
+ * Create a manual mess-off record for a student
+ * Directly creates an Approved MessOff record
+ * 
+ * @route POST /api/munshi/mess-off/manual
+ * @access Private (munshi)
+ */
+exports.createManualMessOff = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { studentId, fromDate, toDate, meals, reason } = req.body;
+    const hostel = req.munshi.hostel;
+
+    if (!studentId || !fromDate || !toDate || !meals || !Array.isArray(meals) || meals.length === 0) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide all required fields (studentId, fromDate, toDate, meals)',
+      });
+    }
+
+    // Verify student exists and belongs to the munshi's hostel
+    const student = await Student.findOne({
+      _id: studentId,
+      hostelNo: hostel,
+    }).session(session);
+
+    if (!student) {
+      await session.abortTransaction();
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found in your hostel',
+      });
+    }
+
+    const from = new Date(fromDate);
+    const to = new Date(toDate);
+
+    if (from > to) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: 'From date cannot be after to date',
+      });
+    }
+
+    // Check for overlapping mess-off requests
+    const overlapping = await MessOff.findOne({
+      studentId,
+      status: { $in: ['Pending', 'Approved'] },
+      $or: [
+        { fromDate: { $lte: to }, toDate: { $gte: from } }
+      ]
+    }).session(session);
+
+    if (overlapping) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: 'Student already has an active or pending mess-off request for overlapping dates',
+      });
+    }
+
+    // Create directly as Approved
+    const messOff = new MessOff({
+      studentId,
+      fromDate: from,
+      toDate: to,
+      meals,
+      reason: reason || 'Manual Mess Off by Munshi',
+      status: 'Approved',
+      approvedAt: new Date(),
+      approvedBy: req.munshi._id
+    });
+
+    await messOff.save({ session });
+
+    // Apply 2-diet rule
+    await recordAutomaticDietsForMessOff(
+      studentId,
+      from,
+      to,
+      meals,
+      session
+    );
+
+    await session.commitTransaction();
+
+    console.log(
+      `[Munshi Controller] Manual mess-off created for student ${student.rollNo} by munshi ${req.munshi.email}`
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Manual mess-off record created successfully',
+      data: {
+        id: messOff._id.toString(),
+        studentId: student._id.toString(),
+        studentName: student.name,
+        from: messOff.fromDate.toISOString().split('T')[0],
+        to: messOff.toDate.toISOString().split('T')[0],
+        meals: messOff.meals,
+        status: messOff.status,
+        reason: messOff.reason,
+      },
+    });
+
+  } catch (error) {
+    await session.abortTransaction();
+    console.error('[Munshi Controller] Manual mess-off creation error:', error);
+    res.status(500).json({
+      success: false,
+      message: ERROR_MESSAGES.SERVER_ERROR || 'Server error',
+    });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -624,10 +876,10 @@ exports.getSessionStats = async (req, res) => {
     allStudents.forEach(student => {
       const idStr = student._id.toString();
       
-      if (messOffSet.has(idStr)) {
-        stats.messOff.push(student);
-      } else if (takenSet.has(idStr)) {
+      if (takenSet.has(idStr)) {
         stats.taken.push(student);
+      } else if (messOffSet.has(idStr)) {
+        stats.messOff.push(student);
       } else {
         stats.notTaken.push(student);
       }

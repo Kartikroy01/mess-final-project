@@ -1,6 +1,16 @@
 // src/App.jsx
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+
+// Scroll to top on route change
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
 
 // Layout
 import PublicLayout from "./components/PublicLayout"; // <-- IMPORT NEW LAYOUT
@@ -25,6 +35,7 @@ export default function App() {
   return (
     
     <Router>
+      <ScrollToTop />
       <Routes>
         {/* 1. Public Routes: These pages WILL have the Navbar and Footer */}
         <Route element={<PublicLayout />}>

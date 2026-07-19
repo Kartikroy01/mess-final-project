@@ -588,14 +588,14 @@ export default function ClerkDashboard() {
     <div className="flex min-h-screen bg-[#F8FAFC]">
        {/* Sidebar Navigation */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-slate-100 transform transition-transform duration-300 ease-in-out ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"} md:${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-40 w-72 bg-[#003B6F] text-white border-r border-white/10 transform transition-transform duration-300 ease-in-out ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"} md:${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="p-8 h-full flex flex-col">
           <div className="flex items-center justify-between mb-10 px-2">
             <div className="flex items-center gap-3">
-                <img src="/logo_250.png" alt="Logo" className="w-11 h-11 object-contain" />
-                <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
-                NITJ<span className="text-indigo-600">Mess</span>
+                <img src="/logo_250.png" alt="Logo" className="w-11 h-11 object-contain shrink-0" />
+                <h1 className="text-2xl font-bold text-white tracking-tight">
+                NITJ<span className="text-indigo-300">Mess</span>
                 </h1>
             </div>
             <button 
@@ -603,27 +603,27 @@ export default function ClerkDashboard() {
                     setSidebarOpen(false);
                     setMobileMenuOpen(false);
                 }}
-                className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer"
             >
                 <X size={20} />
             </button>
           </div>
 
-          <div className="px-2 mb-8 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50 group hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
+          <div className="px-2 mb-8 bg-white/10 p-4 rounded-2xl border border-white/10 group hover:bg-white/20 transition-all duration-500">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-200">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg">
                 {clerkName ? clerkName.charAt(0).toUpperCase() : "C"}
               </div>
               <div className="overflow-hidden">
-                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">
+                <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-0.5">
                   Clerk Profile
                 </p>
-                <h4 className="text-sm font-black text-slate-800 truncate leading-tight group-hover:text-indigo-600 transition-colors">
+                <h4 className="text-sm font-black text-slate-100 truncate leading-tight group-hover:text-white transition-colors">
                   {clerkName}
                 </h4>
                  <div className="flex items-center gap-1.5 mt-1">
-                  <Home size={10} className="text-slate-400" />
-                  <p className="text-[10px] font-bold text-slate-500 truncate">
+                  <Home size={10} className="text-slate-300" />
+                  <p className="text-[10px] font-bold text-slate-300 truncate">
                     {hostel || "Hostel"}
                   </p>
                 </div>
@@ -642,7 +642,7 @@ export default function ClerkDashboard() {
                     navigate(tab.path);
                     setMobileMenuOpen(false);
                   }}
-                  className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 font-bold text-sm relative overflow-hidden group ${isActive ? "bg-indigo-600 text-white shadow-xl shadow-indigo-200" : "text-slate-500 hover:bg-slate-50 hover:text-indigo-600"}`}
+                  className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 font-bold text-sm relative overflow-hidden group cursor-pointer ${isActive ? "bg-indigo-600 text-white shadow-xl shadow-indigo-600/20" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
                 >
                   <Icon
                     size={20}
@@ -657,10 +657,10 @@ export default function ClerkDashboard() {
             })}
           </nav>
 
-          <div className="mt-auto pt-8 border-t border-slate-100">
+          <div className="mt-auto pt-8 border-t border-white/10">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-2xl text-slate-500 font-bold hover:bg-rose-50 hover:text-rose-600 transition-all active:scale-95"
+              className="w-full flex items-center justify-center gap-2 bg-red-600/10 text-red-300 hover:bg-red-650 hover:text-white px-6 py-4 rounded-2xl transition-all font-bold text-sm cursor-pointer"
             >
               <LogOut size={20} />
               <span>Sign Out</span>
