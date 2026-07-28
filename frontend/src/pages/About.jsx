@@ -15,24 +15,36 @@ import { Link } from "react-router-dom";
 export default function About() {
   const features = [
     {
-      icon: <ShieldCheck className="w-8 h-8 text-nitj-accent" />,
+      icon: <ShieldCheck className="w-8 h-8" />,
       title: "Transparency",
-      description: "Real-time tracking of meal attendance and billing ensures complete trust between students and administration."
+      description: "Real-time tracking of meal attendance and billing ensures complete trust between students and administration.",
+      colorClass: "text-blue-600 group-hover:text-white",
+      bgClass: "bg-blue-50 group-hover:bg-blue-600",
+      borderClass: "hover:border-blue-100 hover:shadow-blue-200/40",
     },
     {
-      icon: <Zap className="w-8 h-8 text-nitj-accent" />,
+      icon: <Zap className="w-8 h-8" />,
       title: "Efficiency",
-      description: "Streamlined processes for requesting mess-off and managing daily menus reduce manual paperwork and delays."
+      description: "Streamlined processes for requesting mess-off and managing daily menus reduce manual paperwork and delays.",
+      colorClass: "text-amber-500 group-hover:text-white",
+      bgClass: "bg-amber-50 group-hover:bg-amber-500",
+      borderClass: "hover:border-amber-100 hover:shadow-amber-200/40",
     },
     {
-      icon: <Cpu className="w-8 h-8 text-nitj-accent" />,
+      icon: <Cpu className="w-8 h-8" />,
       title: "Digitalization",
-      description: "A paperless environment for all hostel operations, from menu planning to monthly bill generation."
+      description: "A paperless environment for all hostel operations, from menu planning to monthly bill generation.",
+      colorClass: "text-teal-600 group-hover:text-white",
+      bgClass: "bg-teal-50 group-hover:bg-teal-600",
+      borderClass: "hover:border-teal-100 hover:shadow-teal-200/40",
     },
     {
-      icon: <Users2 className="w-8 h-8 text-nitj-accent" />,
+      icon: <Users2 className="w-8 h-8" />,
       title: "User-Centric",
-      description: "Designed specifically for the NITJ community, catering to the unique needs of both students and mess staff."
+      description: "Designed specifically for the NITJ community, catering to the unique needs of both students and mess staff.",
+      colorClass: "text-violet-600 group-hover:text-white",
+      bgClass: "bg-violet-50 group-hover:bg-violet-600",
+      borderClass: "hover:border-violet-100 hover:shadow-violet-200/40",
     }
   ];
 
@@ -61,11 +73,11 @@ export default function About() {
       <section className="py-16 px-6 -mt-10">
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8">
           {/* Vision Card */}
-          <div className="bg-white p-10 rounded-3xl shadow-xl border border-slate-100 transform hover:-translate-y-1 transition-all duration-300">
-            <div className="w-14 h-14 bg-nitj-primary/10 rounded-2xl flex items-center justify-center mb-6">
-              <Eye className="w-8 h-8 text-nitj-primary" />
+          <div className="bg-gradient-to-br from-white via-white to-blue-50/30 p-10 rounded-3xl shadow-[0_15px_35px_rgba(37,99,235,0.04)] border border-blue-100/50 transform hover:-translate-y-1.5 hover:border-blue-200/80 hover:shadow-2xl hover:shadow-blue-200/20 transition-all duration-300">
+            <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-200/50 text-white">
+              <Eye className="w-8 h-8" />
             </div>
-            <h2 className="text-2xl font-bold text-nitj-dark mb-4">Our Vision</h2>
+            <h2 className="text-2xl font-black text-slate-800 mb-4">Our Vision</h2>
             <p className="text-slate-600 leading-relaxed italic">
               "To create a world-class digital ecosystem for NITJ hostels where technology 
               seamlessly integrates with daily campus life, ensuring health, convenience, 
@@ -74,11 +86,11 @@ export default function About() {
           </div>
 
           {/* Mission Card */}
-          <div className="bg-white p-10 rounded-3xl shadow-xl border border-slate-100 transform hover:-translate-y-1 transition-all duration-300">
-            <div className="w-14 h-14 bg-[#FF5722]/10 rounded-2xl flex items-center justify-center mb-6">
-              <Target className="w-8 h-8 text-[#FF5722]" />
+          <div className="bg-gradient-to-br from-white via-white to-orange-50/30 p-10 rounded-3xl shadow-[0_15px_35px_rgba(249,115,22,0.04)] border border-orange-100/50 transform hover:-translate-y-1.5 hover:border-orange-200/80 hover:shadow-2xl hover:shadow-orange-200/20 transition-all duration-300">
+            <div className="w-14 h-14 bg-orange-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-orange-200/50 text-white">
+              <Target className="w-8 h-8" />
             </div>
-            <h2 className="text-2xl font-bold text-nitj-dark mb-4">Our Mission</h2>
+            <h2 className="text-2xl font-black text-slate-800 mb-4">Our Mission</h2>
             <p className="text-slate-600 leading-relaxed">
               We aim to eliminate traditional bottlenecks in mess management by providing 
               automated record-keeping, intelligent menu forecasting, and integrated 
@@ -98,9 +110,12 @@ export default function About() {
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
-              <div key={index} className="p-8 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-lg transition-all border border-transparent hover:border-slate-100 text-center group">
-                <div className="mb-6 inline-block p-4 bg-white rounded-xl shadow-sm group-hover:bg-nitj-accent transition-colors">
-                  <div className="group-hover:text-white transition-colors duration-300">
+              <div 
+                key={index} 
+                className={`p-8 rounded-3xl bg-slate-50/50 hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent ${feature.borderClass} text-center group transform hover:-translate-y-1.5`}
+              >
+                <div className={`mb-6 inline-block p-4 rounded-2xl shadow-sm ${feature.bgClass} transition-colors duration-300`}>
+                  <div className={`${feature.colorClass} transition-colors duration-300`}>
                     {feature.icon}
                   </div>
                 </div>

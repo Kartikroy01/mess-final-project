@@ -5,7 +5,6 @@ import { API_BASE_URL } from '../../config';
 const StudentComplaint = ({ token, onSuccess }) => {
     const [category, setCategory] = useState('');
     const [message, setMessage] = useState('');
-    const [isDirectToWarden, setIsDirectToWarden] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showSuccess, setShowSuccess] = useState(false);
@@ -37,13 +36,13 @@ const StudentComplaint = ({ token, onSuccess }) => {
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     category,
                     message,
-                    isDirectToWarden
+                    isDirectToWarden: false
                 })
             });
 
@@ -61,7 +60,6 @@ const StudentComplaint = ({ token, onSuccess }) => {
                 setShowSuccess(false);
                 setCategory('');
                 setMessage('');
-                setIsDirectToWarden(false);
             }, 3000);
 
         } catch (err) {
@@ -92,21 +90,7 @@ const StudentComplaint = ({ token, onSuccess }) => {
 
     return (
         <div className="max-w-7xl w-full mx-auto animate-in fade-in slide-in-from-bottom-6 duration-700">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <div>
-                    <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-                        <div className="p-2.5 bg-[#1464aa] text-white rounded-2xl shadow-lg shadow-blue-100">
-                            <MessageSquare size={28} strokeWidth={2.5} />
-                        </div>
-                        Grievance Portal
-                    </h1>
-                    <p className="text-slate-500 mt-2 font-medium flex items-center gap-2">
-                         Your identity will remain confidential with the warden.
-                    </p>
-                </div>
-
-            </div>
+            {/* Header Section Removed */}
 
             <div className="w-full">
                 {/* Form Section */}
@@ -151,31 +135,6 @@ const StudentComplaint = ({ token, onSuccess }) => {
                             />
                         </div>
 
-                        {/* Critical Flag Toggle */}
-                        <div className={`flex items-center justify-between p-6 rounded-3xl border transition-all duration-500 ${isDirectToWarden ? 'bg-orange-50 border-orange-200 shadow-inner' : 'bg-slate-50 border-transparent'}`}>
-                            <div className="flex items-center gap-4">
-                                <div className={`p-3 rounded-2xl transition-colors duration-500 ${isDirectToWarden ? 'bg-orange-100 text-orange-600' : 'bg-slate-200 text-slate-400'}`}>
-                                    <ShieldAlert size={24} />
-                                </div>
-                                <div className="pr-4 border-r border-slate-200">
-                                    <p className={`text-sm font-black tracking-tight ${isDirectToWarden ? 'text-orange-900' : 'text-slate-600'}`}>Direct to Warden</p>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 whitespace-nowrap">High Priority Flag</p>
-                                </div>
-                                <p className="text-[10px] text-slate-500 font-medium max-w-[120px] leading-tight hidden sm:block">
-                                    Use this only for serious issues that require immediate attention.
-                                </p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input 
-                                    type="checkbox" 
-                                    checked={isDirectToWarden}
-                                    onChange={(e) => setIsDirectToWarden(e.target.checked)}
-                                    className="sr-only peer" 
-                                />
-                                <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-7 after:transition-all peer-checked:bg-[#E28122]"></div>
-                            </label>
-                        </div>
-
                         {error && (
                             <div className="p-5 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 animate-pulse">
                                 <AlertCircle size={24} className="shrink-0" />
@@ -186,7 +145,7 @@ const StudentComplaint = ({ token, onSuccess }) => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className={`w-full py-5 rounded-3xl font-black text-white flex items-center justify-center gap-3 shadow-xl transition-all active:scale-[0.98] disabled:opacity-50 group ${isDirectToWarden ? 'bg-orange-600 shadow-orange-100' : 'bg-[#1464aa] shadow-blue-100'}`}
+                            className="w-full py-5 rounded-3xl font-black text-white flex items-center justify-center gap-3 shadow-xl transition-all active:scale-[0.98] disabled:opacity-50 group bg-[#1464aa] shadow-blue-100/50 hover:brightness-110"
                         >
                             {loading ? (
                                 <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />

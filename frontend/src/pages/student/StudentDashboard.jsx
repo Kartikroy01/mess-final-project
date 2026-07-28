@@ -289,17 +289,14 @@ const NavItem = ({ icon, text, active, onClick, badge }) => (
 const BottomNavItem = ({ icon, label, active, onClick }) => (
   <button
     onClick={onClick}
-    className={`flex flex-col items-center justify-center w-full py-2 gap-1 transition-all ${
-      active ? "text-[#1464aa] scale-105" : "text-slate-400 hover:text-slate-500"
+    className={`flex flex-col items-center justify-center w-full py-1 gap-0.5 transition-all duration-300 ${
+      active ? "text-[#1464aa]" : "text-slate-400"
     }`}
   >
-    <div className={`relative ${active ? "drop-shadow-md" : ""}`}>
-      {React.cloneElement(icon, { size: active ? 22 : 20, strokeWidth: active ? 2.5 : 2 })}
-      {active && (
-        <span className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#1464aa] rounded-full"></span>
-      )}
+    <div className={`relative flex items-center justify-center transition-all duration-300 ${active ? "text-[#1464aa]" : "text-slate-400"}`}>
+      {React.cloneElement(icon, { size: 20, strokeWidth: active ? 2.5 : 2 })}
     </div>
-    <span className={`text-[9px] font-bold ${active ? "text-[#1464aa]" : "text-slate-400"}`}>
+    <span className={`text-[10px] font-bold tracking-wide transition-colors duration-300 ${active ? "text-[#1464aa]" : "text-slate-400"}`}>
       {label}
     </span>
   </button>
@@ -369,58 +366,43 @@ const StudentHome = ({
     {
       id: "scan",
       label: "QR Code",
-      icon: <QrCode size={24} />,
-      color: "bg-blue-600",
-      textColor: "text-white",
+      desc: "Scan member card",
+      icon: <QrCode className="w-6 h-6 text-blue-600" />,
+      bgClass: "from-blue-50/70 to-blue-50/20 border-blue-100",
       action: () => setShowQRModal(true),
     },
     {
       id: "messOff",
       label: "Mess Off",
-      icon: <CalendarOff size={24} />,
-      color: "bg-white",
-      textColor: "text-blue-600",
+      desc: "Apply leave status",
+      icon: <CalendarOff className="w-6 h-6 text-pink-600" />,
+      bgClass: "from-pink-50/70 to-pink-50/20 border-pink-100",
       action: () => setActivePage("messOff"),
     },
     {
       id: "feedback",
       label: "Feedback",
-      icon: <MessageSquare size={24} />,
-      color: "bg-white",
-      textColor: "text-blue-600",
+      desc: "Rate your meals",
+      icon: <MessageSquare className="w-6 h-6 text-amber-600" />,
+      bgClass: "from-amber-50/70 to-amber-50/20 border-amber-100",
       action: () => setActivePage("feedback"),
     },
     {
       id: "complaint",
       label: "Complain",
-      icon: <AlertCircle size={24} />,
-      color: "bg-white",
-      textColor: "text-blue-600",
+      desc: "Report food issues",
+      icon: <AlertCircle className="w-6 h-6 text-sky-600" />,
+      bgClass: "from-sky-50/70 to-sky-50/20 border-sky-100",
       action: () => setActivePage("complaint"),
     },
     {
       id: "history",
       label: "Meal History",
-      icon: <Clock size={24} />,
-      color: "bg-white",
-      textColor: "text-blue-600",
+      desc: "Track your history",
+      icon: <Clock className="w-6 h-6 text-emerald-600" />,
+      bgClass: "from-emerald-50/70 to-emerald-50/20 border-emerald-100",
       action: () => setActivePage("reports"),
-    },
-    {
-      id: "menu",
-      label: "Today Menu",
-      icon: <UtensilsCrossed size={24} />,
-      color: "bg-white",
-      textColor: "text-blue-600",
-      action: () => {},
-    },
-    {
-      id: "fines",
-      label: "Fines",
-      icon: <AlertCircle size={24} />,
-      color: "bg-white",
-      textColor: "text-blue-600",
-      action: () => setActivePage("reports"),
+      colSpan: "col-span-2",
     },
   ];
 
@@ -444,12 +426,6 @@ const StudentHome = ({
       icon: <Activity />,
       grad: "from-purple-500 to-purple-600",
     },
-    {
-      label: "Fines",
-      value: `₹${student.fines || 0}`,
-      icon: <AlertCircle />,
-      grad: "from-red-500 to-red-600",
-    },
   ];
 
   return (
@@ -459,23 +435,26 @@ const StudentHome = ({
         {/* Removed duplicate utility bar */}
 
         {/* Mobile Header */}
-        <div className="bg-white px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-[1001]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-          <div className="flex items-center gap-3">
-            {/* Native style header without hamburger */}
-            <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-sm">
-              <span className="text-[11px] font-black text-[#144d8b] tracking-tight">NITJ MESS</span>
-            </div>
+        <div 
+          className="bg-white/80 backdrop-blur-md px-4 py-2.5 flex items-center justify-between border-b border-slate-100/80 sticky top-0 z-[1001]" 
+          style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top))" }}
+        >
+          <div className="flex items-center gap-2">
+            <img src="/logo_250.png" alt="NITJ Logo" className="w-7 h-7 object-contain" />
+            <span className="text-sm font-black text-slate-800 tracking-tight uppercase">
+              NITJ <span className="text-[#E28122]">Mess</span>
+            </span>
           </div>
-          <div className="flex items-center gap-4 text-slate-600">
+          <div className="flex items-center gap-1.5 text-slate-500">
             <button
               onClick={() => setActivePage("reports")}
-              className="hover:text-blue-600 transition-colors"
+              className="p-2 hover:text-[#1464aa] hover:bg-slate-50 rounded-xl transition-all duration-200"
             >
-              <BarChart2 size={24} />
+              <BarChart2 size={20} strokeWidth={2.5} />
             </button>
-            <button className="relative hover:text-blue-600 transition-colors">
-              <Bell size={24} />
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full"></span>
+            <button className="p-2 hover:text-[#1464aa] hover:bg-slate-50 rounded-xl transition-all duration-200 relative">
+              <Bell size={20} strokeWidth={2.5} />
+              <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white"></span>
             </button>
           </div>
         </div>
@@ -531,25 +510,28 @@ const StudentHome = ({
 
           {/* Quick Actions Grid */}
           <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-5 shadow-xl shadow-blue-100/50 border border-white">
-            <h2 className="text-lg md:text-xl font-bold text-slate-800 mb-5 md:mb-6 px-1 flex items-center justify-between">
+            <h2 className="text-lg md:text-xl font-bold text-slate-800 mb-4 md:mb-5 px-1 flex items-center justify-between">
               Quick Actions
               <ChevronRight size={18} className="text-slate-400" />
             </h2>
-            <div className="grid grid-cols-4 gap-x-2 gap-y-8">
+            <div className="grid grid-cols-2 gap-3">
               {quickActions.map((action) => (
                 <button
                   key={action.id}
                   onClick={action.action}
-                  className="flex flex-col items-center gap-3 active:scale-95 transition-all"
+                  className={`flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-br border ${action.bgClass} ${action.colSpan || ""} active:scale-98 transition-all duration-200 text-left group shadow-sm`}
                 >
-                  <div
-                    className={`w-14 h-14 rounded-[1.5rem] flex items-center justify-center shadow-lg ${action.color} ${action.textColor} ${action.id === "scan" ? "shadow-blue-200" : "shadow-slate-100 border border-slate-50"}`}
-                  >
+                  <div className="flex flex-col justify-center min-w-0 pr-2">
+                    <span className="text-xs font-black text-slate-800 tracking-tight leading-tight group-hover:text-[#1464aa] transition-colors">
+                      {action.label}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-semibold mt-1 leading-snug">
+                      {action.desc}
+                    </span>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm border border-slate-100/60 group-hover:scale-105 transition-transform duration-300">
                     {action.icon}
                   </div>
-                  <span className="text-[9px] md:text-[10px] font-bold text-slate-600 text-center leading-tight max-w-[70px]">
-                    {action.label}
-                  </span>
                 </button>
               ))}
             </div>
@@ -557,9 +539,7 @@ const StudentHome = ({
 
           {/* Mobile Stats Grid */}
           <div className="grid grid-cols-3 gap-2 px-1">
-            {stats
-              .filter((s) => s.label !== "Fines")
-              .map((s, i) => (
+            {stats.map((s, i) => (
                 <div
                   key={i}
                   className="bg-white p-3 rounded-2xl border border-slate-50 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-2 min-h-[80px] justify-center sm:justify-start"
@@ -653,7 +633,7 @@ const StudentHome = ({
         </div>
       </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {stats.map((s, i) => (
             <div
               key={i}
@@ -965,6 +945,7 @@ const StudentReports = ({
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [isDownloading, setIsDownloading] = useState(false);
   const [filteredHistory, setFilteredHistory] = useState([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const monthNames = [
     "January",
@@ -1122,44 +1103,58 @@ const StudentReports = ({
       className={`bg-white rounded-3xl overflow-hidden border border-slate-100 ${!isSummary ? "shadow-xl shadow-slate-200/50 p-6" : ""}`}
     >
       {!isSummary && (
-        <div className="flex flex-wrap justify-between items-center mb-8">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-50 rounded-2xl mr-4">
-              <BarChart2 className="text-blue-600" size={24} />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
-                Meal Reports
-              </h2>
-              <p className="text-slate-500 font-medium">
-                Detailed history of your dining activity
-              </p>
-            </div>
-          </div>
+        <div className="w-full mb-8">
           {availableMonths.length > 0 && (
-            <div className="flex items-center gap-3 mt-4 sm:mt-0">
-              <div className="relative">
-                <select
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                  className="appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold text-slate-700 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none cursor-pointer"
+            <div className="grid grid-cols-2 gap-3 w-full">
+              <div className="relative w-full">
+                <button
+                  type="button"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-full flex items-center justify-between pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-white focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none cursor-pointer text-left"
                 >
-                  {availableMonths.map((month) => (
-                    <option key={month} value={month}>
-                      {monthNames[month]}
-                    </option>
-                  ))}
-                </select>
-                <ChevronRight
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-slate-400 pointer-events-none"
-                  size={16}
-                  strokeWidth={3}
-                />
+                  <span>{monthNames[selectedMonth]}</span>
+                  <ChevronRight
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-transform duration-200 ${isDropdownOpen ? "-rotate-90" : "rotate-90"}`}
+                    size={16}
+                    strokeWidth={3}
+                  />
+                </button>
+
+                {isDropdownOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setIsDropdownOpen(false)}
+                    />
+                    <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 py-1.5 max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                      {availableMonths.map((month) => (
+                        <button
+                          key={month}
+                          type="button"
+                          onClick={() => {
+                            setSelectedMonth(month);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-all flex items-center justify-between ${
+                            selectedMonth === month
+                              ? "bg-blue-50 text-[#1464aa]"
+                              : "text-slate-600 hover:bg-blue-50/50 hover:text-[#1464aa]"
+                          }`}
+                        >
+                          <span>{monthNames[month]}</span>
+                          {selectedMonth === month && (
+                            <span className="w-1.5 h-1.5 bg-[#1464aa] rounded-full"></span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
 
               <button
                 onClick={handleDownloadPdf}
-                className="bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 hover:shadow-lg hover:shadow-slate-800/20 active:scale-95 transition-all flex items-center gap-2 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#1464aa] text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200/50 active:scale-95 transition-all flex items-center justify-center gap-2 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Download size={16} strokeWidth={2.5} />
                 <span>Export PDF</span>
@@ -1640,22 +1635,8 @@ const MessOffPage = ({ studentName, token }) => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
-      <div className="flex items-center mb-2">
-        <div className="p-3 bg-blue-50 rounded-2xl mr-4 border border-blue-100">
-          <CalendarOff className="text-blue-600" size={28} strokeWidth={2.5} />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
-            Mess Leave
-          </h1>
-          <p className="text-slate-500 mt-1 font-medium">
-            Apply for leave and track your application status
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">
         <div className="lg:col-span-5 lg:sticky lg:top-8">
           <MessOffForm token={token} onSubmitSuccess={refreshRequests} />
         </div>
@@ -1693,7 +1674,6 @@ const MessOffForm = ({ token, onSubmitSuccess }) => {
         meals,
         reason,
       });
-      // Custom toast notification could go here
       alert("Mess off application submitted successfully!");
       setFromDate("");
       setToDate("");
@@ -1708,45 +1688,52 @@ const MessOffForm = ({ token, onSubmitSuccess }) => {
   };
 
   return (
-    <div className="bg-white rounded-[2rem] shadow-xl shadow-blue-200/40 p-6 md:p-8 border border-slate-100 relative overflow-hidden">
+    <div className="bg-white rounded-2xl md:rounded-[2rem] shadow-lg md:shadow-xl shadow-blue-100/50 md:shadow-blue-200/40 p-5 md:p-8 border border-slate-100 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-40 h-40 bg-blue-50 rounded-full blur-3xl opacity-60 -mr-10 -mt-10 pointer-events-none"></div>
 
-      <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center relative z-10">
-        <span className="w-1 h-6 bg-indigo-500 rounded-full mr-3"></span>
+      <h2 className="text-lg font-extrabold text-slate-800 mb-5 flex items-center relative z-10 tracking-tight">
+        <span className="w-1 h-5 bg-indigo-600 rounded-full mr-2.5"></span>
         New Application
       </h2>
 
-      <div className="space-y-5 relative z-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">
+      <div className="space-y-4 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="space-y-1.5">
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">
               From
             </label>
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none font-medium text-slate-700"
-            />
+            <div className="relative">
+              <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-medium text-slate-700 text-sm"
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">
+          <div className="space-y-1.5">
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">
               To
             </label>
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none font-medium text-slate-700"
-            />
+            <div className="relative">
+              <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-medium text-slate-700 text-sm"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">
+        <div className="space-y-1.5">
+          <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">
             Select Meals to Skip
           </label>
           <div className="relative">
+            <UtensilsCrossed className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
             <select
               value={meals.length === 3 ? "All" : meals[0] || ""}
               onChange={(e) => {
@@ -1755,7 +1742,7 @@ const MessOffForm = ({ token, onSubmitSuccess }) => {
                 else if (val === "") setMeals([]);
                 else setMeals([val]);
               }}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none font-medium text-slate-700 appearance-none cursor-pointer"
+              className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-medium text-slate-700 text-sm appearance-none cursor-pointer"
             >
               <option value="" disabled>
                 Choose meal type
@@ -1766,35 +1753,34 @@ const MessOffForm = ({ token, onSubmitSuccess }) => {
               <option value="All">All Meals (Full Day)</option>
             </select>
             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-              <ChevronDown size={18} />
+              <ChevronDown size={16} />
             </div>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">
+        <div className="space-y-1.5">
+          <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">
             Reason{" "}
             <span className="font-normal text-slate-400 normal-case">
               (Optional)
             </span>
           </label>
-          <textarea
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none font-medium text-slate-700 resize-none"
-            rows="3"
-            placeholder="e.g. Going home for weekend..."
-          ></textarea>
+          <div className="relative">
+            <MessageSquare className="absolute left-3.5 top-3.5 text-slate-400 w-4 h-4 pointer-events-none" />
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-medium text-slate-700 text-sm resize-none"
+              rows="3"
+              placeholder="e.g. Going home for weekend..."
+            ></textarea>
+          </div>
         </div>
 
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          className="w-full mt-2 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group hover:brightness-110"
-          style={{
-            backgroundColor: "#1464aa",
-            boxShadow: "0 4px 15px rgba(20,100,170,0.25)",
-          }}
+          className="w-full mt-2 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-200/50 hover:shadow-xl hover:shadow-blue-300/40 bg-gradient-to-r from-[#1464aa] to-indigo-600 hover:from-[#1e88e5] hover:to-indigo-500 flex items-center justify-center transition-all active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed group text-sm transform hover:-translate-y-0.5 duration-200"
         >
           {submitting ? (
             <>
@@ -2201,23 +2187,7 @@ function StudentDashboard() {
                   setIsSidebarOpen(false);
                 }}
               />
-              <NavItem
-                icon={<UtensilsCrossed />}
-                text="Today Menu"
-                active={false}
-                onClick={() => {
-                  setIsSidebarOpen(false);
-                }}
-              />
-              <NavItem
-                icon={<AlertCircle />}
-                text="Fines"
-                active={activePage === "reports"}
-                onClick={() => {
-                  setActivePage("reports");
-                  setIsSidebarOpen(false);
-                }}
-              />
+
 
               <div className="px-4 mb-2 mt-6">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -2280,17 +2250,17 @@ function StudentDashboard() {
 
         {/* Header */}
         <header
-          className={`sticky top-0 z-30 bg-white px-6 pb-4 border-b border-slate-100 flex justify-between items-center ${activePage === "home" ? "md:flex hidden" : "flex"}`}
-          style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}
+          className={`sticky top-0 z-30 bg-white px-4 py-3 md:px-6 md:pb-4 border-b border-slate-100 flex justify-between items-center ${activePage === "home" ? "md:flex hidden" : "flex"}`}
+          style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top))" }}
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {/* Mobile Back Button */}
             {activePage !== "home" && (
               <button
                 onClick={() => setActivePage("home")}
-                className="md:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors mr-2"
+                className="md:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors mr-1"
               >
-                <ArrowLeft size={24} />
+                <ArrowLeft size={22} />
               </button>
             )}
 
@@ -2302,10 +2272,16 @@ function StudentDashboard() {
               <Menu size={24} />
             </button>
 
-            {/* Mobile Initials Bubble (Hamburger) - Hide when back button is present */}
-            {/* Removed hamburger button for native mobile look */}
+            {/* Mobile dynamic page title */}
             <div className="flex items-center gap-2 md:hidden">
-              <h1 className="font-bold text-slate-800 whitespace-nowrap text-sm tracking-tight">NITJ MESS</h1>
+              <h1 className="font-black text-slate-800 whitespace-nowrap text-base tracking-tight">
+                {activePage === "home" ? "NITJ MESS" : 
+                 activePage === "messOff" ? "Mess Leave" : 
+                 activePage === "feedback" ? "Feedback" : 
+                 activePage === "reports" ? "History" : 
+                 activePage === "complaint" ? "Complain" : 
+                 activePage}
+              </h1>
             </div>
 
             <div className="hidden md:block">
@@ -2354,7 +2330,7 @@ function StudentDashboard() {
           </div>
         </header>
 
-        <div className="p-4 md:p-10 max-w-7xl mx-auto pb-32 md:pb-20">
+        <div className="px-3 py-4 md:p-10 max-w-7xl mx-auto pb-32 md:pb-20">
           {renderContent()}
         </div>
 
@@ -2566,17 +2542,20 @@ function StudentDashboard() {
 
         {/* --- MOBILE BOTTOM NAVIGATION --- */}
         <div 
-          className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-3xl border-t border-slate-100/50 z-[1000] flex justify-around items-end pt-2 pb-4 px-2 shadow-[0_-10px_40px_rgba(0,0,0,0.06)]"
-          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
+          className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-100/80 z-[1000] flex justify-around items-center px-1 shadow-[0_-8px_30px_rgba(0,0,0,0.05)]"
+          style={{ 
+            height: "calc(60px + env(safe-area-inset-bottom))",
+            paddingBottom: "env(safe-area-inset-bottom)" 
+          }}
         >
           <BottomNavItem icon={<Home />} label="Home" active={activePage === "home"} onClick={() => setActivePage("home")} />
           <BottomNavItem icon={<Clock />} label="History" active={activePage === "reports"} onClick={() => setActivePage("reports")} />
-          <div className="relative -top-5 px-2">
+          <div className="relative -top-4 px-1 flex-shrink-0">
             <button
               onClick={() => setShowQRModal(true)}
-              className="w-14 h-14 bg-gradient-to-tr from-[#1464aa] to-[#1e88e5] rounded-full flex items-center justify-center text-white shadow-[0_8px_25px_rgba(20,100,170,0.5)] border-[4px] border-[#f8fafc] active:scale-95 transition-all"
+              className="w-13 h-13 bg-gradient-to-tr from-[#1464aa] to-[#1e88e5] rounded-full flex items-center justify-center text-white shadow-[0_6px_20px_rgba(20,100,170,0.4)] border-[3px] border-[#f8fafc] active:scale-95 transition-all"
             >
-              <QrCode size={24} strokeWidth={2.5} />
+              <QrCode size={22} strokeWidth={2.5} />
             </button>
           </div>
           <BottomNavItem icon={<CalendarOff />} label="Leave" active={activePage === "messOff"} onClick={() => setActivePage("messOff")} />

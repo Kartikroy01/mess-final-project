@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import HeroSection from "./herosection.jsx";
+import About from "./About.jsx";
 
 const menuItems = [
   { name: "Paneer Masala", desc: "Rich and creamy cottage cheese curry.", price: 60, type: "Dinner", image: "/images/menu/paneer_masala.png" },
@@ -94,6 +95,8 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      <About />
     </div>
   );
 }

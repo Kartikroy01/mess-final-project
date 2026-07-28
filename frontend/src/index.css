@@ -5,6 +5,11 @@
   --color-nitj-accent: #E28122;
   --color-nitj-light: #F8FAFC;
   --color-nitj-dark: #0c2d56;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+body, input, select, textarea, button {
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer utilities {
