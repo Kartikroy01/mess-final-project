@@ -779,19 +779,6 @@ const DashboardView = ({
         <div className="lg:col-span-2 space-y-8">
           {/* Student Lookup */}
           <Card className="p-4 md:p-6 lg:p-8">
-            <div className="hidden lg:flex items-center gap-4 mb-8">
-              <div className="p-3 bg-indigo-50 rounded-2xl">
-                <Search className="w-6 h-6 text-indigo-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-slate-800">
-                  Student Lookup
-                </h2>
-                <p className="text-slate-500 text-sm">
-                  Scan QR or enter details to find student
-                </p>
-              </div>
-            </div>
 
             {!scannedStudent ? (
               <div className="space-y-6">
@@ -847,12 +834,12 @@ const DashboardView = ({
                 )}
               </div>
             ) : (
-              <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-3xl p-4 md:p-6 border border-indigo-100 relative overflow-hidden">
+              <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl md:rounded-3xl p-3 md:p-6 border border-indigo-100 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-                  <div className="flex items-center gap-3 md:gap-4">
-                    <div className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-2xl overflow-hidden flex items-center justify-center shadow-sm text-indigo-600 text-lg md:text-xl font-bold shrink-0">
+                <div className="flex flex-row items-center justify-between gap-3 relative z-10">
+                  <div className="flex items-center gap-2 md:gap-4 min-w-0">
+                    <div className="hidden sm:flex w-12 h-12 md:w-16 md:h-16 bg-white rounded-2xl overflow-hidden items-center justify-center shadow-sm text-indigo-600 text-lg md:text-xl font-bold shrink-0">
                       {scannedStudent.photo ? (
                         <>
                           <img 
@@ -873,33 +860,33 @@ const DashboardView = ({
                       )}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-base md:text-2xl font-black text-slate-800 truncate leading-tight">
+                      <h3 className="text-sm md:text-2xl font-black text-slate-800 truncate leading-tight">
                         {scannedStudent.name}
                       </h3>
-                      <div className="flex flex-wrap gap-1.5 mt-1">
-                        <Badge variant="info" className="text-[10px] md:text-xs">
+                      <div className="flex flex-wrap gap-1 mt-0.5 md:mt-1">
+                        <Badge variant="info" className="text-[9px] md:text-xs px-1.5 py-0.5">
                           {scannedStudent.rollNumber}
                         </Badge>
-                        <Badge variant="warning" className="text-[10px] md:text-xs">
-                          {scannedStudent.roomNumber}
+                        <Badge variant="warning" className="text-[9px] md:text-xs px-1.5 py-0.5">
+                          Room: {scannedStudent.roomNumber}
                         </Badge>
                         {scannedStudent.isMessClosed && (
-                            <Badge variant="danger" className="text-[10px] md:text-xs">Mess Closed</Badge>
+                            <Badge variant="danger" className="text-[9px] md:text-xs px-1.5 py-0.5">Mess Closed</Badge>
                         )}
                         {!scannedStudent.isMessClosed && scannedStudent.takenMeals?.includes(sessionMeal) && (
-                            <Badge variant="success" className="text-[10px] md:text-xs">Diet Taken</Badge>
+                            <Badge variant="success" className="text-[9px] md:text-xs px-1.5 py-0.5">Diet Taken</Badge>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto md:bg-white/60 md:p-4 rounded-2xl backdrop-blur-sm">
-                    <div className="text-left sm:text-right">
-                      <p className="md:block text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
+                  <div className="flex items-center justify-end gap-2 md:gap-3 shrink-0 md:bg-white/60 md:p-4 rounded-2xl backdrop-blur-sm">
+                    <div className="text-right pr-1">
+                      <p className="hidden md:block text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
                         Balance
                       </p>
                       <p
-                        className={`text-lg md:text-2xl font-black leading-none ${scannedStudent.balance > 0 ? "text-emerald-600" : "text-slate-800"}`}
+                        className={`text-sm md:text-2xl font-black leading-none ${scannedStudent.balance > 0 ? "text-emerald-600" : "text-slate-800"}`}
                       >
                         ₹{scannedStudent.balance}
                       </p>
@@ -908,7 +895,7 @@ const DashboardView = ({
                     <Button 
                         onClick={handleSubmitExtras}
                         variant="success"
-                        className="py-2.5 px-5 md:py-3 md:px-6 shadow-emerald-200 text-sm md:text-base h-11 md:h-14"
+                        className="py-1.5 px-3 md:py-3 md:px-6 shadow-emerald-200 text-xs md:text-base h-9 md:h-14 font-bold rounded-lg md:rounded-xl"
                         disabled={scannedStudent?.isMessClosed || (scannedStudent?.takenMeals?.includes(sessionMeal) && extraItems.length === 0)}
                     >
                         Process
@@ -916,9 +903,9 @@ const DashboardView = ({
                     <div className="hidden sm:block h-8 w-px bg-slate-200"></div>
                     <button
                       onClick={handleClear}
-                      className="p-2.5 hover:bg-white rounded-xl transition-colors text-slate-400 hover:text-rose-500 bg-slate-100 sm:bg-transparent"
+                      className="p-1.5 hover:bg-white rounded-lg transition-colors text-slate-400 hover:text-rose-500 bg-slate-100 md:bg-transparent"
                     >
-                      <X size={20} />
+                      <X size={16} />
                     </button>
                   </div>
                 </div>
@@ -1026,7 +1013,7 @@ const DashboardView = ({
                       )}
                     </div>
                     <div className="p-2 md:p-4 lg:p-5">
-                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-1 md:mb-2 gap-0.5">
+                      <div className="flex flex-row justify-between items-center mb-1 md:mb-2 gap-2">
                         <h3 className="font-bold text-[9px] md:text-sm lg:text-base text-slate-800 group-hover:text-indigo-700 line-clamp-2 leading-tight">
                           Extra Diet
                         </h3>
@@ -1087,7 +1074,7 @@ const DashboardView = ({
                         )}
                       </div>
                       <div className="p-2 md:p-4 lg:p-5">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-1 md:mb-2 gap-0.5">
+                        <div className="flex flex-row justify-between items-center mb-1 md:mb-2 gap-2">
                           <h3 className={`font-bold text-[9px] md:text-sm lg:text-base transition-colors line-clamp-2 leading-tight ${showDelete ? 'text-rose-600' : 'text-slate-800 group-hover:text-indigo-700'}`}>
                             {item.name}
                           </h3>
@@ -1206,7 +1193,7 @@ const DashboardView = ({
                         )}
                       </div>
                       <div className="p-2 md:p-4 lg:p-5">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-1 md:mb-2 gap-0.5">
+                        <div className="flex flex-row justify-between items-center mb-1 md:mb-2 gap-2">
                           <h3 className={`font-bold text-[9px] md:text-sm lg:text-base transition-colors line-clamp-2 leading-tight ${showExtraActions ? 'text-rose-600' : 'text-slate-800 group-hover:text-indigo-700'}`}>
                             {item.name}
                           </h3>
@@ -1995,13 +1982,6 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
           )}
           {activeTab === "adddiet" && (
             <div className="space-y-6">
-                <Card className="p-6">
-                <h3 className="text-xl font-bold text-slate-800 mb-2">Instructions</h3>
-                <p className="text-slate-600 text-sm">
-                    To add a diet, go to the <b>Dashboard</b> tab, scan a student, and click <b>Process Order</b> (Diet Only) or select extra items.
-                </p>
-                </Card>
-
                  {/* Session Stats Section */}
                 <Card className="p-6">
                     <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center justify-between gap-2">
@@ -2067,7 +2047,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
                                         {sessionStats?.notTaken?.length || 0}
                                     </span>
                                 </div>
-                                {sessionStats?.notTaken?.length > 0 && (
+                                {sessionStats?.notTaken?.length > 0 && sessionMeal?.toLowerCase() !== 'snacks' && (
                                         <button
                                             onClick={async () => {
                                                 if (window.confirm(`Are you sure you want to mark diet for all ${sessionStats.notTaken.length} students?`)) {

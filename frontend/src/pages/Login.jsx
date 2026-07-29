@@ -459,12 +459,12 @@ export default function Login() {
   // Reset Password View
   if (showResetPassword) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+      <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         {/* Clean Premium Grid Overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
         <div className="absolute inset-0 bg-nitj-accent/10 rounded-full filter blur-[120px] opacity-40"></div>
         
-        <div className="bg-white/5 backdrop-blur-3xl rounded-3xl w-full max-w-md p-10 relative z-10 border border-white/10 shadow-2xl">
+        <div className="bg-white/5 backdrop-blur-3xl rounded-3xl w-full max-w-md p-10 relative z-10 border border-white/10 shadow-2xl -translate-y-6 md:translate-y-0">
           <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-nitj-accent rounded-3xl mb-6 shadow-2xl shadow-nitj-accent/30 text-white">
               <KeyRound className="w-10 h-10 text-white" />
@@ -585,12 +585,12 @@ export default function Login() {
   // Forgot Password View
   if (showForgotPassword) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+      <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         {/* Clean Premium Grid Overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
         <div className="absolute inset-0 bg-nitj-accent/10 rounded-full filter blur-[120px] opacity-40"></div>
         
-        <div className="bg-white/5 backdrop-blur-3xl rounded-3xl w-full max-w-md p-10 relative z-10 border border-white/10 shadow-2xl">
+        <div className="bg-white/5 backdrop-blur-3xl rounded-3xl w-full max-w-md p-10 relative z-10 border border-white/10 shadow-2xl -translate-y-6 md:translate-y-0">
           <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-nitj-accent rounded-3xl mb-6 shadow-2xl shadow-nitj-accent/30 text-white">
               <Lock className="w-10 h-10 text-white" />
@@ -670,12 +670,12 @@ export default function Login() {
   // Register View
   if (showRegister) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+      <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-hidden" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         {/* Clean Premium Grid Overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
         <div className="absolute inset-0 bg-nitj-accent/10 rounded-full filter blur-[120px] opacity-40"></div>
         
-        <div className="bg-white/5 backdrop-blur-3xl rounded-3xl w-full max-w-2xl p-10 relative z-10 border border-white/10 shadow-2xl">
+        <div className="bg-white/5 backdrop-blur-3xl rounded-3xl w-full max-w-2xl p-10 relative z-10 border border-white/10 shadow-2xl -translate-y-6 md:translate-y-0">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-nitj-accent rounded-3xl mb-6 shadow-2xl shadow-nitj-accent/30 text-white">
               <UserPlus className="w-10 h-10 text-white" />
@@ -1005,12 +1005,12 @@ export default function Login() {
 
   // Login View
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-4 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-y-auto" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-nitj-dark to-nitj-primary relative overflow-y-auto" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       {/* Clean Premium Grid Overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
       <div className="absolute inset-0 bg-nitj-accent/10 rounded-full filter blur-[120px] opacity-40"></div>
       
-      <div className="bg-white/5 backdrop-blur-3xl rounded-2xl w-full max-w-md p-6 relative z-10 border border-white/10 shadow-2xl">
+      <div className="bg-white/5 backdrop-blur-3xl rounded-2xl w-full max-w-md p-6 relative z-10 border border-white/10 shadow-2xl -translate-y-6 md:translate-y-0">
         <div className="text-center mb-5">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl mb-3 shadow-xl shadow-black/10 overflow-hidden">
             <img src="/logo_250.png" alt="Logo" className="w-full h-full object-contain" />

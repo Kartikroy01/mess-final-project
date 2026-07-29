@@ -183,18 +183,6 @@ export default function About() {
         </div>
       </section>
 
-      {/* Footer Call to Action */}
-      <section className="bg-nitj-dark py-20 text-center px-6">
-        <h2 className="text-3xl font-bold text-white mb-8">Ready to experience the future of dining?</h2>
-        <div className="flex flex-wrap justify-center gap-4">
-          <Link to="/login" className="px-8 py-3 bg-nitj-accent text-white font-bold rounded-xl hover:bg-[#FF7043] transition-all transform hover:scale-105 shadow-xl">
-            Get Started Now
-          </Link>
-          <a href="mailto:mess.nitj@gmail.com" className="px-8 py-3 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-all border border-white/20">
-            Contact Administration
-          </a>
-        </div>
-      </section>
     </div>
   );
 }

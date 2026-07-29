@@ -185,22 +185,6 @@ const AddBillPage = () => {
 
   return (
     <div className="max-w-7xl w-full mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Premium Header Widget */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-[#003B6F] to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-650/10 shrink-0">
-            <IndianRupee size={26} className="stroke-[2.5]" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight">
-              Add Bill Charge
-            </h2>
-            <p className="text-slate-500 text-xs mt-0.5">
-              Add custom extra charges or fines to student accounts in your hostel.
-            </p>
-          </div>
-        </div>
-      </div>
 
       <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
         {/* Alert Messages */}

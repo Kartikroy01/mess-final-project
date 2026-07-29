@@ -24,7 +24,11 @@ const createTransporter = () => {
     greetingTimeout: 20000,
     socketTimeout: 30000,
     // Strictly force family 4
-    family: 4
+    family: 4,
+    tls: {
+      servername: 'smtp.gmail.com',
+      rejectUnauthorized: false // Skip mismatch checks due to hardcoded IPv4 address bypass
+    }
   });
 };
 

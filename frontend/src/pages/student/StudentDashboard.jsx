@@ -28,6 +28,8 @@ import {
   XCircle,
   Clock,
   AlertCircle,
+  Coffee,
+  Moon,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -452,9 +454,11 @@ const StudentHome = ({
             >
               <BarChart2 size={20} strokeWidth={2.5} />
             </button>
-            <button className="p-2 hover:text-[#1464aa] hover:bg-slate-50 rounded-xl transition-all duration-200 relative">
-              <Bell size={20} strokeWidth={2.5} />
-              <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white"></span>
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 hover:text-[#1464aa] hover:bg-slate-50 rounded-xl transition-all duration-200"
+            >
+              <Menu size={20} strokeWidth={2.5} />
             </button>
           </div>
         </div>
@@ -825,7 +829,7 @@ const StudentFeedback = ({ token }) => {
                     type="date"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium text-slate-700 outline-none"
+                    className="block w-full min-w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium text-slate-700 outline-none"
                   />
                 </div>
                 <div className="space-y-2">
@@ -1636,7 +1640,7 @@ const MessOffPage = ({ studentName, token }) => {
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">
+<div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">
         <div className="lg:col-span-5 lg:sticky lg:top-8">
           <MessOffForm token={token} onSubmitSuccess={refreshRequests} />
         </div>
@@ -1651,33 +1655,55 @@ const MessOffPage = ({ studentName, token }) => {
 const MessOffForm = ({ token, onSubmitSuccess }) => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [meals, setMeals] = useState([]);
+  const [startMeal, setStartMeal] = useState("Breakfast");
+  const [endMeal, setEndMeal] = useState("Dinner");
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const handleMealToggle = (meal) => {
-    setMeals((prev) =>
-      prev.includes(meal) ? prev.filter((m) => m !== meal) : [...prev, meal],
-    );
+  const calculateMealsToSkip = (start, end, isSingleDay) => {
+    const mealOrder = ["Breakfast", "Lunch", "Dinner"];
+    const startIndex = mealOrder.indexOf(start);
+    const endIndex = mealOrder.indexOf(end);
+    
+    if (isSingleDay) {
+      if (startIndex <= endIndex) {
+        return mealOrder.slice(startIndex, endIndex + 1);
+      }
+      return [];
+    } else {
+      const firstDayMeals = mealOrder.slice(startIndex);
+      const lastDayMeals = mealOrder.slice(0, endIndex + 1);
+      return Array.from(new Set([...firstDayMeals, ...lastDayMeals]));
+    }
   };
 
   const handleSubmit = async () => {
-    if (!fromDate || !toDate || meals.length === 0) {
-      alert("Please fill in all required fields");
+    if (!fromDate || !toDate) {
+      alert("Please select both From and To dates");
       return;
     }
+    
+    const isSingleDay = fromDate === toDate;
+    const computedMeals = calculateMealsToSkip(startMeal, endMeal, isSingleDay);
+    
+    if (computedMeals.length === 0) {
+      alert("Please select a valid meal range to skip (e.g. End Meal cannot be before Start Meal on a single day)");
+      return;
+    }
+    
     setSubmitting(true);
     try {
       await apiService.submitMessOff(token, {
         fromDate,
         toDate,
-        meals,
+        meals: computedMeals,
         reason,
       });
       alert("Mess off application submitted successfully!");
       setFromDate("");
       setToDate("");
-      setMeals([]);
+      setStartMeal("Breakfast");
+      setEndMeal("Dinner");
       setReason("");
       if (onSubmitSuccess) onSubmitSuccess();
     } catch (error) {
@@ -1700,60 +1726,102 @@ const MessOffForm = ({ token, onSubmitSuccess }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div className="space-y-1.5">
             <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">
-              From
+              From Date
             </label>
             <div className="relative">
-              <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+              {!fromDate && (
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+              )}
               <input
                 type="date"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-medium text-slate-700 text-sm"
+                className={`block w-full min-w-full ${fromDate ? 'pl-3.5' : 'pl-10'} pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-medium text-slate-700 text-sm`}
               />
             </div>
           </div>
           <div className="space-y-1.5">
             <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">
-              To
+              To Date
             </label>
             <div className="relative">
-              <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+              {!toDate && (
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+              )}
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-medium text-slate-700 text-sm"
+                className={`block w-full min-w-full ${toDate ? 'pl-3.5' : 'pl-10'} pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-medium text-slate-700 text-sm`}
               />
             </div>
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">
-            Select Meals to Skip
-          </label>
-          <div className="relative">
-            <UtensilsCrossed className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
-            <select
-              value={meals.length === 3 ? "All" : meals[0] || ""}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === "All") setMeals(["Breakfast", "Lunch", "Dinner"]);
-                else if (val === "") setMeals([]);
-                else setMeals([val]);
-              }}
-              className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-medium text-slate-700 text-sm appearance-none cursor-pointer"
-            >
-              <option value="" disabled>
-                Choose meal type
-              </option>
-              <option value="Breakfast">Breakfast Only</option>
-              <option value="Lunch">Lunch Only</option>
-              <option value="Dinner">Dinner Only</option>
-              <option value="All">All Meals (Full Day)</option>
-            </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-              <ChevronDown size={16} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">
+              Start Off From
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: "Breakfast", label: "Breakfast", icon: Coffee },
+                { id: "Lunch", label: "Lunch", icon: UtensilsCrossed },
+                { id: "Dinner", label: "Dinner", icon: Moon },
+              ].map((meal) => {
+                const isSelected = startMeal === meal.id;
+                const Icon = meal.icon;
+                return (
+                  <button
+                    key={meal.id}
+                    type="button"
+                    onClick={() => setStartMeal(meal.id)}
+                    className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border-2 transition-all duration-200 group active:scale-95 cursor-pointer ${
+                      isSelected
+                        ? "border-blue-600 bg-blue-50/30"
+                        : "border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-200"
+                    }`}
+                  >
+                    <Icon size={14} className={isSelected ? "text-blue-600" : "text-slate-400"} />
+                    <span className={`text-[10px] font-black mt-1 ${isSelected ? "text-blue-900" : "text-slate-600"}`}>
+                      {meal.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">
+              End Off After
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: "Breakfast", label: "Breakfast", icon: Coffee },
+                { id: "Lunch", label: "Lunch", icon: UtensilsCrossed },
+                { id: "Dinner", label: "Dinner", icon: Moon },
+              ].map((meal) => {
+                const isSelected = endMeal === meal.id;
+                const Icon = meal.icon;
+                return (
+                  <button
+                    key={meal.id}
+                    type="button"
+                    onClick={() => setEndMeal(meal.id)}
+                    className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border-2 transition-all duration-200 group active:scale-95 cursor-pointer ${
+                      isSelected
+                        ? "border-blue-600 bg-blue-50/30"
+                        : "border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-200"
+                    }`}
+                  >
+                    <Icon size={14} className={isSelected ? "text-blue-600" : "text-slate-400"} />
+                    <span className={`text-[10px] font-black mt-1 ${isSelected ? "text-blue-900" : "text-slate-600"}`}>
+                      {meal.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -1819,6 +1887,10 @@ const MessOffStatus = ({ requests, loading }) => {
       Rejected: {
         bg: "bg-rose-50 text-rose-700 ring-rose-100",
         icon: <XCircle size={14} strokeWidth={3} className="text-rose-500" />,
+      },
+      Cancelled: {
+        bg: "bg-slate-100 text-slate-600 ring-slate-200/50",
+        icon: <XCircle size={14} strokeWidth={3} className="text-slate-400" />,
       },
     };
     return (
@@ -2067,17 +2139,17 @@ function StudentDashboard() {
       {/* Sidebar Overlay for Mobile */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden transition-opacity"
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[1010] md:hidden transition-opacity"
           onClick={() => setIsSidebarOpen(false)}
         ></div>
       )}
 
       {/* Sidebar */}
       <aside
-        className={`bg-white w-80 fixed inset-y-0 left-0 transform ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:${desktopSidebarOpen ? "translate-x-0" : "-translate-x-full"} transition-transform duration-300 ease-out z-50 shadow-2xl shadow-slate-200/50 flex flex-col border-r border-slate-100`}
+        className={`bg-white w-80 fixed inset-y-0 left-0 transform ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:${desktopSidebarOpen ? "translate-x-0" : "-translate-x-full"} transition-transform duration-300 ease-out z-[1020] md:z-50 shadow-2xl shadow-slate-200/50 flex flex-col border-r border-slate-100`}
       >
-        <div className="p-8 pb-4 h-full flex flex-col">
-          <div className="flex items-center justify-between mb-8">
+        <div className="p-8 pb-4 h-full flex flex-col overflow-y-auto custom-scrollbar">
+          <div className="flex items-center justify-between mb-8 shrink-0">
             <div className="flex items-center gap-3">
               <div
                 className="text-white p-2.5 rounded-xl shadow-lg"
@@ -2215,7 +2287,7 @@ function StudentDashboard() {
             </ul>
           </nav>
 
-          <div className="mt-auto pt-6 border-t border-slate-100">
+          <div className="mt-auto pt-6 border-t border-slate-100 shrink-0">
             <button
               onClick={handleLogout}
               className="w-full flex items-center justify-center gap-2 px-4 py-3.5 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all font-bold text-sm group"
@@ -2294,10 +2366,6 @@ function StudentDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors relative">
-              <Bell size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border border-white"></span>
-            </button>
             <div className="h-8 w-px bg-slate-200 mx-1 hidden md:block"></div>
             <div className="hidden md:flex items-center gap-2">
               <span className="text-sm font-bold text-slate-700">

@@ -834,8 +834,8 @@ exports.getSessionStats = async (req, res) => {
     
     const targetMeal = mealType || 'breakfast'; // Fallback
     
-    // Get all students in hostel
-    const allStudents = await Student.find({ hostelNo: hostel })
+    // Get all verified students in hostel
+    const allStudents = await Student.find({ hostelNo: hostel, isVerified: true })
       .select('name rollNo roomNo')
       .sort({ roomNo: 1 })
       .lean();
@@ -1080,10 +1080,11 @@ exports.bulkRecordDiet = async (req, res) => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     
-    // Fetch all students to verify hostel and existence
+    // Fetch all verified students to verify hostel and existence
     const students = await Student.find({
         _id: { $in: studentIds },
-        hostelNo: hostel
+        hostelNo: hostel,
+        isVerified: true
     }).session(session);
 
     let successCount = 0;

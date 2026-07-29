@@ -294,7 +294,7 @@ const MessOffRequestsPage = ({ requests, handleAction, refreshRequests }) => {
                       type="date"
                       value={fromDate}
                       onChange={(e) => setFromDate(e.target.value)}
-                      className="w-full px-4 py-3 rounded-2xl bg-slate-50/50 border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none font-medium transition-all text-sm text-slate-700"
+                      className="block w-full min-w-full px-4 py-3 rounded-2xl bg-slate-50/50 border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none font-medium transition-all text-sm text-slate-700"
                       required
                     />
                   </div>
@@ -304,7 +304,7 @@ const MessOffRequestsPage = ({ requests, handleAction, refreshRequests }) => {
                       type="date"
                       value={toDate}
                       onChange={(e) => setToDate(e.target.value)}
-                      className="w-full px-4 py-3 rounded-2xl bg-slate-50/50 border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none font-medium transition-all text-sm text-slate-700"
+                      className="block w-full min-w-full px-4 py-3 rounded-2xl bg-slate-50/50 border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none font-medium transition-all text-sm text-slate-700"
                       required
                     />
                   </div>
@@ -519,7 +519,8 @@ const MessOffRequestsPage = ({ requests, handleAction, refreshRequests }) => {
                       <div className="scale-75 md:scale-100 origin-left">
                         <Badge variant={
                           req.status === 'Pending' ? 'warning' :
-                          req.status === 'Approved' ? 'success' : 'danger'
+                          req.status === 'Approved' ? 'success' :
+                          req.status === 'Cancelled' ? 'info' : 'danger'
                         }>
                           {req.status}
                         </Badge>

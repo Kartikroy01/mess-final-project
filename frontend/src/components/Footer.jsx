@@ -4,58 +4,54 @@ import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Instagram, Youtube } 
 
 export default function Footer() {
   return (
-    <footer className="hidden md:block" style={{ backgroundColor: "#0d1b2e", color: "#d1d5db" }}>
+    <footer className="block border-t-4 border-blue-600 bg-gradient-to-b from-[#0f1d30] to-[#08111e] text-slate-300">
       {/* Main footer grid */}
-      <div className="max-w-7xl mx-auto px-6 py-10">
-        <div className="grid md:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-8 lg:gap-12">
 
           {/* Institute Section — with logo */}
-          <div className="md:col-span-1">
-            <div className="flex items-center gap-3 mb-4">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3.5">
               <img
                 src="/logo_250.png"
                 alt="NITJ Logo"
-                style={{ width: "56px", height: "56px", objectFit: "contain", flexShrink: 0 }}
+                className="w-14 h-14 object-contain shrink-0 bg-white/5 p-1 rounded-xl border border-white/10 shadow-md"
               />
               <div>
-                <h2 className="text-sm font-bold text-white leading-tight">
-                  Dr B R Ambedkar National Institute of Technology
-                </h2>
-                <p className="text-xs text-gray-400 mt-0.5">Jalandhar</p>
+                <p className="text-[15px] font-bold text-white leading-snug tracking-tight">
+                  Dr B R Ambedkar National Institute of Technology Jalandhar
+                </p>
               </div>
             </div>
 
-            <ul className="space-y-2 text-sm text-gray-400 mt-4">
-              <li className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#E28122" }} />
-                <span>G.T Road, Amritsar Bypass, Jalandhar, Punjab, India-144008</span>
+            <ul className="space-y-3.5 text-xs md:text-sm text-slate-400 mt-5">
+              <li className="flex items-start gap-3 group">
+                <MapPin className="w-4 h-4 mt-0.5 text-orange-500 shrink-0 group-hover:scale-110 transition-transform" />
+                <span className="leading-relaxed">G.T Road, Amritsar Bypass, Jalandhar, Punjab, India-144008</span>
               </li>
-              <li className="flex items-start gap-2">
-                <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#E28122" }} />
-                <span>+91-0181-2690301</span>
+              <li className="flex items-center gap-3 group">
+                <Phone className="w-4 h-4 text-orange-500 shrink-0 group-hover:scale-110 transition-transform" />
+                <a href="tel:+9101815037855" className="hover:text-white transition-colors">+91-0181-5037855, 2690301</a>
               </li>
-              <li className="flex items-start gap-2">
-                <Mail className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#E28122" }} />
-                <span>mess@nitj.ac.in</span>
+              <li className="flex items-center gap-3 group">
+                <Mail className="w-4 h-4 text-orange-500 shrink-0 group-hover:scale-110 transition-transform" />
+                <a href="mailto:mess@nitj.ac.in" className="hover:text-white transition-colors">mess@nitj.ac.in</a>
               </li>
             </ul>
 
             {/* Social icons */}
-            <div className="flex gap-3 mt-5">
+            <div className="flex gap-3 mt-6 flex-wrap">
               {[
-                { icon: <Facebook className="w-4 h-4" />, href: "#" },
-                { icon: <Instagram className="w-4 h-4" />, href: "#" },
-                { icon: <Twitter className="w-4 h-4" />, href: "#" },
-                { icon: <Linkedin className="w-4 h-4" />, href: "#" },
-                { icon: <Youtube className="w-4 h-4" />, href: "#" },
+                { icon: <Facebook className="w-4 h-4" />, href: "#", color: "hover:bg-blue-600 hover:text-white" },
+                { icon: <Instagram className="w-4 h-4" />, href: "#", color: "hover:bg-pink-600 hover:text-white" },
+                { icon: <Twitter className="w-4 h-4" />, href: "#", color: "hover:bg-sky-500 hover:text-white" },
+                { icon: <Linkedin className="w-4 h-4" />, href: "#", color: "hover:bg-blue-700 hover:text-white" },
+                { icon: <Youtube className="w-4 h-4" />, href: "#", color: "hover:bg-red-600 hover:text-white" },
               ].map((s, i) => (
                 <a
                   key={i}
                   href={s.href}
-                  className="flex items-center justify-center rounded-full text-gray-300 transition-colors"
-                  style={{ width: "32px", height: "32px", backgroundColor: "#1a2d42" }}
-                  onMouseEnter={e => e.currentTarget.style.backgroundColor = "#1464aa"}
-                  onMouseLeave={e => e.currentTarget.style.backgroundColor = "#1a2d42"}
+                  className={`w-9 h-9 rounded-xl bg-slate-800/80 flex items-center justify-center text-slate-300 transition-all duration-300 border border-slate-700/30 hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/10 active:scale-95 ${s.color}`}
                 >
                   {s.icon}
                 </a>
@@ -63,75 +59,87 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* NITJ Hostel Mess */}
-          <div>
-            <h3 className="text-base font-semibold mb-4 text-white border-b pb-2" style={{ borderColor: "#1464aa" }}>
-              NITJ Hostel Mess
-            </h3>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              Digital mess management system for efficient meal tracking, attendance monitoring, and comprehensive reporting for NITJ students.
-            </p>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h3 className="text-base font-semibold mb-4 text-white border-b pb-2" style={{ borderColor: "#1464aa" }}>
-              Quick Links
-            </h3>
-            <ul className="space-y-2 text-sm">
-              {[
-                { label: "Home", to: "/" },
-                { label: "Weekly Menu", to: "/menu" },
-                { label: "About Us", to: "/about" },
-                { label: "Contact", to: "/contact" },
-                { label: "NIT Jalandhar Website", href: "https://nitj.ac.in" },
-              ].map((link, i) =>
-                link.href ? (
+          {/* Academics & Administration Subgrid (2 columns on mobile/tablet, spans 2 columns on desktop) */}
+          <div className="grid grid-cols-2 gap-6 col-span-1 md:col-span-2">
+            {/* Academics */}
+            <div>
+              <h3 className="text-base font-extrabold text-white mb-4 border-b border-blue-600 pb-1.5 w-full">
+                Academics
+              </h3>
+              <ul className="space-y-3.5 text-xs md:text-sm">
+                {[
+                  { label: "Academic Calendar", href: "https://www.nitj.ac.in/index.php/nitj_cinfo/index/15" },
+                  { label: "Admission", href: "https://www.nitj.ac.in/" },
+                  { label: "Classroom Information", href: "https://www.nitj.ac.in/" },
+                  { label: "Institute Timetable", href: "https://www.nitj.ac.in/" },
+                  { label: "Library Resources", href: "https://www.nitj.ac.in/" },
+                ].map((link, i) => (
                   <li key={i}>
                     <a
                       href={link.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors"
-                      style={{ "--hover-color": "#E28122" }}
+                      className="text-slate-400 hover:text-white transition-colors"
                     >
-                      <span style={{ color: "#E28122" }}>›</span> {link.label}
+                      {link.label}
                     </a>
                   </li>
-                ) : (
+                ))}
+              </ul>
+            </div>
+
+            {/* Administration */}
+            <div>
+              <h3 className="text-base font-extrabold text-white mb-4 border-b border-blue-600 pb-1.5 w-full">
+                Administration
+              </h3>
+              <ul className="space-y-3.5 text-xs md:text-sm">
+                {[
+                  { label: "Academic Section Officials", href: "https://www.nitj.ac.in/" },
+                  { label: "Deans", href: "https://www.nitj.ac.in/index.php/nitj_cinfo/index/11" },
+                  { label: "Annual Reports", href: "https://www.nitj.ac.in/" },
+                  { label: "Minutes of Meeting", href: "https://www.nitj.ac.in/" },
+                  { label: "NIT Act and Statutes", href: "https://www.nitj.ac.in/" },
+                  { label: "Rules/Policies", href: "https://www.nitj.ac.in/" },
+                ].map((link, i) => (
                   <li key={i}>
-                    <Link
-                      to={link.to}
-                      className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors"
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-slate-400 hover:text-white transition-colors"
                     >
-                      <span style={{ color: "#E28122" }}>›</span> {link.label}
-                    </Link>
+                      {link.label}
+                    </a>
                   </li>
-                )
-              )}
-            </ul>
+                ))}
+              </ul>
+            </div>
           </div>
 
-          {/* Contact / Portal Links */}
+          {/* Quick Links */}
           <div>
-            <h3 className="text-base font-semibold mb-4 text-white border-b pb-2" style={{ borderColor: "#1464aa" }}>
-              Portal Links
+            <h3 className="text-base font-extrabold text-white mb-4 border-b border-blue-600 pb-1.5 w-full">
+              Quick Links
             </h3>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-3.5 text-xs md:text-sm">
               {[
-                { label: "Login", to: "/login" },
-                { label: "Privacy Policy", to: "/privacy" },
-                { label: "Terms of Service", to: "/terms" },
-                { label: "Feedback", to: "/feedback" },
-                { label: "Mess Schedule", to: "/menu" },
+                { label: "Other Charges Payment Link", href: "https://www.nitj.ac.in/" },
+                { label: "NISP", href: "https://www.nitj.ac.in/" },
+                { label: "Rankings", href: "https://www.nitj.ac.in/" },
+                { label: "Virtual Labs", href: "https://www.nitj.ac.in/" },
+                { label: "NITJ Compendium", href: "https://www.nitj.ac.in/index.php/nitj_cinfo/index/26" },
+                { label: "Council of NITs", href: "https://www.nitj.ac.in/" },
               ].map((link, i) => (
                 <li key={i}>
-                  <Link
-                    to={link.to}
-                    className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors"
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-400 hover:text-white transition-colors"
                   >
-                    <span style={{ color: "#E28122" }}>›</span> {link.label}
-                  </Link>
+                    {link.label}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -139,16 +147,16 @@ export default function Footer() {
         </div>
       </div>
 
+
       {/* Bottom copyright bar */}
-      <div style={{ backgroundColor: "#091525", borderTop: "1px solid #1a2d42" }}>
-        <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col md:flex-row justify-between items-center text-xs text-gray-400 gap-2">
-          <p>© Copyright {new Date().getFullYear()}, All Rights Reserved NIT Jalandhar</p>
-          <p>
+      <div className="bg-[#070f1a] border-t border-slate-800/80">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 gap-4">
+          <p className="font-medium text-center md:text-left">© Copyright {new Date().getFullYear()}, All Rights Reserved NIT Jalandhar</p>
+          <p className="flex items-center gap-1.5 font-medium justify-center">
             Developed in-house by{" "}
             <Link
               to="/dev-team"
-              className="font-semibold hover:brightness-125 transition-all active:scale-95 cursor-pointer no-underline"
-              style={{ color: "#E28122" }}
+              className="font-bold hover:brightness-125 transition-all text-orange-500 flex items-center gap-0.5 no-underline"
             >
               Mess Portal Dev Team
             </Link>

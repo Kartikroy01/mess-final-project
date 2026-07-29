@@ -913,7 +913,7 @@ export default function ClerkDashboard() {
                                         setFromDate(e.target.value);
                                         setMonth("");
                                     }} 
-                                    className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold outline-none text-slate-800"
+                                    className="block w-full min-w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold outline-none text-slate-800"
                                 />
                             </div>
                             <div>
@@ -925,7 +925,7 @@ export default function ClerkDashboard() {
                                         setToDate(e.target.value);
                                         setMonth("");
                                     }} 
-                                    className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold outline-none text-slate-800"
+                                    className="block w-full min-w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold outline-none text-slate-800"
                                 />
                             </div>
                         </div>

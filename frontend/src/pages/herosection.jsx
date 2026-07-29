@@ -33,7 +33,7 @@ export default function HeroSection() {
   }, [slides.length]);
 
   return (
-    <div className="relative h-[65vh] md:h-screen w-full overflow-hidden bg-gray-900">
+    <div className="relative h-[48vh] md:h-screen w-full overflow-hidden bg-gray-900">
       {/* Background Image Slider */}
       {slides.map((slide, index) => (
         <div
@@ -56,38 +56,41 @@ export default function HeroSection() {
       {/* Main Content (Centered) */}
       <div className="relative h-full flex flex-col items-center justify-center text-center px-6 z-10">
         <div
-          className={`max-w-4xl space-y-8 transition-all duration-1000 transform ${
+          className={`max-w-4xl transition-all duration-1000 transform ${
             isVisible ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"
           }`}
         >
           {/* Static Welcome Text */}
-          <h2 className="text-3xl md:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight drop-shadow-2xl mb-6 md:mb-8">
+          <h2 className="text-2xl md:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight drop-shadow-2xl mb-4 md:mb-8">
             Welcome to <span className="text-[#FF5722] whitespace-nowrap">NITJ MESS</span>
           </h2>
 
-          <div className="relative w-full min-h-[100px] md:min-h-[140px] flex items-center justify-center">
+          <div className="relative w-full min-h-[70px] md:min-h-[140px] flex items-center justify-center">
             {/* Dynamic Content Cycling with Slider */}
             {slides.map((slide, index) => (
               <div
                 key={index}
-                className={`transition-all duration-700 absolute transition-all ease-in-out ${
-                  index === currentSlide ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none"
-                }`}
+                className="absolute inset-x-0 transition-all duration-700 ease-in-out transform"
+                style={{
+                  opacity: index === currentSlide ? 1 : 0,
+                  transform: index === currentSlide ? "translateY(0) scale(1)" : "translateY(12px) scale(0.95)",
+                  pointerEvents: index === currentSlide ? "auto" : "none",
+                }}
               >
-                <p className="text-lg md:text-2xl text-white font-medium italic drop-shadow-md px-4">
+                <p className="text-sm md:text-2xl text-white font-medium italic drop-shadow-md px-4">
                   "{slide.heading}"
                 </p>
-                <p className="text-base md:text-xl text-slate-200 mt-2 md:mt-3 font-normal max-w-2xl mx-auto drop-shadow-sm px-4">
+                <p className="text-xs md:text-xl text-slate-200 mt-1 md:mt-3 font-normal max-w-2xl mx-auto drop-shadow-sm px-4">
                   "{slide.subheading}"
                 </p>
               </div>
             ))}
           </div>
 
-          <div className="flex flex-col items-center gap-6 pt-8 md:pt-12">
+          <div className="flex flex-col items-center gap-6 pt-4 md:pt-12">
             <Link
               to="/login"
-              className="px-8 py-3 md:px-10 md:py-3.5 bg-transparent text-white border-[1.5px] border-[#FF5722] rounded-md font-bold text-base md:text-lg hover:bg-[#FF5722]/10 hover:border-[#FF7043] transition-all duration-300 transform active:scale-95 shadow-lg shadow-[#FF5722]/20"
+              className="px-6 py-2 md:px-10 md:py-3.5 bg-transparent text-white border-[1.5px] border-[#FF5722] rounded-md font-bold text-sm md:text-lg hover:bg-[#FF5722]/10 hover:border-[#FF7043] transition-all duration-300 transform active:scale-95 shadow-lg shadow-[#FF5722]/20"
             >
               Get In
             </Link>
