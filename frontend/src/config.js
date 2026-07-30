@@ -1,10 +1,8 @@
-import { Capacitor } from '@capacitor/core';
-
 export const getApiBaseUrl = () => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
   
-  // Always use Render for Native Mobile App
-  if (Capacitor.getPlatform() !== 'web') {
+  // Always use Render for Native Mobile App (checks window.Capacitor dynamically)
+  if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() !== 'web') {
     return "https://mess-management-api.onrender.com";
   }
 

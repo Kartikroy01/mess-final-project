@@ -30,45 +30,6 @@ const createTokenForMunshi = (munshi) => {
 };
 
 const buildStudentResponse = async (student) => {
-  const now = new Date();
-  const month = now.getMonth() + 1;
-  const year = now.getFullYear();
-
-  let bill = await Bill.findOne({ studentId: student._id, month, year });
-
-  if (!bill) {
-    bill = await Bill.create({
-      studentId: student._id,
-      month,
-      year,
-      mealCharges: 0,
-      fines: 0,
-      extras: 0,
-      totalBill: 0,
-      mealCount: 0,
-    });
-  }
-
-  const meals = await MealHistory.find({ studentId: student._id })
-    .sort({ date: -1 })
-    .limit(10)
-    .lean();
-
-  const mealHistory = meals.map((meal) => {
-    const dateObj = new Date(meal.date);
-    const timeStr = dateObj.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit', 
-      hour12: true 
-    });
-    return {
-      date: meal.date.toISOString().split("T")[0],
-      time: timeStr,
-      type: meal.type,
-      items: meal.items || [],
-    };
-  });
-
   return {
     id: student._id,
     name: student.name,
@@ -79,9 +40,9 @@ const buildStudentResponse = async (student) => {
     phoneNo: student.phoneNo,
     photo: student.photo,
     qrCode: student.qrCode,
-    bill: bill.totalBill,
-    mealCount: bill.mealCount,
-    mealHistory,
+    bill: 0,
+    mealCount: 0,
+    mealHistory: [],
   };
 };
 

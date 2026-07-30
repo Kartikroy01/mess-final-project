@@ -1,4 +1,5 @@
 // server.js
+process.env.UV_THREADPOOL_SIZE = 64;
 const express = require('express');
 // Force backend restart for menu updates (5)
 const mongoose = require('mongoose');

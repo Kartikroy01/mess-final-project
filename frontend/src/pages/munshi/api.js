@@ -1,4 +1,3 @@
-import { Capacitor } from '@capacitor/core';
 import { getApiBaseUrl } from '../../config';
 
 const API_BASE = `${getApiBaseUrl()}/api`;

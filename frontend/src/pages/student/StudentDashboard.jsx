@@ -409,6 +409,7 @@ const StudentHome = ({
   ];
 
   const totalBill = billData?.totalBill || student.bill || 0;
+  const mealCount = billData?.mealCount !== undefined ? billData.mealCount : (student.mealCount || 0);
   const stats = [
     {
       label: "Total Bill",
@@ -418,13 +419,13 @@ const StudentHome = ({
     },
     {
       label: "Total Meals",
-      value: student.mealCount || 0,
+      value: mealCount,
       icon: <UtensilsCrossed />,
       grad: "from-green-500 to-emerald-600",
     },
     {
       label: "Avg/Meal",
-      value: `₹${(totalBill / (student.mealCount || 1)).toFixed(2)}`,
+      value: `₹${(totalBill / (mealCount || 1)).toFixed(2)}`,
       icon: <Activity />,
       grad: "from-purple-500 to-purple-600",
     },

@@ -914,7 +914,7 @@ const DashboardView = ({
           </Card>
 
           {/* Menu Items */}
-          <Card className="p-4 md:p-6 lg:p-8">
+          <Card className="p-3 md:p-5 lg:p-5">
             <div className="flex flex-row items-center justify-between gap-4 mb-4 md:mb-6 lg:mb-8">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="p-2.5 bg-orange-50 rounded-xl md:rounded-2xl shrink-0">
@@ -969,7 +969,7 @@ const DashboardView = ({
                 Loading menu...
               </div>
             ) : (
-              <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-5 gap-3 md:gap-4 lg:gap-6">
+              <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 gap-1.5 md:gap-4 lg:gap-6">
                 {/* Special Extra Diet Card */}
                 {sessionMeal && sessionMeal.toLowerCase() !== 'snacks' && selectedCategory === 'All' && (
                   <div
@@ -996,28 +996,38 @@ const DashboardView = ({
                     }}
                     role="button"
                     tabIndex={0}
-                    className={`group relative overflow-hidden rounded-xl md:rounded-2xl border-2 text-left transition-all duration-300 cursor-pointer ${
+                    className={`group relative overflow-hidden rounded-lg sm:rounded-xl md:rounded-2xl border-2 text-left transition-all duration-300 cursor-pointer ${
                       extraItems.some(i => i.id === 'extra-diet-item')
                         ? "border-indigo-500 bg-indigo-50/50"
                         : "border-slate-100 bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-500/5"
                     }`}
                   >
                     <div className="aspect-square md:aspect-[4/3] bg-indigo-50 flex items-center justify-center relative">
-                      <UtensilsCrossed size={36} className="text-indigo-500 group-hover:scale-110 transition-transform duration-500" />
+                      <UtensilsCrossed className="w-5 h-5 sm:w-7 sm:h-7 md:w-9 md:h-9 text-indigo-500 group-hover:scale-110 transition-transform duration-500" />
                       {extraItems.some(i => i.id === 'extra-diet-item') && (
                         <div className="absolute inset-0 bg-indigo-900/20 flex items-center justify-center backdrop-blur-[2px]">
-                          <div className="bg-white rounded-full p-2 text-indigo-600 shadow-xl scale-100 animate-in zoom-in duration-200">
-                            <CheckCircle size={24} fill="currentColor" className="text-white" />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExtraItems((prev) => prev.filter((i) => i.id !== 'extra-diet-item'));
+                            }}
+                            className="absolute top-1 right-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-1 shadow-lg hover:scale-110 active:scale-95 transition-all z-20 animate-in zoom-in duration-200"
+                          >
+                            <X size={10} strokeWidth={3} className="w-3 h-3" />
+                          </button>
+                          <div className="bg-white rounded-full p-1 sm:p-2 text-indigo-600 shadow-xl scale-100 animate-in zoom-in duration-200">
+                            <CheckCircle className="w-4 h-4 sm:w-6 sm:h-6 text-indigo-600" fill="currentColor" />
                           </div>
                         </div>
                       )}
                     </div>
-                    <div className="p-2 md:p-4 lg:p-5">
-                      <div className="flex flex-row justify-between items-center mb-1 md:mb-2 gap-2">
-                        <h3 className="font-bold text-[9px] md:text-sm lg:text-base text-slate-800 group-hover:text-indigo-700 line-clamp-2 leading-tight">
+                    <div className="p-1 sm:p-2 md:p-3 lg:p-3.5">
+                      <div className="flex flex-row justify-between items-center mb-0.5 md:mb-1.5 gap-1">
+                        <h3 className="font-bold text-[8px] sm:text-xs md:text-sm lg:text-base text-slate-800 group-hover:text-indigo-700 truncate min-w-0 flex-1">
                           Extra Diet
                         </h3>
-                        <div className="bg-slate-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg text-[9px] md:text-xs font-bold text-slate-600 shrink-0">
+                        <div className="bg-slate-100 px-1 py-0.5 rounded text-[8px] sm:text-[10px] md:text-xs font-bold text-slate-600 shrink-0">
                           ₹0
                         </div>
                       </div>
@@ -1045,7 +1055,7 @@ const DashboardView = ({
                       }}
                       role="button"
                       tabIndex={0}
-                      className={`group relative overflow-hidden rounded-xl md:rounded-2xl border-2 text-left transition-all duration-300 cursor-pointer ${
+                      className={`group relative overflow-hidden rounded-lg sm:rounded-xl md:rounded-2xl border-2 text-left transition-all duration-300 cursor-pointer ${
                         isSelected
                           ? "border-indigo-500 bg-indigo-50/50"
                           : "border-slate-100 bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-500/5"
@@ -1063,22 +1073,31 @@ const DashboardView = ({
                         />
                         {isSelected && (
                           <div className="absolute inset-0 bg-indigo-900/20 flex items-center justify-center backdrop-blur-[2px]">
-                            <div className="bg-white rounded-full p-2 text-indigo-600 shadow-xl scale-100 animate-in zoom-in duration-200">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExtraItems((prev) => prev.filter((i) => i.id !== isSelected.id));
+                              }}
+                              className="absolute top-1 right-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-1 shadow-lg hover:scale-110 active:scale-95 transition-all z-20 animate-in zoom-in duration-200"
+                            >
+                              <X size={10} strokeWidth={3} className="w-3 h-3" />
+                            </button>
+                            <div className="bg-white rounded-full p-1 sm:p-2 text-indigo-600 shadow-xl scale-100 animate-in zoom-in duration-200">
                               <CheckCircle
-                                size={24}
+                                className="w-4 h-4 sm:w-6 sm:h-6 text-indigo-600"
                                 fill="currentColor"
-                                className="text-white"
                               />
                             </div>
                           </div>
                         )}
                       </div>
-                      <div className="p-2 md:p-4 lg:p-5">
-                        <div className="flex flex-row justify-between items-center mb-1 md:mb-2 gap-2">
-                          <h3 className={`font-bold text-[9px] md:text-sm lg:text-base transition-colors line-clamp-2 leading-tight ${showDelete ? 'text-rose-600' : 'text-slate-800 group-hover:text-indigo-700'}`}>
+                      <div className="p-1 sm:p-2 md:p-3 lg:p-3.5">
+                        <div className="flex flex-row justify-between items-center mb-0.5 md:mb-1.5 gap-1">
+                          <h3 className={`font-bold text-[8px] sm:text-xs md:text-sm lg:text-base transition-colors truncate min-w-0 flex-1 ${showDelete ? 'text-rose-600' : 'text-slate-800 group-hover:text-indigo-700'}`}>
                             {item.name}
                           </h3>
-                          <div className="bg-slate-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg text-[9px] md:text-xs font-bold text-slate-600 shrink-0">
+                          <div className="bg-slate-100 px-1 py-0.5 rounded text-[8px] sm:text-[10px] md:text-xs font-bold text-slate-600 shrink-0">
                             ₹{item.price}
                           </div>
                         </div>
@@ -1179,25 +1198,34 @@ const DashboardView = ({
                         
                         {isSelected && (
                           <div className="absolute inset-0 bg-indigo-900/20 flex items-center justify-center backdrop-blur-[2px]">
-                            <div className="bg-white rounded-full p-2 text-indigo-600 shadow-xl scale-100 animate-in zoom-in duration-200">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExtraItems((prev) => prev.filter((i) => i.id !== isSelected.id));
+                              }}
+                              className="absolute top-1 right-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-1 shadow-lg hover:scale-110 active:scale-95 transition-all z-20 animate-in zoom-in duration-200"
+                            >
+                              <X size={10} strokeWidth={3} className="w-3 h-3" />
+                            </button>
+                            <div className="bg-white rounded-full p-1.5 text-indigo-600 shadow-xl scale-100 animate-in zoom-in duration-200">
                               <CheckCircle
-                                size={24}
+                                className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-indigo-600"
                                 fill="currentColor"
-                                className="text-white"
                               />
-                              <div className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-white">
+                              <div className="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[8px] font-bold h-4 w-4 rounded-full flex items-center justify-center border-2 border-white">
                                 {isSelected.qty}
                               </div>
                             </div>
                           </div>
                         )}
                       </div>
-                      <div className="p-2 md:p-4 lg:p-5">
-                        <div className="flex flex-row justify-between items-center mb-1 md:mb-2 gap-2">
-                          <h3 className={`font-bold text-[9px] md:text-sm lg:text-base transition-colors line-clamp-2 leading-tight ${showExtraActions ? 'text-rose-600' : 'text-slate-800 group-hover:text-indigo-700'}`}>
+                      <div className="p-1 sm:p-2 md:p-3 lg:p-3.5">
+                        <div className="flex flex-row justify-between items-center mb-0.5 md:mb-1.5 gap-1">
+                          <h3 className={`font-bold text-[8px] sm:text-xs md:text-sm lg:text-base transition-colors truncate min-w-0 flex-1 ${showExtraActions ? 'text-rose-600' : 'text-slate-800 group-hover:text-indigo-700'}`}>
                             {item.name}
                           </h3>
-                          <div className="bg-slate-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg text-[9px] md:text-xs font-bold text-slate-600 shrink-0">
+                          <div className="bg-slate-100 px-1 py-0.5 rounded text-[8px] sm:text-[10px] md:text-xs font-bold text-slate-600 shrink-0">
                             ₹{item.price}
                           </div>
                         </div>
