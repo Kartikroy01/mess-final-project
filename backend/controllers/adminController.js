@@ -4,6 +4,7 @@ const BillRecord = require("../models/BillRecord");
 const ExtraOrder = require("../models/ExtraOrder");
 const Bill = require("../models/Bill");
 const Menu = require("../models/menu");
+const MealHistory = require("../models/MealHistory");
 
 // Fixed list of hostels
 const HOSTELS_LIST = [
@@ -618,6 +619,88 @@ exports.updateHostelMenu = async (req, res) => {
   } catch (error) {
     console.error('Error in updateHostelMenu:', error);
     res.status(500).json({ success: false, message: 'Server error updating weekly menu: ' + error.message });
+  }
+};
+
+// Helper: parse month string YYYY-MM to start and end Date
+function parseMonth(monthStr) {
+  const [y, m] = monthStr.split("-").map(Number);
+  if (!y || !m) return null;
+  const start = new Date(y, m - 1, 1);
+  const end = new Date(y, m, 0, 23, 59, 59, 999);
+  return { start, end };
+}
+
+// GET /api/admin/students-for-bill
+exports.getStudentsForBill = async (req, res) => {
+  try {
+    const { hostelNo, month } = req.query;
+    if (!hostelNo) {
+      return res.status(400).json({ success: false, message: "Hostel number is required" });
+    }
+    if (!month) {
+      return res.status(400).json({ success: false, message: "Month (YYYY-MM) is required" });
+    }
+
+    const range = parseMonth(month);
+    if (!range) {
+      return res.status(400).json({ success: false, message: "Invalid month format. Use YYYY-MM" });
+    }
+
+    // Fetch students from this hostel
+    const students = await Student.find({
+      hostelNo: new RegExp("^" + hostelNo + "$", "i"),
+    })
+      .select("roomNo name rollNo")
+      .lean();
+
+    const studentIds = students.map((s) => s._id);
+
+    // Aggregate meal counts per student
+    const meals = await MealHistory.aggregate([
+      {
+        $match: {
+          studentId: { $in: studentIds },
+          date: { $gte: range.start, $lte: range.end },
+        },
+      },
+      { 
+        $group: { 
+            _id: "$studentId", 
+            dietCount: { $sum: { $ifNull: ["$dietCount", 0] } } 
+        } 
+      },
+    ]);
+
+    const mealMap = new Map(meals.map((m) => [String(m._id), m.dietCount]));
+
+    // Aggregate extras
+    const extras = await ExtraOrder.aggregate([
+      {
+        $match: {
+          studentId: { $in: studentIds },
+          date: { $gte: range.start, $lt: range.end },
+        },
+      },
+      { $group: { _id: "$studentId", extraTotal: { $sum: "$totalAmount" } } },
+    ]);
+
+    const extraMap = new Map(extras.map((e) => [String(e._id), e.extraTotal]));
+
+    const result = students.map((s, idx) => ({
+      serial: idx + 1,
+      studentId: s._id,
+      roomNo: s.roomNo,
+      name: s.name,
+      rollNo: s.rollNo,
+      diet: mealMap.get(String(s._id)) || 0,
+      extra: extraMap.get(String(s._id)) || 0,
+    }));
+
+    res.json({ success: true, data: result });
+  } catch (err) {
+    console.error("Error in getStudentsForBill:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 

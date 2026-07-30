@@ -19,6 +19,9 @@ router.get('/hostels/:hostelNo', adminController.getHostelDetails);
 // GET /api/admin/students - list of all students (optional query ?hostelNo=BH-1)
 router.get('/students', adminController.getStudents);
 
+// GET /api/admin/students-for-bill - get aggregated bill data for a hostel and month
+router.get('/students-for-bill', adminController.getStudentsForBill);
+
 // GET /api/admin/students/:id/details - get student details and history
 router.get('/students/:id/details', adminController.getStudentDetails);
 

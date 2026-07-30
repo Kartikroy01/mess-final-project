@@ -34,6 +34,7 @@ import MessOffRequestsPage from "./MessOffRequest";
 import ReportsPage from "./MunshiReport";
 import AddMealPage from "./MunshiAddMeal";
 import AddBillPage from "./AddBillPage";
+import BillReportPage from "./BillReportPage";
 import { munshiApi } from "./api";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 
@@ -1428,7 +1429,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
 
   // Get active tab from URL, default to 'dashboard'
   const currentPath = location.pathname.split("/").pop();
-  const activeTab = ["dashboard", "messoff", "reports", "adddiet", "addbill"].includes(currentPath) ? currentPath : "dashboard";
+  const activeTab = ["dashboard", "messoff", "reports", "adddiet", "addbill", "billreport"].includes(currentPath) ? currentPath : "dashboard";
 
   const [sessionMeal, setSessionMeal] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -1701,6 +1702,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
     { id: "messoff", label: "Mess Off", icon: Calendar, path: "/munshi/dashboard/messoff" },
     { id: "reports", label: "Reports", icon: TrendingUp, path: "/munshi/dashboard/reports" },
     { id: "adddiet", label: "Add Diet", icon: Plus, path: "/munshi/dashboard/adddiet" },
+    { id: "billreport", label: "Bill Report", icon: FileText, path: "/munshi/dashboard/billreport" },
     { id: "addbill", label: "Add Bill", icon: IndianRupee, path: "/munshi/dashboard/addbill" },
   ];
 
@@ -1786,7 +1788,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
             </div>
           )}
 
-          <nav className="space-y-2 flex-1">
+          <nav className="space-y-2 flex-1 overflow-y-auto pr-1 custom-scrollbar">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -2155,6 +2157,7 @@ const MunshiDashboard = ({ onLogout: onLogoutProp }) => {
             </div>
           )}
           {activeTab === "addbill" && <AddBillPage />}
+          {activeTab === "billreport" && <BillReportPage hostel={munshiHostel} />}
         </div>
       </main>
     </div>

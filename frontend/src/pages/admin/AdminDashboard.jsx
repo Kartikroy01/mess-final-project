@@ -28,8 +28,10 @@ import {
   Eye,
   Image as ImageIcon,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  FileText
 } from 'lucide-react';
+import AdminBillReportPage from './AdminBillReportPage';
 
 export default function AdminDashboard() {
   const getBranchFromRollNo = (rollNo) => {
@@ -764,7 +766,7 @@ export default function AdminDashboard() {
       
       {/* --- SIDEBAR --- */}
       <aside className={`bg-[#003B6F] text-white w-64 fixed inset-y-0 left-0 transform ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 ${isSidebarVisible ? 'md:flex' : 'md:hidden'} transition-all duration-300 ease-in-out z-50 flex flex-col justify-between shadow-2xl shrink-0 h-full`}>
-        <div>
+        <div className="flex-1 overflow-y-auto custom-scrollbar pb-4">
           {/* Header/Logo */}
           <div className="p-5 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -829,6 +831,15 @@ export default function AdminDashboard() {
                 >
                   <Users className="w-5 h-5" />
                   All Clerks
+                </button>
+              </li>
+              <li className="mt-2">
+                <button
+                  onClick={() => { setActiveTab('billreport'); setSelectedHostel(null); setSelectedStudentDetails(null); if (window.innerWidth < 768) setIsSidebarVisible(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold text-sm cursor-pointer ${activeTab === 'billreport' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'text-slate-300 hover:bg-white/10 hover:text-white'}`}
+                >
+                  <FileText className="w-5 h-5" />
+                  Bill Report
                 </button>
               </li>
             </ul>
@@ -2272,6 +2283,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
+              {activeTab === 'billreport' && <AdminBillReportPage />}
             </>
           )}
 
